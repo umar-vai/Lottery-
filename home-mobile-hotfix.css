@@ -1,12 +1,12 @@
-/* Mobile hotfix: faster winner ticker + compact first viewport */
-.winner-track{animation-duration:16s!important}
+/* Mobile hotfix: much faster winner ticker + compact first viewport */
+.winner-track{animation-duration:8s!important;will-change:transform}
 @media(max-width:680px){
-  .winner-track{animation-duration:11s!important;will-change:transform}
+  .winner-track{animation-duration:5s!important;will-change:transform}
   .winner-marquee{margin-top:2px;margin-bottom:9px}
   .winner-mini{min-width:190px}
 }
 @media(max-width:390px){
-  .winner-track{animation-duration:9.5s!important}
+  .winner-track{animation-duration:4.2s!important}
   .winner-mini{min-width:178px}
 }
 @media(prefers-reduced-motion:reduce){.winner-track{animation:none!important}}

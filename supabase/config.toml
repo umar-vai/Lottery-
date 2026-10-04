@@ -1,0 +1,2 @@
+[functions.draw-engine]
+verify_jwt = false

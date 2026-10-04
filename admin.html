@@ -4,8 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#080b10" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>DRAW//01 Admin</title>
-  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin.css?v=32" />
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -16,8 +19,8 @@
       <div class="brand"><span class="brand-mark"></span><span>DRAW//01</span></div>
       <div class="gate-kicker">ADMIN CONTROL</div>
       <h1>Secure operations dashboard</h1>
-      <p id="gateMessage">Checking your admin session…</p>
-      <button id="adminLoginBtn" class="primary-btn" hidden>Continue with Google</button>
+      <p id="gateMessage">Loading secure admin access…</p>
+      <button id="adminLoginBtn" class="primary-btn">Continue with Google</button>
       <a class="text-link" href="./">Back to public site</a>
     </div>
   </div>
@@ -155,6 +158,7 @@
     </form>
   </dialog>
 
-  <script defer src="admin.js"></script>
+  <script src="admin-hotfix.js?v=32"></script>
+  <script defer src="admin.js?v=32" onload="window.__DRAW01_ADMIN_MAIN_READY=true" onerror="document.getElementById('gateMessage').textContent='Admin script failed to load. Tap Continue with Google to retry.'"></script>
 </body>
 </html>

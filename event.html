@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#07100c">
   <title>DRAW//01 Event</title>
   <link rel="stylesheet" href="event.css?v=1">
+  <link rel="stylesheet" href="event-v2.css?v=1">
   <link rel="stylesheet" href="site-shell.css?v=1">
 </head>
 <body>
@@ -26,7 +27,7 @@
         <a class="back" href="./">← All events</a>
         <div class="hero-grid">
           <div><span id="status" class="status">EVENT</span><h1 id="title">Event</h1><p id="description"></p></div>
-          <div class="prize-card glass"><span>EVENT PRIZE</span><strong id="prize">0 credits</strong><small id="prizeMode"></small></div>
+          <div class="prize-card glass"><span>TOTAL PRIZES</span><strong id="prize">0 credits</strong><small id="prizeMode"></small></div>
         </div>
       </section>
 
@@ -53,12 +54,12 @@
 
         <aside class="side">
           <article class="panel glass"><div class="panel-head"><div><span class="kicker">YOUR EVENT TICKETS</span><h2>My entries</h2></div><span id="ticketUsage" class="muted-pill">0 / 0</span></div><div id="myTickets" class="records"><p class="muted">Sign in to see your entries.</p></div></article>
-          <article class="panel glass result-card"><span class="kicker">DRAW RESULT</span><h2 id="resultTitle">Waiting for draw</h2><div id="resultNumbers" class="result-numbers"></div><p id="resultMeta" class="muted">Winning numbers will appear here after the event is completed.</p></article>
+          <article class="panel glass result-card"><span class="kicker">DRAW RESULT</span><h2 id="resultTitle">Waiting for draw</h2><div id="resultNumbers" class="result-numbers"></div><p id="resultMeta" class="muted">Winner tickets will appear here after the event is completed.</p></article>
         </aside>
       </section>
     </section>
   </main>
-  <script src="site-shell.js?v=1"></script>
-  <script type="module" src="event.js?v=1"></script>
+  <script src="site-shell.js?v=2"></script>
+  <script type="module" src="event.js?v=2"></script>
 </body>
 </html>

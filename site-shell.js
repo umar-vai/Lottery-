@@ -4,7 +4,7 @@ var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
 var APP_URL='https://umar-vai.github.io/Lottery-/';
-var TELEGRAM_URL=''; // Add exact t.me URL here once provided by the owner.
+var TELEGRAM_URL='https://t.me/Umar_ibn_sulaiman';
 var state={session:null,user:null,profile:null,timer:null};
 function $(id){return document.getElementById(id)}
 function sessionKey(){return 'sb-'+REF+'-auth-token'}

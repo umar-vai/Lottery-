@@ -1,0 +1,10 @@
+/* Decorative virtual-credit motifs across DRAW//01. Purely visual: no cash/crypto functionality. */
+body{position:relative;isolation:isolate}
+body::before,body::after{position:fixed;inset:auto;pointer-events:none;user-select:none;z-index:0;white-space:pre;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:950;letter-spacing:5vw;line-height:4.8;transform-origin:center;filter:blur(.1px);will-change:transform;overflow:hidden}
+body::before{content:"₿      $      ৳      CR      ◈      ◎\A   ৳      CR      $      ₿      ◇      ¢\A CR      ◈      ₿      ৳      $      ◎\A   $      ৳      CR      ◇      ₿      ¢\A ₿      CR      ◎      $      ৳      ◈";left:-12vw;top:-22vh;width:128vw;height:150vh;color:rgba(168,255,62,.048);font-size:clamp(28px,4vw,62px);transform:rotate(-7deg);animation:d01-motif-drift-a 28s ease-in-out infinite alternate}
+body::after{content:"$     ◇     CR     ৳     ₿     ◎\A   CR     ৳     $     ◈     ₿     ¢\A ◎     ₿     ◇     CR     $     ৳\A   ৳     $     ₿     ◎     CR     ◈";right:-18vw;bottom:-24vh;width:122vw;height:128vh;color:rgba(255,255,255,.028);font-size:clamp(24px,3.4vw,52px);transform:rotate(8deg);animation:d01-motif-drift-b 34s ease-in-out infinite alternate-reverse}
+body>main,.draw01-global-header,.draw01-global-footer,dialog,.v5-backdrop,.v5-modal{position:relative;z-index:1}
+@keyframes d01-motif-drift-a{0%{transform:translate3d(-1.5vw,1vh,0) rotate(-7deg)}50%{transform:translate3d(2vw,-4vh,0) rotate(-4deg)}100%{transform:translate3d(5vw,2vh,0) rotate(-8deg)}}
+@keyframes d01-motif-drift-b{0%{transform:translate3d(2vw,3vh,0) rotate(8deg)}50%{transform:translate3d(-3vw,-3vh,0) rotate(5deg)}100%{transform:translate3d(-6vw,2vh,0) rotate(9deg)}}
+@media(max-width:680px){body::before{font-size:27px;letter-spacing:9vw;line-height:5.5;color:rgba(168,255,62,.042);left:-30vw;width:160vw}body::after{font-size:22px;letter-spacing:10vw;line-height:6;color:rgba(255,255,255,.022);right:-34vw;width:165vw}}
+@media(prefers-reduced-motion:reduce){body::before,body::after{animation:none!important}}

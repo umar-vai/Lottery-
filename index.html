@@ -18,7 +18,7 @@
   <main class="shell">
     <header class="topbar">
       <a class="brand" href="./" aria-label="DRAW 01 home"><span class="brand-mark"></span><span>DRAW//01</span></a>
-      <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
+      <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a></nav>
       <div class="account-zone" id="accountZone">
         <div class="status"><span class="pulse"></span> LIVE SYSTEM</div>
         <a class="admin-nav-btn" id="adminNavLink" href="ops-v4.html" hidden><span class="admin-nav-dot"></span>ADMIN</a>
@@ -30,7 +30,7 @@
     <section class="market-hero">
       <div class="eyebrow">MULTI-EVENT · VIRTUAL CREDIT TEST SYSTEM</div>
       <h1>Choose.<br><span>Enter. Draw.</span></h1>
-      <p class="lede">Every event has its own ticket price, prize, entry limit, number rules and draw schedule. Browse freely, choose your numbers, then sign in only when you want to confirm an entry.</p>
+      <p class="lede">Every event has its own ticket price, ranked prizes, entry limit, number rules and draw mode. Browse freely, choose your numbers, then sign in only when you want to confirm an entry.</p>
     </section>
 
     <section class="market-summary" aria-label="Event overview">
@@ -42,19 +42,19 @@
     <section class="wallet-strip" id="walletStrip" hidden><div><span>Your virtual balance</span><strong id="walletBalance">0 credits</strong><small>Only admins can adjust balances. Virtual credits have no cash value.</small></div><a class="account-btn" href="#events">Browse events</a></section>
 
     <section class="events-hub" id="events">
-      <div class="events-hub-head"><div><span class="events-kicker">PUBLIC EVENTS</span><h2>Choose a draw</h2><p>Open an event to view its exact rules, build tickets and follow the result.</p></div><span class="events-credit-note">Virtual credits only</span></div>
+      <div class="events-hub-head"><div><span class="events-kicker">PUBLIC EVENTS</span><h2>Choose a draw</h2><p>Open an event to view its rules, build tickets and follow the ranked winner result.</p></div><span class="events-credit-note">Virtual credits only</span></div>
       <div id="lotteryEventsGrid" class="events-grid"><div class="events-empty">Loading events…</div></div>
     </section>
 
     <section class="market-info">
-      <article><b>01</b><h3>Event-specific rules</h3><p>Admins configure the ticket price, prize, player limit, number range and schedule independently for every event.</p></article>
+      <article><b>01</b><h3>Event-specific rules</h3><p>Admins configure ticket price, winner count, prize per rank, player limits, number rules and schedule independently for every event.</p></article>
       <article><b>02</b><h3>Server-enforced entries</h3><p>Balance checks, ticket limits and deductions happen atomically on the backend. Browser-side changes cannot create free entries.</p></article>
-      <article><b>03</b><h3>Automatic secure draws</h3><p>Published events are drawn automatically after their scheduled draw time. Admins may trigger a due draw, but cannot choose the winning numbers.</p></article>
+      <article><b>03</b><h3>Ticket-pool draws</h3><p>Winners are selected only from tickets already submitted to that exact event. No replacement or fabricated ticket is created during the draw.</p></article>
     </section>
 
     <footer><span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes or real-money wagering.</span><span class="footer-links"><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span></footer>
   </main>
-  <script src="site-shell.js?v=1"></script>
-  <script type="module" src="home-v2.js?v=1"></script>
+  <script src="site-shell.js?v=2"></script>
+  <script type="module" src="home-v2.js?v=2"></script>
 </body>
 </html>

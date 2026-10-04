@@ -1,15 +1,16 @@
 # DRAW//01 — Public Powerball-style Test System
 
-A minimal public multiplayer draw application for GitHub Pages. It reproduces the core Powerball-style game mechanics for simulation/testing only: 5 unique white numbers from 1–69, one Powerball from 1–26, scheduled ticket cutoff, shared server-side draw results, Power Play, prize tiers, jackpot rollover, Google sign-in and user ticket history.
+A public multiplayer draw application for GitHub Pages. It reproduces the core Powerball-style game mechanics for simulation/testing only: 5 unique white numbers from 1–69, one Powerball from 1–26, scheduled ticket cutoff, shared server-side draw results, Power Play, prize tiers, jackpot rollover, Google sign-in and user ticket history.
 
-## Architecture
+## Live architecture
 
 - **Frontend:** GitHub Pages
+- **Backend project:** Supabase `Lottery DRAW01`
 - **Auth:** Supabase Auth + Google OAuth
 - **Database:** Supabase Postgres
 - **Security:** Row Level Security (RLS)
 - **Realtime:** Supabase Realtime on the `draws` table
-- **Automatic draw:** Supabase Edge Function `draw-engine`
+- **Automatic draw:** Postgres `pg_cron` runs `private.run_draw_engine()` every minute
 - **Draw fairness:** cryptographic seed, SHA-256 commitment before draw, seed reveal after draw
 
 ## Current repo structure
@@ -17,11 +18,12 @@ A minimal public multiplayer draw application for GitHub Pages. It reproduces th
 - `index.html` — public multiplayer UI
 - `styles.css` + `multiplayer.css` — responsive tech UI
 - `app.js` — Google auth, ticket submission, realtime draw/history UI
-- `config.js` — public Supabase URL + publishable key (currently blank until backend project is created)
+- `config.js` — live Supabase project URL + public publishable key
 - `supabase/schema.sql` — core schema, RLS, validation triggers, realtime setup
 - `supabase/secure_draw.sql` — protected draw seed storage and single-active-draw guard
-- `supabase/functions/draw-engine/index.ts` — automatic draw engine
-- `supabase/config.toml` — function auth configuration
+- `supabase/automatic_draw_scheduler.sql` — live database draw engine + cron scheduler
+- `supabase/functions/draw-engine/index.ts` — earlier Edge Function implementation kept as an alternative/reference; the live scheduler currently runs in Postgres
+- `GOOGLE_AUTH_SETUP.md` — exact remaining Google OAuth setup steps
 
 ## Core game logic
 
@@ -38,17 +40,23 @@ A minimal public multiplayer draw application for GitHub Pages. It reproduces th
 
 ## Test schedule
 
-V1 defaults to a draw every **10 minutes** with a **30-second cutoff** before draw time. These values live in `game_settings`, so they can be changed without editing frontend code.
+The live test system currently uses a draw every **10 minutes** with a **60-second ticket cutoff** before draw time. The cron engine checks once per minute. These values live in `game_settings`, so they can later be changed without editing frontend code.
 
-## Backend activation checklist
+## Verified server-side test
 
-1. Create a dedicated Supabase project.
-2. Apply `supabase/schema.sql`.
-3. Apply `supabase/secure_draw.sql`.
-4. Deploy the `draw-engine` Edge Function.
-5. Create a Supabase Cron job that invokes the draw engine regularly.
-6. Enable Google Auth in Supabase and add the GitHub Pages URL as an allowed redirect URL.
-7. Put only the **project URL** and **publishable key** in `config.js`. Never put a secret/service-role key in GitHub Pages.
+The first forced backend verification completed successfully:
+
+- Draw #1: `32 38 46 49 63 + 21`
+- Power Play: `5X`
+- Seed commitment stored before completion and seed revealed after completion
+- Draw #2 opened automatically
+- Simulated jackpot rolled from `$20M` to `$30M` because there was no jackpot winner
+
+## Remaining Google OAuth setup
+
+The backend and frontend are already connected. Google OAuth requires a Client ID and Client Secret from the project owner's Google Cloud account. Follow `GOOGLE_AUTH_SETUP.md`.
+
+Never commit a Google Client Secret or Supabase service-role/secret key to this repository.
 
 ## Public site
 

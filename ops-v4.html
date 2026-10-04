@@ -7,33 +7,34 @@
   <title>DRAW//01 Admin</title>
   <link rel="stylesheet" href="ops-v2.css?v=40">
   <link rel="stylesheet" href="ops-events.css?v=3">
-  <link rel="stylesheet" href="ops-v4.css?v=1">
+  <link rel="stylesheet" href="ops-v4.css?v=2">
   <link rel="stylesheet" href="site-shell.css?v=1">
 </head>
 <body>
   <div class="orb orb-a"></div><div class="orb orb-b"></div>
   <main class="shell">
-    <header class="topbar glass">
-      <div class="brand-wrap"><a class="brand" href="./"><i></i><span>DRAW//01</span></a><span class="admin-chip">ADMIN</span></div>
-      <div class="top-right"><span class="live-badge"><i></i><span>EVENT ENGINE</span></span><div class="admin-identity"><div><strong id="adminName">Admin</strong><small id="adminEmail"></small></div></div><button id="topCreate" class="btn primary compact">+ New event</button></div>
-    </header>
+    <header class="topbar glass"><a class="brand" href="./"><i></i><span>DRAW//01</span></a></header>
 
     <section id="gate" class="gate glass"><span class="eyebrow">SECURE OPERATIONS</span><h1>Event control center</h1><p id="gateMsg">Checking your admin session…</p><div class="gate-actions"><button id="retryBtn" class="btn primary">Check session</button><a class="btn ghost" href="./">Public site</a></div></section>
 
     <section id="app" class="app" hidden>
-      <section class="hero-row"><div><span class="eyebrow">MULTI-EVENT PLATFORM</span><h1>Control center</h1><p>Manage events, ticket rules, virtual-credit balances, entries, draws and audit history from one place.</p></div><div class="hero-actions"><button id="heroCreate" class="btn primary">+ Create event</button><a class="btn ghost" href="./">Open public site ↗</a></div></section>
+      <section class="hero-row"><div><span class="eyebrow">MULTI-EVENT PLATFORM</span><h1>Control center</h1><p>Manage events, ticket pools, ranked winners, virtual credits and audit history from one place.</p></div><div class="hero-actions"><button id="heroCreate" class="btn primary">+ Create event</button><a class="btn ghost" href="./">Open public site ↗</a></div></section>
 
       <section class="stats-grid">
         <article class="stat-card glass"><div class="stat-icon">E</div><div><span>Events</span><strong id="statEvents">0</strong><small>Total events</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">●</div><div><span>Open now</span><strong id="statOpen">0</strong><small>Accepting tickets</small></div></article>
-        <article class="stat-card glass"><div class="stat-icon">T</div><div><span>Tickets</span><strong id="statTickets">0</strong><small>Event entries</small></div></article>
+        <article class="stat-card glass"><div class="stat-icon">T</div><div><span>Tickets</span><strong id="statTickets">0</strong><small>Across all events</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">P</div><div><span>Players</span><strong id="statPlayers">0</strong><small>Registered users</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">C</div><div><span>Credits</span><strong id="statCredits">0</strong><small>Player balances</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">⏱</div><div><span>Next draw</span><strong id="statNext">—</strong><small id="statNextMeta">Not scheduled</small></div></article>
       </section>
 
       <nav class="tabs glass" aria-label="Admin sections">
-        <button data-tab="overview" class="active">Overview</button><button data-tab="events">Events</button><button data-tab="tickets">Tickets</button><button data-tab="players">Players</button><button data-tab="ledger">Ledger</button><button data-tab="audit">Audit</button>
+        <button data-tab="overview" class="active">Overview</button>
+        <button data-tab="events">Events & Tickets</button>
+        <button data-tab="players">Players</button>
+        <button data-tab="ledger">Ledger</button>
+        <button data-tab="audit">Audit</button>
       </nav>
 
       <section id="overview" class="tab active"><div class="dashboard-grid">
@@ -41,9 +42,7 @@
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT ACTIVITY</span><h2>Operations feed</h2></div><button id="refreshOverview" class="icon-btn">↻</button></div><div id="overviewAudit" class="timeline compact-timeline"></div></article>
       </div></section>
 
-      <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">EVENT MANAGEMENT</span><h2>Lottery events</h2><p>Each event has independent pricing, prize, limits, number rules and schedule.</p></div><button id="createEventBtn" class="btn primary">+ Create event</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 events</span></div><div id="eventList" class="records"></div></article></section>
-
-      <section id="tickets" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">TICKET OPERATIONS</span><h2>Event tickets</h2><p>Review entries, paid credits and results across events.</p></div></div><div class="filter-row"><select id="ticketEventFilter"><option value="all">All events</option></select><span id="ticketSummary" class="muted-pill">0 tickets</span></div><div id="ticketList" class="records"></div></article></section>
+      <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">EVENT + TICKET MANAGEMENT</span><h2>Events and ticket pools</h2><p>Open an event to inspect its configuration, players and every submitted ticket.</p></div><button id="createEventBtn" class="btn primary">+ Create event</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 events</span></div><div id="eventList" class="event-accordion-list"></div></article></section>
 
       <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>New accounts start at 0 virtual credits. Only admins can adjust balances.</p></div></div><div id="playerList" class="records"></div></article></section>
 
@@ -56,20 +55,31 @@
   <dialog id="eventDialog" class="event-form-modal"><form id="eventForm" class="event-form-card glass">
     <div class="panel-head"><div><span class="eyebrow" id="eventModalKicker">CREATE EVENT</span><h2 id="eventModalTitle">New public event</h2></div><button type="button" id="closeEventModal" class="icon-btn">×</button></div>
     <div class="event-form-grid">
-      <label><span>Event title</span><input id="fTitle" required placeholder="Friday Mega Draw"></label><label><span>Public slug</span><input id="fSlug" placeholder="friday-mega-draw"></label>
+      <label><span>Event title</span><input id="fTitle" required placeholder="Friday Mega Draw"></label>
+      <label><span>Public slug</span><input id="fSlug" placeholder="friday-mega-draw"></label>
       <label class="full"><span>Description</span><textarea id="fDescription" placeholder="Describe this event for players."></textarea></label>
-      <label><span>Ticket price (credits)</span><input id="fPrice" type="number" min="0" step="1" value="10" required></label><label><span>Prize (credits)</span><input id="fPrize" type="number" min="0" step="1" value="1000" required></label>
-      <label><span>Prize mode</span><select id="fPrizeMode"><option value="split_pool">Split pool between winners</option><option value="fixed_per_winning_ticket">Fixed prize per winning ticket</option></select></label><label><span>Max tickets per player</span><input id="fLimit" type="number" min="1" max="1000" value="5" required></label>
-      <label><span>Numbers to pick</span><input id="fWhiteCount" type="number" min="1" max="10" value="5" required></label><label><span>Number range max</span><input id="fWhiteMax" type="number" min="2" max="500" value="69" required></label>
-      <label class="inline-check"><input id="fBonusEnabled" type="checkbox" checked><span>Use bonus ball</span></label><label><span>Bonus range max</span><input id="fBonusMax" type="number" min="1" max="500" value="26" required></label>
-      <label><span>Opens at</span><input id="fOpen" type="datetime-local" required></label><label><span>Ticket cutoff</span><input id="fCutoff" type="datetime-local" required></label><label><span>Draw time</span><input id="fDraw" type="datetime-local" required></label><label><span>Status</span><select id="fStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></label>
-    </div><div id="eventFormHint" class="form-hint"></div><div class="event-modal-actions"><button type="button" id="cancelEventModal" class="btn ghost">Cancel</button><button type="submit" id="saveEventBtn" class="btn primary">Create event</button></div>
+      <label><span>Ticket price (credits)</span><input id="fPrice" type="number" min="0" step="1" value="10" required></label>
+      <label><span>Max tickets per player</span><input id="fLimit" type="number" min="1" max="1000" value="5" required></label>
+      <label><span>Numbers to pick</span><input id="fWhiteCount" type="number" min="1" max="10" value="5" required></label>
+      <label><span>Number range max</span><input id="fWhiteMax" type="number" min="2" max="500" value="69" required></label>
+      <label class="inline-check"><input id="fBonusEnabled" type="checkbox" checked><span>Use bonus ball</span></label>
+      <label><span>Bonus range max</span><input id="fBonusMax" type="number" min="1" max="500" value="26" required></label>
+      <label><span>Schedule mode</span><select id="fScheduleMode"><option value="scheduled">Scheduled draw</option><option value="manual">Open until I draw it</option></select></label>
+      <label><span>Opens at</span><input id="fOpen" type="datetime-local"></label>
+      <label class="schedule-only"><span>Ticket cutoff</span><input id="fCutoff" type="datetime-local"></label>
+      <label class="schedule-only"><span>Draw time</span><input id="fDraw" type="datetime-local"></label>
+      <label><span>Status</span><select id="fStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></label>
+      <label><span>Number of winners</span><input id="fWinnerCount" type="number" min="1" max="100" value="1" required></label>
+      <div class="full prize-builder"><div class="prize-builder-head"><div><span class="eyebrow">RANKED PRIZES</span><h3>Prize per winner</h3></div><strong id="prizeTotal">Total: 0 cr</strong></div><div id="winnerPrizeFields" class="winner-prize-grid"></div></div>
+    </div>
+    <div id="eventFormHint" class="form-hint"></div>
+    <div class="event-modal-actions"><button type="button" id="cancelEventModal" class="btn ghost">Cancel</button><button type="submit" id="saveEventBtn" class="btn primary">Create event</button></div>
   </form></dialog>
 
   <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin note<input id="balanceNote" placeholder="Test credit adjustment"></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
 
   <div id="toast"></div>
   <script src="site-shell.js?v=1"></script>
-  <script src="ops-v4.js?v=1" defer></script>
+  <script src="ops-v4.js?v=2" defer></script>
 </body>
 </html>

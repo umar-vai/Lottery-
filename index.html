@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#080b10">
   <meta name="description" content="DRAW//01 is a virtual-credit multi-event draw simulation platform.">
   <title>DRAW//01 — Events</title>
@@ -12,10 +12,11 @@
   <link rel="stylesheet" href="events-home.css?v=3">
   <link rel="stylesheet" href="home-v2.css?v=1">
   <link rel="stylesheet" href="site-shell.css?v=3">
+  <link rel="stylesheet" href="home-v3.css?v=1">
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
-  <main class="shell">
+  <main class="shell home-page">
     <header class="topbar">
       <a class="brand" href="./" aria-label="DRAW 01 home"><span class="brand-mark"></span><span>DRAW//01</span></a>
       <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a></nav>
@@ -27,34 +28,73 @@
       </div>
     </header>
 
-    <section class="market-hero">
-      <div class="eyebrow">MULTI-EVENT · VIRTUAL CREDIT TEST SYSTEM</div>
-      <h1>Choose.<br><span>Enter. Draw.</span></h1>
-      <p class="lede">Every event has its own ticket price, ranked prizes, entry limit, number rules and draw mode. Browse freely, choose your numbers, then sign in only when you want to confirm an entry.</p>
+    <section class="winner-marquee" aria-label="Recent winners">
+      <div id="winnerTrack" class="winner-track"><div class="winner-empty">Recent winners loading…</div></div>
     </section>
 
-    <section class="market-summary" aria-label="Event overview">
+    <section class="market-hero home-hero">
+      <div class="hero-coinfield" aria-hidden="true"><span class="credit-coin c1">CR</span><span class="credit-coin c2">CR</span><span class="credit-coin c3">CR</span><span class="credit-coin c4">CR</span></div>
+      <div class="home-hero-grid">
+        <div>
+          <div class="eyebrow">LIVE EVENTS · VIRTUAL CREDIT DRAW SYSTEM</div>
+          <h1>Pick.<br><span>Play. Win.</span></h1>
+          <p class="hero-bn">পছন্দের ইভেন্ট বেছে নিন, নিজের টিকিট তৈরি করুন, আর ড্র শেষ হলে দেখুন কার ভাগ্যে এলো সেরা র‍্যাঙ্ক।</p>
+          <p class="hero-en">প্রতিটি ইভেন্ট আলাদা। আলাদা ticket price, আলাদা winner count, আলাদা prize — আর winner সবসময় সেই event-এর existing ticket pool থেকেই বাছাই হয়।</p>
+          <div class="hero-actions-home"><a class="hero-cta primary" href="#events">চলমান ইভেন্ট দেখুন</a><a class="hero-cta ghost" href="#how-it-works">কীভাবে কাজ করে?</a></div>
+        </div>
+        <aside class="hero-side-card">
+          <span>WINNER SPOTLIGHT</span>
+          <strong>Real event. Real ticket pool.</strong>
+          <p id="heroWinnerText">Completed event-এর winner-রা উপরের ticker-এ live highlight হয়। Virtual credits only — কোনো real-money wagering নয়।</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="market-summary home-summary" aria-label="Event overview">
       <article class="market-stat"><span>Open events</span><strong id="openCount">0</strong></article>
       <article class="market-stat"><span>Upcoming / locked</span><strong id="upcomingCount">0</strong></article>
       <article class="market-stat"><span>Completed</span><strong id="completedCount">0</strong></article>
     </section>
 
-    <section class="wallet-strip" id="walletStrip" hidden><div><span>Your virtual balance</span><strong id="walletBalance">0 credits</strong><small>Only admins can adjust balances. Virtual credits have no cash value.</small></div><a class="account-btn" href="#events">Browse events</a></section>
+    <section class="wallet-strip" id="walletStrip" hidden><div><span>আপনার বর্তমান ক্রেডিট</span><strong id="walletBalance">0 credits</strong><small>এই credits শুধুই simulation/testing-এর জন্য।</small></div><a class="account-btn" href="#events">ইভেন্ট দেখুন</a></section>
 
-    <section class="events-hub" id="events">
-      <div class="events-hub-head"><div><span class="events-kicker">PUBLIC EVENTS</span><h2>Choose a draw</h2><p>Open an event to view its rules, build tickets and follow the ranked winner result.</p></div><span class="events-credit-note">Virtual credits only</span></div>
-      <div id="lotteryEventsGrid" class="events-grid"><div class="events-empty">Loading events…</div></div>
+    <section class="event-zone" id="events">
+      <div class="event-zone-head"><div><span class="mini">RUNNING / OPEN / UPCOMING</span><h2>এখন যেগুলোতে অংশ নিতে পারেন</h2><p>Open event-এ এখনই ticket নেওয়া যায়। Upcoming event আগে থেকেই দেখে রাখতে পারেন।</p></div><span class="event-zone-badge" id="activeEventCount">0 active</span></div>
+      <div id="activeEventsGrid" class="events-grid event-grid-home"><div class="events-empty">Loading active events…</div></div>
     </section>
 
-    <section class="market-info">
-      <article><b>01</b><h3>Event-specific rules</h3><p>Admins configure ticket price, winner count, prize per rank, player limits, number rules and schedule independently for every event.</p></article>
-      <article><b>02</b><h3>Server-enforced entries</h3><p>Balance checks, ticket limits and deductions happen atomically on the backend. Browser-side changes cannot create free entries.</p></article>
-      <article><b>03</b><h3>Ticket-pool draws</h3><p>Winners are selected only from tickets already submitted to that exact event. No replacement or fabricated ticket is created during the draw.</p></article>
+    <section class="why-section">
+      <div class="why-head"><div><span class="events-kicker">WHY PEOPLE ENJOY IT</span><h2>খেলা সহজ, ফলাফল পরিষ্কার</h2></div><p>যে কেউ কয়েক সেকেন্ডেই বুঝতে পারবে কোন event open, ticket কত credits, কয়জন winner এবং prize কী।</p></div>
+      <div class="why-grid">
+        <article class="why-card"><div class="why-icon">01</div><h3>নিজের নম্বর, নিজের ticket</h3><p>আপনি নিজের পছন্দের numbers নিতে পারেন, অথবা Quick Pick দিয়ে দ্রুত ticket তৈরি করতে পারেন।</p></article>
+        <article class="why-card"><div class="why-icon">02</div><h3>Existing ticket থেকেই winner</h3><p>Draw-এর সময় নতুন কোনো ticket তৈরি হয় না। ওই event-এ আগে থেকে থাকা ticket pool থেকেই winner নির্বাচন হয়।</p></article>
+        <article class="why-card"><div class="why-icon">03</div><h3>Winner সবাই দেখতে পারে</h3><p>Completed event-এ winner-এর নাম, rank, winning ticket এবং পাওয়া virtual credits দেখা যায়।</p></article>
+      </div>
+    </section>
+
+    <section class="event-zone completed-zone">
+      <div class="event-zone-head"><div><span class="mini">COMPLETED EVENTS</span><h2>শেষ হওয়া ড্র ও রেজাল্ট</h2><p>পুরোনো event খুলে winner, rank এবং winning ticket result দেখতে পারবেন।</p></div><span class="event-zone-badge" id="completedEventCount">0 completed</span></div>
+      <div id="completedEventsGrid" class="events-grid event-grid-home"><div class="events-empty">Loading completed events…</div></div>
+    </section>
+
+    <section class="how-section" id="how-it-works">
+      <div class="how-head"><span class="mini">3 EASY STEPS</span><h2>কীভাবে অংশ নেবেন?</h2></div>
+      <div class="how-steps">
+        <article class="how-step"><b>1</b><h3>Event বেছে নিন</h3><p>Cover, prize, ticket price এবং draw status দেখে আপনার পছন্দের event-এ ঢুকুন।</p></article>
+        <article class="how-step"><b>2</b><h3>Ticket confirm করুন</h3><p>Numbers select করুন। Confirm করার সময় Google login এবং প্রয়োজনীয় virtual credit লাগবে।</p></article>
+        <article class="how-step"><b>3</b><h3>Result দেখুন</h3><p>Event complete হলে winner list-এ নাম, rank, winning ticket এবং prize credit দেখা যাবে।</p></article>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <h2>আপনার পরের winning ticket কি এখানেই?</h2>
+      <p>চলমান event দেখে নিজের ticket তৈরি করুন। সব prize virtual credits—এই project simulation/testing-এর জন্য।</p>
+      <a class="hero-cta primary" href="#events">Open events দেখুন</a>
     </section>
 
     <footer><span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes or real-money wagering.</span><span class="footer-links"><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span></footer>
   </main>
   <script src="site-shell.js?v=3"></script>
-  <script type="module" src="home-v2.js?v=4"></script>
+  <script type="module" src="home-v2.js?v=5"></script>
 </body>
 </html>

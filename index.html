@@ -1,154 +1,59 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#080b10" />
-  <meta name="description" content="DRAW//01 is a public Powerball-style multiplayer draw simulation and testing application." />
-  <title>DRAW//01 — Multiplayer Draw</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="multiplayer.css" />
-  <link rel="stylesheet" href="glass-tuning.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080b10">
+  <meta name="description" content="DRAW//01 is a virtual-credit multi-event draw simulation platform.">
+  <title>DRAW//01 — Events</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="multiplayer.css">
+  <link rel="stylesheet" href="glass-tuning.css">
+  <link rel="stylesheet" href="events-home.css?v=2">
+  <link rel="stylesheet" href="home-v2.css?v=1">
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
-
   <main class="shell">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="DRAW 01 home">
-        <span class="brand-mark"></span>
-        <span>DRAW//01</span>
-      </a>
-      <nav class="site-nav" aria-label="Website navigation">
-        <a href="about.html">About</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-      </nav>
+      <a class="brand" href="./" aria-label="DRAW 01 home"><span class="brand-mark"></span><span>DRAW//01</span></a>
+      <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
       <div class="account-zone" id="accountZone">
         <div class="status"><span class="pulse"></span> LIVE SYSTEM</div>
-        <a class="admin-nav-btn" id="adminNavLink" href="ops-v2.html" hidden aria-label="Open admin dashboard"><span class="admin-nav-dot"></span>ADMIN</a>
+        <a class="admin-nav-btn" id="adminNavLink" href="ops-v2.html" hidden><span class="admin-nav-dot"></span>ADMIN</a>
         <button class="account-btn primary" id="loginBtn" type="button">Continue with Google</button>
-        <div class="account-card" id="accountCard" hidden>
-          <img class="avatar" id="userAvatar" alt="" />
-          <div class="account-meta"><strong id="userName">Player</strong><span id="userEmail"></span></div>
-          <button class="account-btn" id="logoutBtn" type="button">Log out</button>
-        </div>
+        <div class="account-card" id="accountCard" hidden><img class="avatar" id="userAvatar" alt=""><div class="account-meta"><strong id="userName">Player</strong><span id="userEmail"></span></div><button class="account-btn" id="logoutBtn" type="button">Log out</button></div>
       </div>
     </header>
 
-    <div class="backend-banner" id="backendBanner" hidden>
-      Backend setup is being connected. Number picking works, but online login and ticket submission will activate after Supabase configuration is filled.
-    </div>
-
-    <section class="hero">
-      <div class="eyebrow">MULTI-EVENT · PUBLIC TEST SYSTEM</div>
-      <h1>Pick. Lock.<br><span>Draw.</span></h1>
-      <p class="lede">Browse public draw events, build tickets, and use virtual credits to confirm entries. Every event has its own ticket price, ticket limit, prize, schedule and secure server-generated result.</p>
+    <section class="market-hero">
+      <div class="eyebrow">MULTI-EVENT · VIRTUAL CREDIT TEST SYSTEM</div>
+      <h1>Choose.<br><span>Enter. Draw.</span></h1>
+      <p class="lede">Every event has its own ticket price, prize, entry limit, number rules and draw schedule. Browse freely, choose your numbers, then sign in only when you want to confirm an entry.</p>
     </section>
 
-    <section class="game-strip" aria-label="Current draw overview">
-      <div class="metric"><div class="k">SIMULATED JACKPOT</div><div class="v accent" id="jackpotValue">$20M</div></div>
-      <div class="metric"><div class="k">NEXT DRAW</div><div class="v" id="countdownValue">--:--</div></div>
-      <div class="metric"><div class="k">DRAW STATUS</div><div class="v"><span class="draw-status-pill" id="drawStatus">CONNECTING</span></div></div>
+    <section class="market-summary" aria-label="Event overview">
+      <article class="market-stat"><span>Open events</span><strong id="openCount">0</strong></article>
+      <article class="market-stat"><span>Upcoming / locked</span><strong id="upcomingCount">0</strong></article>
+      <article class="market-stat"><span>Completed</span><strong id="completedCount">0</strong></article>
     </section>
 
-    <section class="panel ticket-panel" aria-labelledby="ticket-title">
-      <div class="panel-head">
-        <div>
-          <span class="label">LEGACY POWERBALL TEST</span>
-          <h2 id="ticket-title">Build a ticket</h2>
-        </div>
-        <button class="ghost-btn" id="quickPickBtn" type="button">Quick pick</button>
-      </div>
+    <section class="wallet-strip" id="walletStrip" hidden><div><span>Your virtual balance</span><strong id="walletBalance">0 credits</strong><small>Only admins can adjust balances. Virtual credits have no cash value.</small></div><a class="account-btn" href="#events">Browse events</a></section>
 
-      <div class="ball-row" id="ticketBalls" aria-label="Selected white balls"></div>
-      <div class="powerball-wrap"><span class="plus">+</span><div id="ticketPowerball" class="ball powerball empty">PB</div></div>
-
-      <div class="ticket-actions ticket-tools">
-        <button class="primary-btn" id="chooseBtn" type="button">Choose numbers</button>
-        <button class="secondary-btn" id="clearBtn" type="button">Clear</button>
-        <label class="toggle"><input id="powerPlayToggle" type="checkbox" /> Power Play</label>
-        <button class="submit-ticket-btn" id="submitTicketBtn" type="button">SUBMIT TICKET</button>
-      </div>
-      <div class="notice" id="ticketNotice">Choose 5 white numbers and 1 Powerball.</div>
-      <div class="login-gate" id="loginGate">
-        <p>You can explore without an account. Google login is required only when you submit a ticket.</p>
-        <button class="account-btn primary" id="loginInlineBtn" type="button">Continue with Google</button>
-      </div>
+    <section class="events-hub" id="events">
+      <div class="events-hub-head"><div><span class="events-kicker">PUBLIC EVENTS</span><h2>Choose a draw</h2><p>Open an event to view its exact rules, build tickets and follow the result.</p></div><span class="events-credit-note">Virtual credits only</span></div>
+      <div id="lotteryEventsGrid" class="events-grid"><div class="events-empty">Loading events…</div></div>
     </section>
 
-    <section class="panel draw-panel" aria-labelledby="draw-title">
-      <div class="panel-head">
-        <div>
-          <span class="label">SERVER DRAW</span>
-          <h2 id="draw-title">Latest result</h2>
-          <div class="schedule-copy" id="drawScheduleCopy">Waiting for draw schedule…</div>
-        </div>
-        <span class="draw-id" id="drawId">#------</span>
-      </div>
-
-      <div class="result-stage" id="resultStage">
-        <div class="draw-balls" id="drawBalls" aria-live="polite"></div>
-        <div id="drawPowerball" class="ball powerball empty">PB</div>
-      </div>
-
-      <div class="match-result" id="matchResult" aria-live="polite">Results are generated on the backend, not in the browser.</div>
+    <section class="market-info">
+      <article><b>01</b><h3>Event-specific rules</h3><p>Admins configure the ticket price, prize, player limit, number range and schedule independently for every event.</p></article>
+      <article><b>02</b><h3>Server-enforced entries</h3><p>Balance checks, ticket limits and deductions happen atomically on the backend. Browser-side changes cannot create free entries.</p></article>
+      <article><b>03</b><h3>Automatic secure draws</h3><p>Published events are drawn automatically after their scheduled draw time. Admins may trigger a due draw, but cannot choose the winning numbers.</p></article>
     </section>
 
-    <section class="grid-two">
-      <section class="panel compact" aria-labelledby="my-tickets-title">
-        <div class="panel-head"><div><span class="label">ACCOUNT</span><h2 id="my-tickets-title">My legacy tickets</h2></div></div>
-        <div class="my-tickets" id="myTickets"><p class="empty-state">Sign in to see your saved tickets.</p></div>
-      </section>
-
-      <section class="panel compact" aria-labelledby="history-title">
-        <div class="panel-head"><div><span class="label">PUBLIC HISTORY</span><h2 id="history-title">Recent draws</h2></div></div>
-        <div class="history" id="historyList"><p class="muted">No completed draws yet.</p></div>
-      </section>
-    </section>
-
-    <section class="panel compact" style="margin-top:18px" aria-labelledby="rules-title">
-      <span class="label">SIMULATION RULES</span>
-      <h2 id="rules-title">How the platform works</h2>
-      <div class="rule-list">
-        <div><strong>01</strong><span>Each public event has its own rules, ticket price, ticket limit, prize and draw schedule.</span></div>
-        <div><strong>02</strong><span>Users start with 0 virtual credits. Only admins can adjust balances.</span></div>
-        <div><strong>03</strong><span>Ticket confirmation checks balance and event limits atomically on the server.</span></div>
-        <div><strong>04</strong><span>Winning numbers are generated by the backend; admins can trigger a draw but cannot choose the result.</span></div>
-        <div><strong>05</strong><span>This remains a simulation/testing system: no cash deposits, withdrawals, cash prizes or real-money wagering.</span></div>
-      </div>
-    </section>
-
-    <footer>
-      <span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes, or wagering.</span>
-      <span class="footer-links"><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span>
-    </footer>
+    <footer><span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes or real-money wagering.</span><span class="footer-links"><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span></footer>
   </main>
-
-  <dialog id="pickerDialog" class="picker-dialog">
-    <form method="dialog" class="picker-card">
-      <div class="picker-head">
-        <div><span class="label">MANUAL PICK</span><h2>Build your ticket</h2></div>
-        <button class="close-btn" value="cancel" aria-label="Close picker">×</button>
-      </div>
-      <p class="picker-copy">Choose <strong>5 white balls</strong>, then <strong>1 red Powerball</strong>.</p>
-      <div class="picker-section">
-        <div class="picker-section-head"><span>WHITE BALLS</span><span id="whiteCount">0 / 5</span></div>
-        <div class="number-grid" id="whiteGrid"></div>
-      </div>
-      <div class="picker-section">
-        <div class="picker-section-head"><span>POWERBALL</span><span id="redCount">0 / 1</span></div>
-        <div class="number-grid red-grid" id="redGrid"></div>
-      </div>
-      <div class="picker-footer">
-        <button class="secondary-btn" id="resetPickerBtn" type="button">Reset</button>
-        <button class="primary-btn" id="saveTicketBtn" type="button" disabled>Use these numbers</button>
-      </div>
-    </form>
-  </dialog>
-
-  <script type="module" src="app.js"></script>
-  <script type="module" src="admin-nav.js"></script>
-  <script type="module" src="home-events.js?v=1"></script>
+  <script type="module" src="home-v2.js?v=1"></script>
+  <script type="module" src="admin-nav.js?v=2"></script>
 </body>
 </html>

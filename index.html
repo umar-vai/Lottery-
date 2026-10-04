@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#080b10" />
-  <meta name="description" content="A minimal Powerball-style lottery draw simulator." />
-  <title>DRAW//01 — Powerball Style Simulator</title>
+  <meta name="description" content="A public Powerball-style multiplayer draw simulator." />
+  <title>DRAW//01 — Multiplayer Draw</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="multiplayer.css" />
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -17,43 +18,66 @@
         <span class="brand-mark"></span>
         <span>DRAW//01</span>
       </a>
-      <div class="status"><span class="pulse"></span> SIMULATOR ONLINE</div>
+      <div class="account-zone" id="accountZone">
+        <div class="status"><span class="pulse"></span> LIVE SYSTEM</div>
+        <button class="account-btn primary" id="loginBtn" type="button">Continue with Google</button>
+        <div class="account-card" id="accountCard" hidden>
+          <img class="avatar" id="userAvatar" alt="" />
+          <div class="account-meta"><strong id="userName">Player</strong><span id="userEmail"></span></div>
+          <button class="account-btn" id="logoutBtn" type="button">Log out</button>
+        </div>
+      </div>
     </header>
 
+    <div class="backend-banner" id="backendBanner" hidden>
+      Backend setup is being connected. Number picking works, but online login and ticket submission will activate after Supabase configuration is filled.
+    </div>
+
     <section class="hero">
-      <div class="eyebrow">5 / 69 + 1 / 26</div>
-      <h1>Pick. Draw.<br><span>Match.</span></h1>
-      <p class="lede">A clean, browser-based Powerball-style number draw simulator. No account. No server. Everything stays on this device.</p>
+      <div class="eyebrow">5 / 69 + 1 / 26 · PUBLIC TEST SYSTEM</div>
+      <h1>Pick. Lock.<br><span>Draw.</span></h1>
+      <p class="lede">Everyone can watch. Sign in with Google to submit tickets. Tickets lock automatically before each scheduled draw and every player receives the same server-generated result.</p>
+    </section>
+
+    <section class="game-strip" aria-label="Current draw overview">
+      <div class="metric"><div class="k">SIMULATED JACKPOT</div><div class="v accent" id="jackpotValue">$20M</div></div>
+      <div class="metric"><div class="k">NEXT DRAW</div><div class="v" id="countdownValue">--:--</div></div>
+      <div class="metric"><div class="k">DRAW STATUS</div><div class="v"><span class="draw-status-pill" id="drawStatus">CONNECTING</span></div></div>
     </section>
 
     <section class="panel ticket-panel" aria-labelledby="ticket-title">
       <div class="panel-head">
         <div>
           <span class="label">YOUR NUMBERS</span>
-          <h2 id="ticket-title">Ticket</h2>
+          <h2 id="ticket-title">Build a ticket</h2>
         </div>
         <button class="ghost-btn" id="quickPickBtn" type="button">Quick pick</button>
       </div>
 
       <div class="ball-row" id="ticketBalls" aria-label="Selected white balls"></div>
-      <div class="powerball-wrap">
-        <span class="plus">+</span>
-        <div id="ticketPowerball" class="ball powerball empty">PB</div>
-      </div>
+      <div class="powerball-wrap"><span class="plus">+</span><div id="ticketPowerball" class="ball powerball empty">PB</div></div>
 
-      <div class="ticket-actions">
+      <div class="ticket-actions ticket-tools">
         <button class="primary-btn" id="chooseBtn" type="button">Choose numbers</button>
         <button class="secondary-btn" id="clearBtn" type="button">Clear</button>
+        <label class="toggle"><input id="powerPlayToggle" type="checkbox" /> Power Play</label>
+        <button class="submit-ticket-btn" id="submitTicketBtn" type="button">SUBMIT TICKET</button>
+      </div>
+      <div class="notice" id="ticketNotice">Choose 5 white numbers and 1 Powerball.</div>
+      <div class="login-gate" id="loginGate">
+        <p>You can explore without an account. Google login is required only when you submit a ticket.</p>
+        <button class="account-btn primary" id="loginInlineBtn" type="button">Continue with Google</button>
       </div>
     </section>
 
     <section class="panel draw-panel" aria-labelledby="draw-title">
       <div class="panel-head">
         <div>
-          <span class="label">RANDOM DRAW ENGINE</span>
-          <h2 id="draw-title">Draw result</h2>
+          <span class="label">SERVER DRAW</span>
+          <h2 id="draw-title">Latest result</h2>
+          <div class="schedule-copy" id="drawScheduleCopy">Waiting for draw schedule…</div>
         </div>
-        <span class="draw-id" id="drawId">#000000</span>
+        <span class="draw-id" id="drawId">#------</span>
       </div>
 
       <div class="result-stage" id="resultStage">
@@ -61,43 +85,35 @@
         <div id="drawPowerball" class="ball powerball empty">PB</div>
       </div>
 
-      <button class="draw-btn" id="drawBtn" type="button">
-        <span>RUN DRAW</span>
-        <span class="draw-arrow">↗</span>
-      </button>
-
-      <div class="match-result" id="matchResult" aria-live="polite">
-        Pick a ticket, then run a draw to compare.
-      </div>
+      <div class="match-result" id="matchResult" aria-live="polite">Results are generated on the backend, not in the browser.</div>
     </section>
 
     <section class="grid-two">
-      <section class="panel compact" aria-labelledby="rules-title">
-        <span class="label">FORMAT</span>
-        <h2 id="rules-title">How this demo works</h2>
-        <div class="rule-list">
-          <div><strong>01</strong><span>Select 5 unique white numbers from 1–69.</span></div>
-          <div><strong>02</strong><span>Select 1 red Powerball number from 1–26.</span></div>
-          <div><strong>03</strong><span>Run a simulated random draw and compare.</span></div>
-        </div>
+      <section class="panel compact" aria-labelledby="my-tickets-title">
+        <div class="panel-head"><div><span class="label">ACCOUNT</span><h2 id="my-tickets-title">My tickets</h2></div></div>
+        <div class="my-tickets" id="myTickets"><p class="empty-state">Sign in to see your saved tickets.</p></div>
       </section>
 
       <section class="panel compact" aria-labelledby="history-title">
-        <div class="panel-head">
-          <div>
-            <span class="label">LOCAL HISTORY</span>
-            <h2 id="history-title">Recent draws</h2>
-          </div>
-          <button class="text-btn" id="clearHistoryBtn" type="button">Clear</button>
-        </div>
-        <div class="history" id="historyList">
-          <p class="muted">No draws yet.</p>
-        </div>
+        <div class="panel-head"><div><span class="label">PUBLIC HISTORY</span><h2 id="history-title">Recent draws</h2></div></div>
+        <div class="history" id="historyList"><p class="muted">No completed draws yet.</p></div>
       </section>
     </section>
 
+    <section class="panel compact" style="margin-top:18px" aria-labelledby="rules-title">
+      <span class="label">POWERBALL-STYLE LOGIC</span>
+      <h2 id="rules-title">What the system enforces</h2>
+      <div class="rule-list">
+        <div><strong>01</strong><span>5 unique white numbers from 1–69 plus 1 red Powerball from 1–26.</span></div>
+        <div><strong>02</strong><span>Tickets automatically lock at the cutoff; browser-side manipulation cannot reopen sales.</span></div>
+        <div><strong>03</strong><span>Power Play uses the official 2X/3X/4X/5X/10X multiplier distribution, with 10X available only at simulated jackpots of $150M or less.</span></div>
+        <div><strong>04</strong><span>Winning tiers are calculated automatically for all 9 Powerball-style prize combinations.</span></div>
+        <div><strong>05</strong><span>Each draw publishes a SHA-256 commitment and later reveals its seed so the generated result can be independently verified.</span></div>
+      </div>
+    </section>
+
     <footer>
-      <span>Educational simulator only — no ticket sales, payments, or wagering.</span>
+      <span>Simulation/testing system only — no ticket sales, payments, cash prizes, or wagering.</span>
       <span>Not affiliated with Powerball® or MUSL.</span>
     </footer>
   </main>
@@ -105,38 +121,25 @@
   <dialog id="pickerDialog" class="picker-dialog">
     <form method="dialog" class="picker-card">
       <div class="picker-head">
-        <div>
-          <span class="label">MANUAL PICK</span>
-          <h2>Build your ticket</h2>
-        </div>
+        <div><span class="label">MANUAL PICK</span><h2>Build your ticket</h2></div>
         <button class="close-btn" value="cancel" aria-label="Close picker">×</button>
       </div>
-
       <p class="picker-copy">Choose <strong>5 white balls</strong>, then <strong>1 red Powerball</strong>.</p>
-
       <div class="picker-section">
-        <div class="picker-section-head">
-          <span>WHITE BALLS</span>
-          <span id="whiteCount">0 / 5</span>
-        </div>
+        <div class="picker-section-head"><span>WHITE BALLS</span><span id="whiteCount">0 / 5</span></div>
         <div class="number-grid" id="whiteGrid"></div>
       </div>
-
       <div class="picker-section">
-        <div class="picker-section-head">
-          <span>POWERBALL</span>
-          <span id="redCount">0 / 1</span>
-        </div>
+        <div class="picker-section-head"><span>POWERBALL</span><span id="redCount">0 / 1</span></div>
         <div class="number-grid red-grid" id="redGrid"></div>
       </div>
-
       <div class="picker-footer">
         <button class="secondary-btn" id="resetPickerBtn" type="button">Reset</button>
-        <button class="primary-btn" id="saveTicketBtn" type="button" disabled>Save ticket</button>
+        <button class="primary-btn" id="saveTicketBtn" type="button" disabled>Use these numbers</button>
       </div>
     </form>
   </dialog>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

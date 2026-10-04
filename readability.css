@@ -1,0 +1,43 @@
+/* DRAW//01 readability pass — keep the visual hierarchy while removing micro-text. */
+html{font-size:16px;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+body{font-size:16px}
+body p{line-height:1.65}
+
+/* Shared labels / secondary copy */
+.eyebrow,.kicker,.events-kicker,.status,.section-label,.picker-head,.event-status,.d01-live{font-size:12px!important;line-height:1.35!important}
+.help,.muted,.notice,.event-description,.record-meta,.event-summary-meta,.ticket-meta,.participant-head span,.timeline-item small,.timeline-item time,.overview-empty,.empty-sub,.form-hint,.d01-footer-copy,.d01-footer-links{font-size:13px!important;line-height:1.55!important}
+.market-hero .lede,.events-hub-head p,.market-info p,.event-card p,.event-hero p,.legal-card p,.legal-card li{font-size:15px!important;line-height:1.7!important}
+
+/* Cards / metrics */
+.market-stat span,.event-metrics span,.meta span,.prize-card span,.info-card span,.stat-card span,.capacity-card small,.prize-builder label span,.event-form-grid>label>span,.balance-card label,.record-card small{font-size:12px!important;line-height:1.4!important}
+.event-metrics strong,.meta strong,.info-card strong,.stat-card small,.muted-pill,.credit-balance,.participant-head strong,.ticket-line b{font-size:13px!important}
+.stat-card strong{font-size:clamp(26px,3vw,38px)!important}
+
+/* Controls */
+.tabs button,.btn,.account-btn,.num,.role-select,.filter-row select,.event-form-grid input,.event-form-grid select,.event-form-grid textarea,.balance-card input,.balance-card select{font-size:14px!important}
+.event-form-grid input,.event-form-grid select,.event-form-grid textarea,.balance-card input,.balance-card select{min-height:46px!important}
+.event-form-grid textarea{min-height:100px!important;line-height:1.5!important}
+
+/* Ticket / result readability */
+.entry strong{font-size:14px!important}.entry small{font-size:12px!important;line-height:1.55!important}
+.number-chips span,.result-numbers span{font-size:12px!important}
+.winner-rank,.winner{font-size:12px!important}
+
+/* Legal pages */
+.legal-nav a,.legal-footer,.legal-card strong{font-size:13px!important}
+
+/* Admin accordion */
+.event-title-line strong{font-size:16px!important}
+.event-accordion summary{font-size:14px!important}
+.event-accordion-body{font-size:14px!important}
+.participant-card{font-size:14px!important}
+
+/* Never let authenticated login control survive because of author display rules. */
+.d01-authenticated .d01-login{display:none!important}
+
+@media(max-width:620px){
+  body{font-size:15px}
+  .market-hero .lede,.events-hub-head p,.market-info p,.event-card p,.event-hero p,.legal-card p,.legal-card li{font-size:14px!important}
+  .help,.muted,.notice,.event-description,.record-meta,.event-summary-meta,.ticket-meta,.participant-head span,.timeline-item small,.timeline-item time,.form-hint{font-size:12px!important}
+  .tabs button,.btn,.account-btn{font-size:13px!important}
+}

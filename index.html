@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#080b10" />
-  <meta name="description" content="A public Powerball-style multiplayer draw simulator." />
+  <meta name="description" content="DRAW//01 is a public Powerball-style multiplayer draw simulation and testing application." />
   <title>DRAW//01 — Multiplayer Draw</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="multiplayer.css" />
@@ -14,10 +14,15 @@
 
   <main class="shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="DRAW 01 home">
+      <a class="brand" href="./" aria-label="DRAW 01 home">
         <span class="brand-mark"></span>
         <span>DRAW//01</span>
       </a>
+      <nav class="site-nav" aria-label="Website navigation">
+        <a href="about.html">About</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </nav>
       <div class="account-zone" id="accountZone">
         <div class="status"><span class="pulse"></span> LIVE SYSTEM</div>
         <button class="account-btn primary" id="loginBtn" type="button">Continue with Google</button>
@@ -36,7 +41,7 @@
     <section class="hero">
       <div class="eyebrow">5 / 69 + 1 / 26 · PUBLIC TEST SYSTEM</div>
       <h1>Pick. Lock.<br><span>Draw.</span></h1>
-      <p class="lede">Everyone can watch. Sign in with Google to submit tickets. Tickets lock automatically before each scheduled draw and every player receives the same server-generated result.</p>
+      <p class="lede">Everyone can watch. Sign in with Google to submit simulated tickets. Tickets lock automatically before each scheduled draw and every player receives the same server-generated result.</p>
     </section>
 
     <section class="game-strip" aria-label="Current draw overview">
@@ -106,15 +111,15 @@
       <div class="rule-list">
         <div><strong>01</strong><span>5 unique white numbers from 1–69 plus 1 red Powerball from 1–26.</span></div>
         <div><strong>02</strong><span>Tickets automatically lock at the cutoff; browser-side manipulation cannot reopen sales.</span></div>
-        <div><strong>03</strong><span>Power Play uses the official 2X/3X/4X/5X/10X multiplier distribution, with 10X available only at simulated jackpots of $150M or less.</span></div>
+        <div><strong>03</strong><span>Power Play uses the 2X/3X/4X/5X/10X multiplier distribution, with 10X available only at simulated jackpots of $150M or less.</span></div>
         <div><strong>04</strong><span>Winning tiers are calculated automatically for all 9 Powerball-style prize combinations.</span></div>
         <div><strong>05</strong><span>Each draw publishes a SHA-256 commitment and later reveals its seed so the generated result can be independently verified.</span></div>
       </div>
     </section>
 
     <footer>
-      <span>Simulation/testing system only — no ticket sales, payments, cash prizes, or wagering.</span>
-      <span>Not affiliated with Powerball® or MUSL.</span>
+      <span>Simulation/testing system only — no ticket sales, payments, cash prizes, or wagering. Not affiliated with Powerball® or MUSL.</span>
+      <span class="footer-links"><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span>
     </footer>
   </main>
 

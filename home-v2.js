@@ -6,14 +6,31 @@ const $=id=>document.getElementById(id);
 let session=null,events=[];
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function credits(v){return `${Number(v||0).toLocaleString()} credits`}
-function fmt(v){return v?new Date(v).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Manual' }
+function fmt(v){return v?new Date(v).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Manual'}
 function statusFor(e){if(e.status==='completed')return'COMPLETED';if(e.status==='cancelled')return'CANCELLED';const n=Date.now();if(e.opens_at&&n<new Date(e.opens_at).getTime())return'UPCOMING';if(e.schedule_mode==='manual')return'OPEN';if(e.cutoff_at&&n<new Date(e.cutoff_at).getTime())return'OPEN';if(e.draw_at&&n<new Date(e.draw_at).getTime())return'LOCKED';return'AWAITING DRAW'}
 async function login(){if(!supabase)return;const {error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:APP_URL}});if(error)console.error(error)}
 async function logout(){if(!supabase)return;await supabase.auth.signOut()}
 async function renderAuth(){const user=session?.user;if($('loginBtn'))$('loginBtn').hidden=!!user;if($('accountCard'))$('accountCard').hidden=!user;if($('walletStrip'))$('walletStrip').hidden=!user;if(!user){if($('walletBalance'))$('walletBalance').textContent='0 credits';window.Draw01Shell?.setSession(null);return}window.Draw01Shell?.setSession(session);const m=user.user_metadata||{};if($('userName'))$('userName').textContent=m.full_name||m.name||user.email?.split('@')[0]||'Player';if($('userAvatar'))$('userAvatar').src=m.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent($('userName')?.textContent||'Player')}`;const {data}=await supabase.from('profiles').select('balance').eq('id',user.id).maybeSingle();if($('walletBalance'))$('walletBalance').textContent=credits(data?.balance||0);window.Draw01Shell?.setBalance(data?.balance||0)}
-function card(e){const st=statusFor(e),a=document.createElement('a');a.className='event-card';a.href=`event.html?e=${encodeURIComponent(e.slug)}`;const drawLabel=e.schedule_mode==='manual'?'Open until admin draw':fmt(e.draw_at);a.innerHTML=`<div class="event-card-top"><span class="event-status ${st.toLowerCase().replace(/\s/g,'-')}">${st}</span><span class="event-arrow">↗</span></div><h3>${esc(e.title)}</h3><p>${esc(e.description||'Open this event to view its rules and choose your numbers.')}</p><div class="event-metrics"><div><span>Total prizes</span><strong>${credits(e.prize_amount)}</strong></div><div><span>Winners</span><strong>${e.winner_count||1}</strong></div><div><span>Ticket</span><strong>${credits(e.ticket_price)}</strong></div><div><span>Draw</span><strong>${esc(drawLabel)}</strong></div></div>`;return a}
+function card(e){
+  const st=statusFor(e),a=document.createElement('a');
+  a.className='event-card';a.href=`event.html?e=${encodeURIComponent(e.slug)}`;
+  const drawLabel=e.schedule_mode==='manual'?'Open until admin draw':fmt(e.draw_at);
+  const cover=e.cover_image_url?`<img src="${esc(e.cover_image_url)}" alt="${esc(e.title)} cover" loading="lazy">`:'<div class="event-cover-placeholder"><span>DRAW//01</span></div>';
+  a.innerHTML=`
+    <div class="event-cover">
+      ${cover}
+      <div class="event-cover-shade"></div>
+      <div class="event-card-top"><span class="event-status ${st.toLowerCase().replace(/\s/g,'-')}">${st}</span><span class="event-arrow">↗</span></div>
+    </div>
+    <div class="event-card-body">
+      <h3>${esc(e.title)}</h3>
+      <p>${esc(e.description||'Open this event to view its rules and choose your numbers.')}</p>
+      <div class="event-metrics"><div><span>Total prizes</span><strong>${credits(e.prize_amount)}</strong></div><div><span>Winners</span><strong>${e.winner_count||1}</strong></div><div><span>Ticket</span><strong>${credits(e.ticket_price)}</strong></div><div><span>Draw</span><strong>${esc(drawLabel)}</strong></div></div>
+    </div>`;
+  return a
+}
 function renderEvents(){const grid=$('lotteryEventsGrid');grid.replaceChildren();const visible=events.filter(e=>e.status!=='draft');if(!visible.length){grid.innerHTML='<div class="events-empty">No public events yet. New events created by admin will appear here automatically.</div>';return}visible.forEach(e=>grid.appendChild(card(e)));const statuses=visible.map(statusFor);$('openCount').textContent=statuses.filter(s=>s==='OPEN').length;$('upcomingCount').textContent=statuses.filter(s=>s==='UPCOMING'||s==='LOCKED'||s==='AWAITING DRAW').length;$('completedCount').textContent=statuses.filter(s=>s==='COMPLETED').length}
-async function loadEvents(){if(!supabase)return;const {data,error}=await supabase.from('lottery_events').select('id,slug,title,description,status,ticket_price,prize_amount,max_tickets_per_user,opens_at,cutoff_at,draw_at,schedule_mode,winner_count').order('created_at',{ascending:false}).limit(100);if(error){$('lotteryEventsGrid').innerHTML='<div class="events-empty">Could not load events right now.</div>';return}events=data||[];renderEvents()}
+async function loadEvents(){if(!supabase)return;const {data,error}=await supabase.from('lottery_events').select('id,slug,title,description,status,ticket_price,prize_amount,max_tickets_per_user,opens_at,cutoff_at,draw_at,schedule_mode,winner_count,cover_image_url').order('created_at',{ascending:false}).limit(100);if(error){$('lotteryEventsGrid').innerHTML='<div class="events-empty">Could not load events right now.</div>';return}events=data||[];renderEvents()}
 async function handlePending(){if(!supabase)return;const pending=localStorage.getItem('draw01_post_login_event');if(!pending)return;const {data}=await supabase.auth.getSession();if(data.session){localStorage.removeItem('draw01_post_login_event');location.replace(`event.html?e=${encodeURIComponent(pending)}`)}}
 async function init(){if(!supabase)return;const {data}=await supabase.auth.getSession();session=data.session;window.Draw01Shell?.setSession(session);await renderAuth();await loadEvents();await handlePending();supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;window.Draw01Shell?.setSession(s);await renderAuth()});setInterval(renderEvents,30000)}
 if($('loginBtn'))$('loginBtn').onclick=login;if($('logoutBtn'))$('logoutBtn').onclick=logout;init();

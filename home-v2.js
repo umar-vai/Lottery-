@@ -3,12 +3,16 @@ import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, APP_URL, BACKEND_READY } from '
 
 const supabase = BACKEND_READY ? createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true,detectSessionInUrl:true,autoRefreshToken:true}}) : null;
 const $=id=>document.getElementById(id);
+const DRAW_SEGMENT_MS=60000;
+const DRAW_START_DELAY_MS=1500;
 let session=null,events=[],winnerRows=[];
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function credits(v){return `${Number(v||0).toLocaleString()} credits`}
 function fmt(v){return v?new Date(v).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Manual'}
-function statusFor(e){if(e.status==='completed')return'COMPLETED';if(e.status==='cancelled')return'CANCELLED';const n=Date.now();if(e.opens_at&&n<new Date(e.opens_at).getTime())return'UPCOMING';if(e.schedule_mode==='manual')return'OPEN';if(e.cutoff_at&&n<new Date(e.cutoff_at).getTime())return'OPEN';if(e.draw_at&&n<new Date(e.draw_at).getTime())return'LOCKED';return'AWAITING DRAW'}
+function revealEnd(e){if(!e?.completed_at)return 0;return new Date(e.completed_at).getTime()+DRAW_START_DELAY_MS+Math.max(1,Number(e.winner_count||1))*DRAW_SEGMENT_MS}
+function revealComplete(e){return e?.status==='completed'&&Date.now()>=revealEnd(e)}
+function statusFor(e){if(e.status==='completed')return revealComplete(e)?'COMPLETED':'LIVE DRAW';if(e.status==='cancelled')return'CANCELLED';const n=Date.now();if(e.opens_at&&n<new Date(e.opens_at).getTime())return'UPCOMING';if(e.schedule_mode==='manual')return'OPEN';if(e.cutoff_at&&n<new Date(e.cutoff_at).getTime())return'OPEN';if(e.draw_at&&n<new Date(e.draw_at).getTime())return'LOCKED';return'AWAITING DRAW'}
 async function login(){if(!supabase)return;const {error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:APP_URL}});if(error)console.error(error)}
 async function logout(){if(!supabase)return;await supabase.auth.signOut()}
 
@@ -30,7 +34,7 @@ async function renderAuth(){
 function card(e){
   const st=statusFor(e),a=document.createElement('a');
   a.className='event-card';a.href=`event.html?e=${encodeURIComponent(e.slug)}`;
-  const drawLabel=e.schedule_mode==='manual'?'Admin draw / ম্যানুয়াল':fmt(e.draw_at);
+  const drawLabel=st==='LIVE DRAW'?'Winner reveal live':e.schedule_mode==='manual'?'Admin draw / ম্যানুয়াল':fmt(e.draw_at);
   const cover=e.cover_image_url?`<img src="${esc(e.cover_image_url)}" alt="${esc(e.title)} cover" loading="lazy">`:'<div class="event-cover-placeholder"><span>DRAW//01</span></div>';
   a.innerHTML=`
     <div class="event-cover">
@@ -53,14 +57,14 @@ function card(e){
 
 function renderEvents(){
   const visible=events.filter(e=>e.status!=='draft'&&e.status!=='cancelled');
-  const active=visible.filter(e=>e.status!=='completed');
-  const completed=visible.filter(e=>e.status==='completed');
+  const active=visible.filter(e=>e.status!=='completed'||!revealComplete(e));
+  const completed=visible.filter(e=>e.status==='completed'&&revealComplete(e));
   const activeGrid=$('activeEventsGrid'),completedGrid=$('completedEventsGrid');
-  if(activeGrid){activeGrid.replaceChildren();if(!active.length)activeGrid.innerHTML='<div class="events-empty">এই মুহূর্তে কোনো ওপেন বা আপকামিং ইভেন্ট নেই। নতুন ইভেন্ট এলে এখানে দেখা যাবে।</div>';else active.forEach(e=>activeGrid.appendChild(card(e)))}
-  if(completedGrid){completedGrid.replaceChildren();if(!completed.length)completedGrid.innerHTML='<div class="events-empty">এখনও কোনো completed event নেই।</div>';else completed.forEach(e=>completedGrid.appendChild(card(e)))}
+  if(activeGrid){activeGrid.replaceChildren();if(!active.length)activeGrid.innerHTML='<div class="events-empty">এই মুহূর্তে কোনো ওপেন বা লাইভ ড্র নেই। নতুন ইভেন্ট এলে এখানে দেখা যাবে।</div>';else active.forEach(e=>activeGrid.appendChild(card(e)))}
+  if(completedGrid){completedGrid.replaceChildren();if(!completed.length)completedGrid.innerHTML='<div class="events-empty">এখনও কোনো fully revealed completed event নেই।</div>';else completed.forEach(e=>completedGrid.appendChild(card(e)))}
   const statuses=visible.map(statusFor);
   if($('openCount'))$('openCount').textContent=statuses.filter(s=>s==='OPEN').length;
-  if($('upcomingCount'))$('upcomingCount').textContent=statuses.filter(s=>s==='UPCOMING'||s==='LOCKED'||s==='AWAITING DRAW').length;
+  if($('upcomingCount'))$('upcomingCount').textContent=statuses.filter(s=>s==='UPCOMING'||s==='LOCKED'||s==='AWAITING DRAW'||s==='LIVE DRAW').length;
   if($('completedCount'))$('completedCount').textContent=statuses.filter(s=>s==='COMPLETED').length;
   if($('activeEventCount'))$('activeEventCount').textContent=`${active.length} active`;
   if($('completedEventCount'))$('completedEventCount').textContent=`${completed.length} completed`;
@@ -84,16 +88,16 @@ function winnerMini(w){
 function renderWinnerTicker(){
   const track=$('winnerTrack');if(!track)return;
   const winners=aggregateWinners(winnerRows).slice(0,12);
-  if(!winners.length){track.classList.remove('winner-track');track.innerHTML='<div class="winner-empty">প্রথম winner-এর অপেক্ষায় — completed event-এর winner এখানে live highlight হবে।</div>';return}
+  if(!winners.length){track.classList.remove('winner-track');track.innerHTML='<div class="winner-empty">লাইভ ড্র পুরোপুরি reveal হওয়ার পর winner এখানে highlight হবে।</div>';return}
   track.className='winner-track';
   const html=winners.map(winnerMini).join('');
   track.innerHTML=html+html;
-  if($('heroWinnerText'))$('heroWinnerText').textContent=`${winners.length} জন recent winner-এর success highlight চলছে`;
+  if($('heroWinnerText'))$('heroWinnerText').textContent=`${winners.length} জন fully revealed recent winner-এর highlight চলছে`;
 }
 
 async function loadWinners(){
   if(!supabase)return;
-  const completed=events.filter(e=>e.status==='completed').slice(0,12);
+  const completed=events.filter(e=>e.status==='completed'&&revealComplete(e)).slice(0,12);
   if(!completed.length){winnerRows=[];renderWinnerTicker();return}
   const all=await Promise.all(completed.map(async e=>{
     const {data,error}=await supabase.rpc('get_public_event_winners',{p_event_id:e.id});
@@ -105,11 +109,11 @@ async function loadWinners(){
 
 async function loadEvents(){
   if(!supabase)return;
-  const {data,error}=await supabase.from('lottery_events').select('id,slug,title,description,status,ticket_price,prize_amount,max_tickets_per_user,opens_at,cutoff_at,draw_at,schedule_mode,winner_count,cover_image_url,created_at').order('created_at',{ascending:false}).limit(100);
+  const {data,error}=await supabase.from('lottery_events').select('id,slug,title,description,status,ticket_price,prize_amount,max_tickets_per_user,opens_at,cutoff_at,draw_at,schedule_mode,winner_count,cover_image_url,created_at,completed_at').order('created_at',{ascending:false}).limit(100);
   if(error){if($('activeEventsGrid'))$('activeEventsGrid').innerHTML='<div class="events-empty">ইভেন্টগুলো এখন লোড করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।</div>';return}
   events=data||[];renderEvents();await loadWinners()
 }
 
 async function handlePending(){if(!supabase)return;const pending=localStorage.getItem('draw01_post_login_event');if(!pending)return;const {data}=await supabase.auth.getSession();if(data.session){localStorage.removeItem('draw01_post_login_event');location.replace(`event.html?e=${encodeURIComponent(pending)}`)}}
-async function init(){if(!supabase)return;const {data}=await supabase.auth.getSession();session=data.session;window.Draw01Shell?.setSession(session);await renderAuth();await loadEvents();await handlePending();supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;window.Draw01Shell?.setSession(s);await renderAuth()});setInterval(()=>{renderEvents()},30000)}
+async function init(){if(!supabase)return;const {data}=await supabase.auth.getSession();session=data.session;window.Draw01Shell?.setSession(session);await renderAuth();await loadEvents();await handlePending();supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;window.Draw01Shell?.setSession(s);await renderAuth()});setInterval(async()=>{renderEvents();await loadWinners()},30000)}
 if($('loginBtn'))$('loginBtn').onclick=login;if($('logoutBtn'))$('logoutBtn').onclick=logout;init();

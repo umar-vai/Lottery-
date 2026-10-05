@@ -7,6 +7,7 @@
   <meta name="description" content="Neon Fortune Slots — Game Zone virtual-credit slot simulation.">
   <title>Neon Fortune Slots — Game Zone</title>
   <link rel="stylesheet" href="site-shell.css?v=5">
+  <link rel="stylesheet" href="platform-gate.css?v=1">
   <link rel="stylesheet" href="slot.css?v=1">
 </head>
 <body>
@@ -16,75 +17,29 @@
       <div><a class="slot-back" href="game-zone.html">← Game Zone</a><span class="slot-kicker">LIVE · VIRTUAL CREDITS</span><h1>Neon Fortune <span>Slots</span></h1><p>Fixed server-side odds, visible paytable, no cash value. Final result is generated on the backend before the reels settle.</p></div>
       <div class="slot-head-metrics"><span><small>RTP</small><strong id="rtpMetric">93.73%</strong></span><span><small>HOUSE EDGE</small><strong id="edgeMetric">6.27%</strong></span><span><small>VERSION</small><strong id="versionMetric">v1</strong></span></div>
     </section>
-
     <section class="slot-layout">
       <div class="slot-machine-wrap">
         <div class="slot-machine" id="slotMachine">
           <div class="slot-crown"><span class="crown-dot"></span><strong>NEON FORTUNE</strong><span class="crown-dot"></span></div>
           <div class="slot-marquee"><span>💎 150× JACKPOT</span><i></i><span>PAIR = BET RETURNED</span><i></i><span>SERVER RNG</span></div>
-
-          <div class="slot-hud">
-            <div><span>BALANCE</span><strong id="slotBalance">—</strong></div>
-            <div><span>BET</span><strong id="slotBetDisplay">5 CR</strong></div>
-            <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">♪ Sound</button>
-          </div>
-
-          <div class="reel-stage">
-            <div class="reel-light top"></div><div class="reel-light bottom"></div>
-            <div class="reels" aria-label="Slot reels">
-              <div class="reel" id="reelBox0"><div class="reel-glass"></div><div class="reel-symbol" id="reel0">🍒</div></div>
-              <div class="reel" id="reelBox1"><div class="reel-glass"></div><div class="reel-symbol" id="reel1">7</div></div>
-              <div class="reel" id="reelBox2"><div class="reel-glass"></div><div class="reel-symbol" id="reel2">💎</div></div>
-            </div>
-            <div class="payline"></div>
-          </div>
-
+          <div class="slot-hud"><div><span>BALANCE</span><strong id="slotBalance">—</strong></div><div><span>BET</span><strong id="slotBetDisplay">5 CR</strong></div><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">♪ Sound</button></div>
+          <div class="reel-stage"><div class="reel-light top"></div><div class="reel-light bottom"></div><div class="reels" aria-label="Slot reels"><div class="reel" id="reelBox0"><div class="reel-glass"></div><div class="reel-symbol" id="reel0">🍒</div></div><div class="reel" id="reelBox1"><div class="reel-glass"></div><div class="reel-symbol" id="reel1">7</div></div><div class="reel" id="reelBox2"><div class="reel-glass"></div><div class="reel-symbol" id="reel2">💎</div></div></div><div class="payline"></div></div>
           <button id="slotLever" class="slot-lever" type="button" aria-label="Pull lever to spin"><span class="lever-knob"></span><span class="lever-stick"></span><span class="lever-base"></span></button>
-
-          <div class="bet-panel">
-            <span class="bet-label">CHOOSE BET</span>
-            <div class="bet-options" id="betOptions"><button class="active" data-bet="5" type="button">5</button><button data-bet="10" type="button">10</button><button data-bet="25" type="button">25</button><button data-bet="50" type="button">50</button></div>
-          </div>
-
-          <button id="spinBtn" class="spin-button" type="button"><span>SPIN</span><small>5 CR</small></button>
-          <button id="slotLoginBtn" class="slot-login" type="button" hidden>Sign in to spin</button>
-
-          <div id="spinResult" class="spin-result neutral"><strong>Ready</strong><span>Choose a bet and spin.</span></div>
-          <div id="confetti" class="confetti" aria-hidden="true"></div>
+          <div class="bet-panel"><span class="bet-label">CHOOSE BET</span><div class="bet-options" id="betOptions"><button class="active" data-bet="5" type="button">5</button><button data-bet="10" type="button">10</button><button data-bet="25" type="button">25</button><button data-bet="50" type="button">50</button></div></div>
+          <button id="spinBtn" class="spin-button" type="button"><span>SPIN</span><small>5 CR</small></button><button id="slotLoginBtn" class="slot-login" type="button" hidden>Sign in to spin</button>
+          <div id="spinResult" class="spin-result neutral"><strong>Ready</strong><span>Choose a bet and spin.</span></div><div id="confetti" class="confetti" aria-hidden="true"></div>
         </div>
-
         <div class="slot-safety-note"><b>Virtual-credit simulation only.</b> Credits have no cash value and cannot be withdrawn. There is no autoplay; every spin requires a deliberate tap/click.</div>
       </div>
-
       <aside class="slot-side">
-        <article class="slot-panel">
-          <div class="slot-panel-head"><div><span class="slot-kicker">PAYTABLE</span><h2>What each match pays</h2></div><span class="panel-chip">Bet × multiplier</span></div>
-          <div class="paytable" id="paytable">
-            <div><span>🍒 🍒 🍒</span><b>5×</b></div>
-            <div><span>🍋 🍋 🍋</span><b>8×</b></div>
-            <div><span>🔔 🔔 🔔</span><b>12×</b></div>
-            <div><span>BAR BAR BAR</span><b>25×</b></div>
-            <div><span>7 7 7</span><b>60×</b></div>
-            <div class="jackpot"><span>💎 💎 💎</span><b>150×</b></div>
-            <div class="pair"><span>Any matching pair</span><b>1×</b></div>
-          </div>
-        </article>
-
-        <article class="slot-panel math-panel">
-          <span class="slot-kicker">FIXED ODDS</span><h2>How the edge works</h2>
-          <p>Each reel is generated independently on the server. Every player uses the same versioned symbol weights. The game does not change odds based on who is playing or how much they have won.</p>
-          <div class="math-grid"><span><small>LONG-RUN RTP</small><b>93.7288%</b></span><span><small>HOUSE EDGE</small><b>6.2712%</b></span><span><small>ANY RETURN</small><b>54.2188%</b></span><span><small>PROFIT HIT</small><b>5.5006%</b></span></div>
-          <p class="math-foot">A pair returns the original bet (net 0). Long-run house edge does not mean every individual session loses; short runs can vary widely.</p>
-        </article>
+        <article class="slot-panel"><div class="slot-panel-head"><div><span class="slot-kicker">PAYTABLE</span><h2>What each match pays</h2></div><span class="panel-chip">Bet × multiplier</span></div><div class="paytable" id="paytable"><div><span>🍒 🍒 🍒</span><b>5×</b></div><div><span>🍋 🍋 🍋</span><b>8×</b></div><div><span>🔔 🔔 🔔</span><b>12×</b></div><div><span>BAR BAR BAR</span><b>25×</b></div><div><span>7 7 7</span><b>60×</b></div><div class="jackpot"><span>💎 💎 💎</span><b>150×</b></div><div class="pair"><span>Any matching pair</span><b>1×</b></div></div></article>
+        <article class="slot-panel math-panel"><span class="slot-kicker">FIXED ODDS</span><h2>How the edge works</h2><p>Each reel is generated independently on the server. Every player uses the same versioned symbol weights. The game does not change odds based on who is playing or how much they have won.</p><div class="math-grid"><span><small>LONG-RUN RTP</small><b>93.7288%</b></span><span><small>HOUSE EDGE</small><b>6.2712%</b></span><span><small>ANY RETURN</small><b>54.2188%</b></span><span><small>PROFIT HIT</small><b>5.5006%</b></span></div><p class="math-foot">A pair returns the original bet (net 0). Long-run house edge does not mean every individual session loses; short runs can vary widely.</p></article>
       </aside>
     </section>
-
-    <section class="slot-history-panel">
-      <div class="slot-panel-head"><div><span class="slot-kicker">MY ACTIVITY</span><h2>Recent spins</h2></div><button id="refreshHistory" type="button">Refresh</button></div>
-      <div id="spinHistory" class="spin-history"><div class="slot-empty">Sign in to see your recent spins.</div></div>
-    </section>
+    <section class="slot-history-panel"><div class="slot-panel-head"><div><span class="slot-kicker">MY ACTIVITY</span><h2>Recent spins</h2></div><button id="refreshHistory" type="button">Refresh</button></div><div id="spinHistory" class="spin-history"><div class="slot-empty">Sign in to see your recent spins.</div></div></section>
   </main>
   <script src="site-shell.js?v=10"></script>
-  <script src="slot.js?v=1" defer></script>
+  <script src="platform-gate.js?v=1"></script>
+  <script data-feature="slot" data-feature-src="slot.js?v=1" data-defer></script>
 </body>
 </html>

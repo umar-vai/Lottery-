@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
-var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7t7-3BMd';
+var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
 var timer=null,userId=null,last=-1;
 function unpack(x){if(!x)return null;if(x.access_token)return x;if(x.currentSession&&x.currentSession.access_token)return x.currentSession;if(x.session&&x.session.access_token)return x.session;if(x.data&&x.data.session&&x.data.session.access_token)return x.data.session;return null}

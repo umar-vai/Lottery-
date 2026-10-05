@@ -1,0 +1,87 @@
+/* lootera.win live lottery logo — lightweight, responsive, no external assets */
+.lootera-live-brand.d01-brand{
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  min-width:max-content;
+  color:#f7fafc!important;
+  text-decoration:none!important;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-.055em;
+  -webkit-tap-highlight-color:transparent;
+}
+.lootera-letter-l,.lootera-word-rest{
+  display:inline-block;
+  font-size:21px;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 1px 0 rgba(255,255,255,.05);
+}
+.lootera-letter-l{margin-right:-1px}
+.lootera-word-rest{margin-left:-1px}
+.lootera-word-rest .lootera-win{color:var(--d01-green,#a8ff3e);text-shadow:0 0 16px rgba(168,255,62,.13)}
+.lootera-balls{
+  position:relative;
+  display:inline-block;
+  width:58px;
+  height:36px;
+  flex:0 0 58px;
+  margin:0 -1px;
+  overflow:visible;
+  vertical-align:middle;
+}
+.lootera-ball-canvas{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  overflow:visible;
+  opacity:0;
+  transition:opacity .18s ease;
+}
+.lootera-live-brand.lootera-logo-ready .lootera-ball-canvas{opacity:1}
+.lootera-ball-fallback{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  transition:opacity .16s ease;
+}
+.lootera-live-brand.lootera-logo-ready .lootera-ball-fallback{opacity:0}
+.lootera-fallback-ball{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:29px;
+  height:29px;
+  border-radius:50%;
+  color:#091018;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:-.05em;
+  box-shadow:inset -5px -7px 10px rgba(0,0,0,.18),inset 4px 4px 7px rgba(255,255,255,.55),0 5px 12px rgba(0,0,0,.28);
+}
+.lootera-fallback-ball.white{background:radial-gradient(circle at 32% 25%,#fff 0 18%,#f5f7fa 40%,#cbd3da 100%);box-shadow:inset -5px -7px 10px rgba(40,54,66,.17),inset 4px 4px 7px rgba(255,255,255,.8),0 0 12px rgba(168,255,62,.18),0 5px 12px rgba(0,0,0,.28)}
+.lootera-fallback-ball.red{margin-left:-2px;background:radial-gradient(circle at 32% 25%,#ff9aa5 0 8%,#ff3b52 42%,#ae0017 100%);color:#10151b;box-shadow:inset -5px -7px 11px rgba(70,0,8,.28),inset 4px 4px 7px rgba(255,255,255,.4),0 0 13px rgba(255,59,78,.16),0 5px 12px rgba(0,0,0,.3)}
+.lootera-live-brand:hover .lootera-word-rest .lootera-win{filter:brightness(1.08)}
+.lootera-live-brand:focus-visible{outline:2px solid var(--d01-green,#a8ff3e);outline-offset:6px;border-radius:8px}
+
+@media(max-width:560px){
+  .lootera-letter-l,.lootera-word-rest{font-size:17px}
+  .lootera-balls{width:48px;height:30px;flex-basis:48px}
+  .lootera-fallback-ball{width:24px;height:24px;font-size:11px}
+}
+@media(max-width:390px){
+  .lootera-letter-l,.lootera-word-rest{font-size:15px}
+  .lootera-balls{width:43px;height:27px;flex-basis:43px}
+  .lootera-fallback-ball{width:22px;height:22px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .lootera-ball-canvas{transition:none}
+}

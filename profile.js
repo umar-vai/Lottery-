@@ -46,7 +46,7 @@ function renderReferral(){
   $('refTotal').textContent=num(r.totalReferred||0);$('refCredits').textContent=num(r.signupCreditsEarned||0)+' CR';$('refSupportTotal').textContent=num(r.supportPointsGenerated||0)+' LP';$('refSupportReward').textContent=num(r.supportRewardEarned||0)+' LP';
   const people=Array.isArray(r.people)?r.people:[];$('refPeopleCount').textContent=`${people.length} ${people.length===1?'person':'people'}`;const root=$('referredPeople');if(!people.length){root.innerHTML='<div class="profile-empty">No one has joined through your link yet. Share your personal referral link above.</div>';return}
   root.innerHTML=people.map(p=>{const n=p.nickname?`@${p.nickname}`:(p.displayName||'Player');const avatar=p.avatarUrl||`https://ui-avatars.com/api/?name=${encodeURIComponent(n)}`;return `<article class="referred-person"><img src="${esc(avatar)}" alt=""><div><strong>${esc(n)}</strong><span>Joined ${esc(fmt(p.joinedAt))} · ${num(p.supportPoints||0)} referred LP</span></div><b>+${num(p.signupBonus||0)} CR<br>+${num(p.supportReward||0)} LP</b></article>`}).join('');
-  window.LandPointsUI?.normalize(document.getElementById('profileApp'));
+  window.LovePointsBrand?.apply(document.getElementById('profileApp'));
 }
 function shareText(){return `Join DRAW//01 with my referral link: ${$('referralLink').value}`}
 function bindSharing(){
@@ -59,7 +59,7 @@ function bindEdit(){
   $('editProfileBtn').onclick=()=>{$('profileEditMsg').textContent='';$('profileEditDialog').showModal()};$('cancelProfileEdit').onclick=()=>$('profileEditDialog').close();
   $('profileEditForm').onsubmit=async e=>{e.preventDefault();const name=$('editDisplayName').value.trim(),nickname=$('editNickname').value.trim();const btn=e.submitter;btn.disabled=true;btn.textContent='Saving…';$('profileEditMsg').textContent='';try{const {data,error}=await supabase.rpc('update_my_profile',{p_display_name:name,p_nickname:nickname});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(row){S.profile.display_name=row.display_name;S.profile.nickname=row.nickname}renderProfile();$('profileEditMsg').textContent='Saved';$('profileEditMsg').className='profile-form-msg ok';window.Draw01Shell?.refresh();setTimeout(()=>$('profileEditDialog').close(),450)}catch(err){$('profileEditMsg').textContent=err.message;$('profileEditMsg').className='profile-form-msg'}finally{btn.disabled=false;btn.textContent='Save profile'}};
 }
-async function refreshAll(){await Promise.all([loadProfile(),loadTickets(),loadReferral()]);renderProfile();renderTickets();renderReferral();window.Draw01Shell?.setBalance(S.profile?.balance||0);window.LandPointsUI?.normalize(document.getElementById('profileApp'))}
+async function refreshAll(){await Promise.all([loadProfile(),loadTickets(),loadReferral()]);renderProfile();renderTickets();renderReferral();window.Draw01Shell?.setBalance(S.profile?.balance||0);window.LovePointsBrand?.apply(document.getElementById('profileApp'))}
 async function boot(){
   if(!supabase){$('profileGateText').textContent='Backend is not configured.';return}const {data}=await supabase.auth.getSession();S.session=data.session;window.Draw01Shell?.setSession(S.session);
   if(!S.session){$('profileGateText').textContent='Sign in with Google to open your player profile.';$('profileLogin').hidden=false;$('profileLogin').onclick=login;return}

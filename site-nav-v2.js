@@ -4,6 +4,14 @@ var enhanced=false;
 
 function $(id){return document.getElementById(id)}
 
+function installSafetyStyle(){
+  if(document.getElementById('gzNavV2Safety'))return;
+  var s=document.createElement('style');
+  s.id='gzNavV2Safety';
+  s.textContent='.d01-account-v2[hidden]{display:none!important}.d01-credit-wrap[hidden]{display:none!important}.d01-admin-link[hidden]{display:none!important}.d01-login[hidden]{display:none!important}';
+  document.head.appendChild(s);
+}
+
 function closeCredit(){
   var wrap=$('d01CreditWrap'),btn=$('d01CreditBtn');
   if(wrap)wrap.classList.remove('open');
@@ -27,6 +35,7 @@ function normalizeCreditText(){
 }
 
 function enhance(){
+  installSafetyStyle();
   var nav=document.querySelector('.draw01-global-nav');
   if(!nav)return false;
   if(nav.dataset.navV2==='1')return true;
@@ -138,6 +147,7 @@ function enhance(){
 }
 
 function boot(){
+  installSafetyStyle();
   if(enhance())enhanced=true;
   if(!enhanced){
     var tries=0;

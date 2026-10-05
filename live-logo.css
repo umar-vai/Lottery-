@@ -20,7 +20,30 @@
   z-index:1;
 }
 
-.lootera-letter-l,
+/* Custom logo L: a real vertical-to-right L with a soft curved turn. */
+.lootera-letter-l{
+  display:block;
+  width:15px;
+  height:23px;
+  flex:0 0 15px;
+  margin-right:-1px;
+  overflow:visible;
+  filter:drop-shadow(0 4px 5px rgba(255,255,255,.035)) drop-shadow(0 7px 8px rgba(0,0,0,.25));
+}
+.lootera-letter-l .lootera-l-main{
+  fill:none;
+  stroke-width:5.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.lootera-letter-l .lootera-l-highlight{
+  fill:none;
+  stroke:rgba(255,255,255,.38);
+  stroke-width:1.05;
+  stroke-linecap:round;
+  opacity:.58;
+}
+
 .lootera-word-rest{
   display:inline-block;
   font-size:20px;
@@ -36,7 +59,6 @@
   filter:drop-shadow(0 4px 5px rgba(255,255,255,.035)) drop-shadow(0 7px 8px rgba(0,0,0,.25));
 }
 
-.lootera-letter-l{margin-right:-1px}
 .lootera-word-rest{margin-left:-1px}
 
 .lootera-word-rest .lootera-win{
@@ -125,7 +147,7 @@
     0 4px 8px rgba(0,0,0,.30);
 }
 
-/* Surface-light reflection: soft, deliberately subtle so it looks metallic rather than like a glowing sticker. */
+/* Soft floor reflection only. The old 1px horizontal ray has been removed. */
 .lootera-live-brand::before{
   content:"";
   position:absolute;
@@ -152,23 +174,6 @@
   pointer-events:none;
 }
 
-.lootera-live-brand::after{
-  content:"";
-  position:absolute;
-  z-index:0;
-  left:8px;
-  right:3px;
-  bottom:-4px;
-  height:1px;
-  border-radius:999px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 36%,rgba(168,255,62,.20) 78%,transparent);
-  box-shadow:
-    0 2px 7px rgba(255,255,255,.05),
-    0 3px 10px rgba(168,255,62,.05);
-  opacity:.65;
-  pointer-events:none;
-}
-
 .lootera-balls::after{
   content:"";
   position:absolute;
@@ -190,14 +195,16 @@
 .lootera-live-brand:focus-visible{outline:2px solid var(--d01-green,#a8ff3e);outline-offset:6px;border-radius:8px}
 
 @media(max-width:560px){
-  .lootera-letter-l,.lootera-word-rest{font-size:17px}
+  .lootera-letter-l{width:13px;height:20px;flex-basis:13px}
+  .lootera-word-rest{font-size:17px}
   .lootera-balls{width:40px;height:25px;flex-basis:40px}
   .lootera-fallback-ball{width:18px;height:18px;font-size:9px}
   .lootera-live-brand::before{bottom:-7px;height:8px}
 }
 
 @media(max-width:390px){
-  .lootera-letter-l,.lootera-word-rest{font-size:15px}
+  .lootera-letter-l{width:11px;height:18px;flex-basis:11px}
+  .lootera-word-rest{font-size:15px}
   .lootera-balls{width:35px;height:22px;flex-basis:35px}
   .lootera-fallback-ball{width:16px;height:16px;font-size:8px}
   .lootera-live-brand::before{bottom:-6px;height:7px}

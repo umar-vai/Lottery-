@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="events-home.css?v=3">
   <link rel="stylesheet" href="home-v2.css?v=1">
   <link rel="stylesheet" href="site-shell.css?v=4">
+  <link rel="stylesheet" href="platform-gate.css?v=1">
   <link rel="stylesheet" href="support-live.css?v=1">
   <link rel="stylesheet" href="home-v3.css?v=1">
   <link rel="stylesheet" href="home-mobile-hotfix.css?v=2">
@@ -22,82 +23,22 @@
     <header class="topbar">
       <a class="brand" href="./" aria-label="Game Zone home"><span class="brand-mark"></span><span>GAME ZONE</span></a>
       <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a><a href="game-zone.html">Game Zone</a></nav>
-      <div class="account-zone" id="accountZone">
-        <div class="status"><span class="pulse"></span> VIRTUAL PLAY</div>
-        <a class="admin-nav-btn" id="adminNavLink" href="ops-v4.html" hidden><span class="admin-nav-dot"></span>ADMIN</a>
-        <button class="account-btn primary" id="loginBtn" type="button">Continue with Google</button>
-        <div class="account-card" id="accountCard" hidden><img class="avatar" id="userAvatar" alt=""><div class="account-meta"><strong id="userName">Player</strong><span id="userEmail"></span></div><button class="account-btn" id="logoutBtn" type="button">Log out</button></div>
-      </div>
+      <div class="account-zone" id="accountZone"><div class="status"><span class="pulse"></span> VIRTUAL PLAY</div><a class="admin-nav-btn" id="adminNavLink" href="ops-v4.html" hidden><span class="admin-nav-dot"></span>ADMIN</a><button class="account-btn primary" id="loginBtn" type="button">Continue with Google</button><div class="account-card" id="accountCard" hidden><img class="avatar" id="userAvatar" alt=""><div class="account-meta"><strong id="userName">Player</strong><span id="userEmail"></span></div><button class="account-btn" id="logoutBtn" type="button">Log out</button></div></div>
     </header>
-
-    <section class="winner-marquee" aria-label="Recent winners">
-      <div id="winnerTrack" class="winner-track"><div class="winner-empty">Recent winners loading…</div></div>
-    </section>
-
-    <section class="market-hero home-hero">
-      <div class="hero-coinfield" aria-hidden="true"><span class="credit-coin c1">CR</span><span class="credit-coin c2">CR</span><span class="credit-coin c3">CR</span><span class="credit-coin c4">CR</span></div>
-      <div class="home-hero-grid">
-        <div>
-          <div class="eyebrow">GAME ZONE · EVENTS · VIRTUAL CREDITS</div>
-          <h1>Pick.<br><span>Play. Win.</span></h1>
-          <p class="hero-bn">পছন্দের ইভেন্ট বেছে নিন, নিজের টিকিট তৈরি করুন, অথবা Game Zone-এর instant virtual-credit games খেলুন।</p>
-          <p class="hero-en">Events এবং instant games একই virtual Draw Credit balance ব্যবহার করে। Credits-এর কোনো cash value নেই এবং withdraw করা যায় না।</p>
-          <div class="hero-actions-home"><a class="hero-cta primary" href="game-zone.html">Game Zone খেলুন</a><a class="hero-cta ghost" href="#events">Events দেখুন</a><a class="hero-cta ghost" href="#how-it-works">কীভাবে কাজ করে?</a></div>
-        </div>
-        <aside class="hero-side-card">
-          <span>WINNER SPOTLIGHT</span>
-          <strong>Events + instant games.</strong>
-          <p id="heroWinnerText">Completed event-এর winner-রা ticker-এ highlight হয়। Instant games-এর ফল server-side generate হয়। Virtual credits only — কোনো real-money wagering নয়।</p>
-        </aside>
-      </div>
-    </section>
-
-    <section class="market-summary home-summary" aria-label="Event overview">
-      <article class="market-stat"><span>Open events</span><strong id="openCount">0</strong></article>
-      <article class="market-stat"><span>Upcoming / locked</span><strong id="upcomingCount">0</strong></article>
-      <article class="market-stat"><span>Completed</span><strong id="completedCount">0</strong></article>
-    </section>
-
+    <section class="winner-marquee" aria-label="Recent winners"><div id="winnerTrack" class="winner-track"><div class="winner-empty">Recent winners loading…</div></div></section>
+    <section class="market-hero home-hero"><div class="hero-coinfield" aria-hidden="true"><span class="credit-coin c1">CR</span><span class="credit-coin c2">CR</span><span class="credit-coin c3">CR</span><span class="credit-coin c4">CR</span></div><div class="home-hero-grid"><div><div class="eyebrow">GAME ZONE · EVENTS · VIRTUAL CREDITS</div><h1>Pick.<br><span>Play. Win.</span></h1><p class="hero-bn">পছন্দের ইভেন্ট বেছে নিন, নিজের টিকিট তৈরি করুন, অথবা Game Zone-এর instant virtual-credit games খেলুন।</p><p class="hero-en">Events এবং instant games একই virtual Draw Credit balance ব্যবহার করে। Credits-এর কোনো cash value নেই এবং withdraw করা যায় না।</p><div class="hero-actions-home"><a class="hero-cta primary" href="game-zone.html">Game Zone খেলুন</a><a class="hero-cta ghost" href="#events">Events দেখুন</a><a class="hero-cta ghost" href="#how-it-works">কীভাবে কাজ করে?</a></div></div><aside class="hero-side-card"><span>WINNER SPOTLIGHT</span><strong>Events + instant games.</strong><p id="heroWinnerText">Completed event-এর winner-রা ticker-এ highlight হয়। Instant games-এর ফল server-side generate হয়। Virtual credits only — কোনো real-money wagering নয়।</p></aside></div></section>
+    <section class="market-summary home-summary" aria-label="Event overview"><article class="market-stat"><span>Open events</span><strong id="openCount">0</strong></article><article class="market-stat"><span>Upcoming / locked</span><strong id="upcomingCount">0</strong></article><article class="market-stat"><span>Completed</span><strong id="completedCount">0</strong></article></section>
     <section class="wallet-strip" id="walletStrip" hidden><div><span>আপনার বর্তমান ক্রেডিট</span><strong id="walletBalance">0 credits</strong><small>এই credits শুধুই simulation/testing-এর জন্য।</small></div><a class="account-btn" href="game-zone.html">Game Zone খুলুন</a></section>
-
-    <section class="event-zone" id="events">
-      <div class="event-zone-head"><div><span class="mini">RUNNING / OPEN / UPCOMING</span><h2>এখন যেগুলোতে অংশ নিতে পারেন</h2><p>Open event-এ এখনই ticket নেওয়া যায়। Upcoming event আগে থেকেই দেখে রাখতে পারেন।</p></div><span class="event-zone-badge" id="activeEventCount">0 active</span></div>
-      <div id="activeEventsGrid" class="events-grid event-grid-home"><div class="events-empty">Loading active events…</div></div>
-    </section>
-
-    <section class="why-section">
-      <div class="why-head"><div><span class="events-kicker">WHY PEOPLE ENJOY IT</span><h2>খেলা সহজ, ফলাফল পরিষ্কার</h2></div><p>কোন event open, ticket কত credits, কয়জন winner এবং prize কী—সব স্পষ্ট। Instant games-এর odds ও RTP-ও প্রকাশিত থাকবে।</p></div>
-      <div class="why-grid">
-        <article class="why-card"><div class="why-icon">01</div><h3>নিজের নম্বর, নিজের ticket</h3><p>আপনি নিজের পছন্দের numbers নিতে পারেন, অথবা Quick Pick দিয়ে দ্রুত ticket তৈরি করতে পারেন।</p></article>
-        <article class="why-card"><div class="why-icon">02</div><h3>Server-side game result</h3><p>Instant game-এর final outcome browser ঠিক করে না। Result backend-এ তৈরি হয়ে তারপর animation settle করে।</p></article>
-        <article class="why-card"><div class="why-icon">03</div><h3>History ও ledger</h3><p>Event tickets, game bets এবং payouts আপনার account history ও credit ledger-এ track করা হয়।</p></article>
-      </div>
-    </section>
-
-    <section class="event-zone completed-zone">
-      <div class="event-zone-head"><div><span class="mini">COMPLETED EVENTS</span><h2>শেষ হওয়া ড্র ও রেজাল্ট</h2><p>পুরোনো event খুলে winner, rank এবং winning ticket result দেখতে পারবেন।</p></div><span class="event-zone-badge" id="completedEventCount">0 completed</span></div>
-      <div id="completedEventsGrid" class="events-grid event-grid-home"><div class="events-empty">Loading completed events…</div></div>
-    </section>
-
-    <section class="how-section" id="how-it-works">
-      <div class="how-head"><span class="mini">3 EASY STEPS</span><h2>কীভাবে অংশ নেবেন?</h2></div>
-      <div class="how-steps">
-        <article class="how-step"><b>1</b><h3>Event বা Game বেছে নিন</h3><p>Events page থেকে draw event অথবা Game Zone থেকে instant game খুলুন।</p></article>
-        <article class="how-step"><b>2</b><h3>Virtual Credit ব্যবহার করুন</h3><p>Ticket confirm বা game spin-এর জন্য প্রয়োজনীয় virtual Draw Credits লাগবে।</p></article>
-        <article class="how-step"><b>3</b><h3>Result ও history দেখুন</h3><p>Event result, game payout এবং balance movement নিজের account-এ দেখতে পারবেন।</p></article>
-      </div>
-    </section>
-
-    <section class="final-cta">
-      <h2>পরের play কোথায় হবে?</h2>
-      <p>Events-এ ticket তৈরি করুন অথবা Game Zone-এর instant games খেলুন। সবকিছু virtual credits দিয়ে simulation/testing-এর জন্য।</p>
-      <a class="hero-cta primary" href="game-zone.html">Open Game Zone</a>
-    </section>
-
+    <section class="event-zone" id="events"><div class="event-zone-head"><div><span class="mini">RUNNING / OPEN / UPCOMING</span><h2>এখন যেগুলোতে অংশ নিতে পারেন</h2><p>Open event-এ এখনই ticket নেওয়া যায়। Upcoming event আগে থেকেই দেখে রাখতে পারেন।</p></div><span class="event-zone-badge" id="activeEventCount">0 active</span></div><div id="activeEventsGrid" class="events-grid event-grid-home"><div class="events-empty">Loading active events…</div></div></section>
+    <section class="why-section"><div class="why-head"><div><span class="events-kicker">WHY PEOPLE ENJOY IT</span><h2>খেলা সহজ, ফলাফল পরিষ্কার</h2></div><p>কোন event open, ticket কত credits, কয়জন winner এবং prize কী—সব স্পষ্ট। Instant games-এর odds ও RTP-ও প্রকাশিত থাকবে।</p></div><div class="why-grid"><article class="why-card"><div class="why-icon">01</div><h3>নিজের নম্বর, নিজের ticket</h3><p>আপনি নিজের পছন্দের numbers নিতে পারেন, অথবা Quick Pick দিয়ে দ্রুত ticket তৈরি করতে পারেন।</p></article><article class="why-card"><div class="why-icon">02</div><h3>Server-side game result</h3><p>Instant game-এর final outcome browser ঠিক করে না। Result backend-এ তৈরি হয়ে তারপর animation settle করে।</p></article><article class="why-card"><div class="why-icon">03</div><h3>History ও ledger</h3><p>Event tickets, game bets এবং payouts আপনার account history ও credit ledger-এ track করা হয়।</p></article></div></section>
+    <section class="event-zone completed-zone"><div class="event-zone-head"><div><span class="mini">COMPLETED EVENTS</span><h2>শেষ হওয়া ড্র ও রেজাল্ট</h2><p>পুরোনো event খুলে winner, rank এবং winning ticket result দেখতে পারবেন।</p></div><span class="event-zone-badge" id="completedEventCount">0 completed</span></div><div id="completedEventsGrid" class="events-grid event-grid-home"><div class="events-empty">Loading completed events…</div></div></section>
+    <section class="how-section" id="how-it-works"><div class="how-head"><span class="mini">3 EASY STEPS</span><h2>কীভাবে অংশ নেবেন?</h2></div><div class="how-steps"><article class="how-step"><b>1</b><h3>Event বা Game বেছে নিন</h3><p>Events page থেকে draw event অথবা Game Zone থেকে instant game খুলুন।</p></article><article class="how-step"><b>2</b><h3>Virtual Credit ব্যবহার করুন</h3><p>Ticket confirm বা game spin-এর জন্য প্রয়োজনীয় virtual Draw Credits লাগবে।</p></article><article class="how-step"><b>3</b><h3>Result ও history দেখুন</h3><p>Event result, game payout এবং balance movement নিজের account-এ দেখতে পারবেন।</p></article></div></section>
+    <section class="final-cta"><h2>পরের play কোথায় হবে?</h2><p>Events-এ ticket তৈরি করুন অথবা Game Zone-এর instant games খেলুন। সবকিছু virtual credits দিয়ে simulation/testing-এর জন্য।</p><a class="hero-cta primary" href="game-zone.html">Open Game Zone</a></section>
     <footer><span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes or real-money wagering.</span><span class="footer-links"><a href="game-zone.html">Game Zone</a><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span></footer>
   </main>
   <script src="site-shell.js?v=10"></script>
+  <script src="platform-gate.js?v=1"></script>
   <script src="support-live.js?v=1" defer></script>
-  <script type="module" src="home-v2.js?v=5"></script>
+  <script data-feature="master" data-feature-src="home-v2.js?v=5" data-module></script>
 </body>
 </html>

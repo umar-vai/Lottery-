@@ -14,14 +14,26 @@
 }
 .lootera-letter-l,.lootera-word-rest{
   display:inline-block;
+  color:#f7fafc;
   font-size:21px;
   font-weight:900;
   line-height:1;
-  text-shadow:0 1px 0 rgba(255,255,255,.05);
+  background:linear-gradient(180deg,#ffffff 0%,#f7f9fb 42%,#cfd7de 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 3px 10px rgba(0,0,0,.24);
 }
 .lootera-letter-l{margin-right:-1px}
 .lootera-word-rest{margin-left:-1px}
-.lootera-word-rest .lootera-win{color:var(--d01-green,#a8ff3e);text-shadow:0 0 16px rgba(168,255,62,.13)}
+.lootera-word-rest .lootera-win{
+  color:var(--d01-green,#a8ff3e);
+  background:linear-gradient(180deg,#e9ff72 0%,#b8ff3f 38%,#79e900 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 16px rgba(168,255,62,.13);
+}
 .lootera-balls{
   position:relative;
   display:inline-block;

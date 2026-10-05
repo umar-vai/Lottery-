@@ -6,5 +6,5 @@ with check (
   and status = 'pending'
   and reviewed_by is null
   and reviewed_at is null
-  and private.platform_feature_enabled('master')
+  and coalesce((public.get_platform_features()->>'master')::boolean,false)
 );

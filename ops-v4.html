@@ -13,9 +13,11 @@
   <link rel="stylesheet" href="admin-v6.css?v=1">
   <link rel="stylesheet" href="site-shell.css?v=4">
   <link rel="stylesheet" href="support-live.css?v=1">
+  <link rel="stylesheet" href="support-center.css?v=8" data-d01-support-center="1">
   <link rel="stylesheet" href="support-wallet-admin.css?v=3">
   <link rel="stylesheet" href="platform-controls-admin.css?v=2">
   <link rel="stylesheet" href="admin-stability-v7.css?v=2">
+  <script src="support-center.js?v=8" data-d01-support-center="1" defer></script>
 </head>
 <body>
   <div class="orb orb-a"></div><div class="orb orb-b"></div>
@@ -51,7 +53,7 @@
 
       <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">EVENT + TICKET MANAGEMENT</span><h2>Events and ticket pools</h2><p>Open an event card to inspect its limits, players and every submitted ticket.</p></div><button id="createEventBtn" class="btn primary">+ Create event</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 events</span></div><div id="eventList" class="event-accordion-list"></div></article></section>
 
-      <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>Manage each player's Draw Credits here. Support Points and phone-bridge tools are kept in the Support tab.</p></div></div><div id="playerList" class="records"></div></article></section>
+      <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>Manage each player's Draw Credits here. Love Points and phone-bridge tools are kept in the Support tab.</p></div></div><div id="playerList" class="records"></div></article></section>
 
       <section id="ledger" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CREDIT LEDGER</span><h2>Balance movements</h2><p>Admin adjustments, ticket purchases and prize credits are recorded here.</p></div></div><div class="filter-row"><select id="ledgerUserFilter"><option value="all">All players</option></select><span id="ledgerSummary" class="muted-pill">0 entries</span></div><div id="ledgerList" class="records"></div></article></section>
 
@@ -89,8 +91,8 @@
   <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin note<input id="balanceNote" placeholder="Test credit adjustment"></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
 
   <div id="toast"></div>
-  <script src="site-shell.js?v=12"></script>
-  <script src="support-live.js?v=1" defer></script>
+  <script src="site-shell.js?v=13"></script>
+  <script src="support-live.js?v=8" defer></script>
   <script src="ops-v4.js?v=3" defer></script>
   <script type="module" src="event-cover-admin.js?v=1"></script>
   <script src="admin-v5.js?v=1" defer></script>

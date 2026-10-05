@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#080b10">
-  <meta name="description" content="DRAW//01 is a virtual-credit multi-event draw simulation platform.">
-  <title>DRAW//01 — Events</title>
+  <meta name="description" content="Game Zone is a virtual-credit games and multi-event simulation platform.">
+  <title>Game Zone — Events</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="multiplayer.css">
   <link rel="stylesheet" href="glass-tuning.css">
@@ -20,10 +20,10 @@
   <div class="noise" aria-hidden="true"></div>
   <main class="shell home-page">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="DRAW 01 home"><span class="brand-mark"></span><span>DRAW//01</span></a>
-      <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a></nav>
+      <a class="brand" href="./" aria-label="Game Zone home"><span class="brand-mark"></span><span>GAME ZONE</span></a>
+      <nav class="site-nav" aria-label="Website navigation"><a href="#events">Events</a><a href="game-zone.html">Game Zone</a></nav>
       <div class="account-zone" id="accountZone">
-        <div class="status"><span class="pulse"></span> LIVE SYSTEM</div>
+        <div class="status"><span class="pulse"></span> VIRTUAL PLAY</div>
         <a class="admin-nav-btn" id="adminNavLink" href="ops-v4.html" hidden><span class="admin-nav-dot"></span>ADMIN</a>
         <button class="account-btn primary" id="loginBtn" type="button">Continue with Google</button>
         <div class="account-card" id="accountCard" hidden><img class="avatar" id="userAvatar" alt=""><div class="account-meta"><strong id="userName">Player</strong><span id="userEmail"></span></div><button class="account-btn" id="logoutBtn" type="button">Log out</button></div>
@@ -38,16 +38,16 @@
       <div class="hero-coinfield" aria-hidden="true"><span class="credit-coin c1">CR</span><span class="credit-coin c2">CR</span><span class="credit-coin c3">CR</span><span class="credit-coin c4">CR</span></div>
       <div class="home-hero-grid">
         <div>
-          <div class="eyebrow">LIVE EVENTS · VIRTUAL CREDIT DRAW SYSTEM</div>
+          <div class="eyebrow">GAME ZONE · EVENTS · VIRTUAL CREDITS</div>
           <h1>Pick.<br><span>Play. Win.</span></h1>
-          <p class="hero-bn">পছন্দের ইভেন্ট বেছে নিন, নিজের টিকিট তৈরি করুন, আর ড্র শেষ হলে দেখুন কার ভাগ্যে এলো সেরা র‍্যাঙ্ক।</p>
-          <p class="hero-en">প্রতিটি ইভেন্ট আলাদা। আলাদা ticket price, আলাদা winner count, আলাদা prize — আর winner সবসময় সেই event-এর existing ticket pool থেকেই বাছাই হয়।</p>
-          <div class="hero-actions-home"><a class="hero-cta primary" href="#events">চলমান ইভেন্ট দেখুন</a><a class="hero-cta ghost" href="#how-it-works">কীভাবে কাজ করে?</a></div>
+          <p class="hero-bn">পছন্দের ইভেন্ট বেছে নিন, নিজের টিকিট তৈরি করুন, অথবা Game Zone-এর instant virtual-credit games খেলুন।</p>
+          <p class="hero-en">Events এবং instant games একই virtual Draw Credit balance ব্যবহার করে। Credits-এর কোনো cash value নেই এবং withdraw করা যায় না।</p>
+          <div class="hero-actions-home"><a class="hero-cta primary" href="game-zone.html">Game Zone খেলুন</a><a class="hero-cta ghost" href="#events">Events দেখুন</a><a class="hero-cta ghost" href="#how-it-works">কীভাবে কাজ করে?</a></div>
         </div>
         <aside class="hero-side-card">
           <span>WINNER SPOTLIGHT</span>
-          <strong>Real event. Real ticket pool.</strong>
-          <p id="heroWinnerText">Completed event-এর winner-রা উপরের ticker-এ live highlight হয়। Virtual credits only — কোনো real-money wagering নয়।</p>
+          <strong>Events + instant games.</strong>
+          <p id="heroWinnerText">Completed event-এর winner-রা ticker-এ highlight হয়। Instant games-এর ফল server-side generate হয়। Virtual credits only — কোনো real-money wagering নয়।</p>
         </aside>
       </div>
     </section>
@@ -58,7 +58,7 @@
       <article class="market-stat"><span>Completed</span><strong id="completedCount">0</strong></article>
     </section>
 
-    <section class="wallet-strip" id="walletStrip" hidden><div><span>আপনার বর্তমান ক্রেডিট</span><strong id="walletBalance">0 credits</strong><small>এই credits শুধুই simulation/testing-এর জন্য।</small></div><a class="account-btn" href="#events">ইভেন্ট দেখুন</a></section>
+    <section class="wallet-strip" id="walletStrip" hidden><div><span>আপনার বর্তমান ক্রেডিট</span><strong id="walletBalance">0 credits</strong><small>এই credits শুধুই simulation/testing-এর জন্য।</small></div><a class="account-btn" href="game-zone.html">Game Zone খুলুন</a></section>
 
     <section class="event-zone" id="events">
       <div class="event-zone-head"><div><span class="mini">RUNNING / OPEN / UPCOMING</span><h2>এখন যেগুলোতে অংশ নিতে পারেন</h2><p>Open event-এ এখনই ticket নেওয়া যায়। Upcoming event আগে থেকেই দেখে রাখতে পারেন।</p></div><span class="event-zone-badge" id="activeEventCount">0 active</span></div>
@@ -66,11 +66,11 @@
     </section>
 
     <section class="why-section">
-      <div class="why-head"><div><span class="events-kicker">WHY PEOPLE ENJOY IT</span><h2>খেলা সহজ, ফলাফল পরিষ্কার</h2></div><p>যে কেউ কয়েক সেকেন্ডেই বুঝতে পারবে কোন event open, ticket কত credits, কয়জন winner এবং prize কী।</p></div>
+      <div class="why-head"><div><span class="events-kicker">WHY PEOPLE ENJOY IT</span><h2>খেলা সহজ, ফলাফল পরিষ্কার</h2></div><p>কোন event open, ticket কত credits, কয়জন winner এবং prize কী—সব স্পষ্ট। Instant games-এর odds ও RTP-ও প্রকাশিত থাকবে।</p></div>
       <div class="why-grid">
         <article class="why-card"><div class="why-icon">01</div><h3>নিজের নম্বর, নিজের ticket</h3><p>আপনি নিজের পছন্দের numbers নিতে পারেন, অথবা Quick Pick দিয়ে দ্রুত ticket তৈরি করতে পারেন।</p></article>
-        <article class="why-card"><div class="why-icon">02</div><h3>Existing ticket থেকেই winner</h3><p>Draw-এর সময় নতুন কোনো ticket তৈরি হয় না। ওই event-এ আগে থেকে থাকা ticket pool থেকেই winner নির্বাচন হয়।</p></article>
-        <article class="why-card"><div class="why-icon">03</div><h3>Winner সবাই দেখতে পারে</h3><p>Completed event-এ winner-এর নাম, rank, winning ticket এবং পাওয়া virtual credits দেখা যায়।</p></article>
+        <article class="why-card"><div class="why-icon">02</div><h3>Server-side game result</h3><p>Instant game-এর final outcome browser ঠিক করে না। Result backend-এ তৈরি হয়ে তারপর animation settle করে।</p></article>
+        <article class="why-card"><div class="why-icon">03</div><h3>History ও ledger</h3><p>Event tickets, game bets এবং payouts আপনার account history ও credit ledger-এ track করা হয়।</p></article>
       </div>
     </section>
 
@@ -82,21 +82,21 @@
     <section class="how-section" id="how-it-works">
       <div class="how-head"><span class="mini">3 EASY STEPS</span><h2>কীভাবে অংশ নেবেন?</h2></div>
       <div class="how-steps">
-        <article class="how-step"><b>1</b><h3>Event বেছে নিন</h3><p>Cover, prize, ticket price এবং draw status দেখে আপনার পছন্দের event-এ ঢুকুন।</p></article>
-        <article class="how-step"><b>2</b><h3>Ticket confirm করুন</h3><p>Numbers select করুন। Confirm করার সময় Google login এবং প্রয়োজনীয় virtual credit লাগবে।</p></article>
-        <article class="how-step"><b>3</b><h3>Result দেখুন</h3><p>Event complete হলে winner list-এ নাম, rank, winning ticket এবং prize credit দেখা যাবে।</p></article>
+        <article class="how-step"><b>1</b><h3>Event বা Game বেছে নিন</h3><p>Events page থেকে draw event অথবা Game Zone থেকে instant game খুলুন।</p></article>
+        <article class="how-step"><b>2</b><h3>Virtual Credit ব্যবহার করুন</h3><p>Ticket confirm বা game spin-এর জন্য প্রয়োজনীয় virtual Draw Credits লাগবে।</p></article>
+        <article class="how-step"><b>3</b><h3>Result ও history দেখুন</h3><p>Event result, game payout এবং balance movement নিজের account-এ দেখতে পারবেন।</p></article>
       </div>
     </section>
 
     <section class="final-cta">
-      <h2>আপনার পরের winning ticket কি এখানেই?</h2>
-      <p>চলমান event দেখে নিজের ticket তৈরি করুন। সব prize virtual credits—এই project simulation/testing-এর জন্য।</p>
-      <a class="hero-cta primary" href="#events">Open events দেখুন</a>
+      <h2>পরের play কোথায় হবে?</h2>
+      <p>Events-এ ticket তৈরি করুন অথবা Game Zone-এর instant games খেলুন। সবকিছু virtual credits দিয়ে simulation/testing-এর জন্য।</p>
+      <a class="hero-cta primary" href="game-zone.html">Open Game Zone</a>
     </section>
 
-    <footer><span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes or real-money wagering.</span><span class="footer-links"><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span></footer>
+    <footer><span>Simulation/testing system only — virtual credits have no cash value. No deposits, withdrawals, cash prizes or real-money wagering.</span><span class="footer-links"><a href="game-zone.html">Game Zone</a><a href="about.html">About & Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></span></footer>
   </main>
-  <script src="site-shell.js?v=9"></script>
+  <script src="site-shell.js?v=10"></script>
   <script src="support-live.js?v=1" defer></script>
   <script type="module" src="home-v2.js?v=5"></script>
 </body>

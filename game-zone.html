@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#05080d">
+  <meta name="description" content="Game Zone — virtual-credit games and event simulations.">
+  <title>Game Zone</title>
+  <link rel="stylesheet" href="site-shell.css?v=5">
+  <link rel="stylesheet" href="game-zone.css?v=1">
+</head>
+<body>
+  <header class="topbar"></header>
+  <main class="gz-shell">
+    <section class="gz-hero gz-glass">
+      <div class="gz-hero-copy">
+        <span class="gz-kicker">VIRTUAL PLAYGROUND</span>
+        <h1>Game <span>Zone</span></h1>
+        <p>Instant games আর existing event-based draws—সবকিছু একই virtual-credit ecosystem-এর মধ্যে। এখানে কোনো cash-out, deposit বা real-money wagering নেই।</p>
+        <div class="gz-hero-actions"><a class="gz-btn primary" href="#games">গেম খেলুন</a><a class="gz-btn ghost" href="./#events">Events দেখুন</a></div>
+      </div>
+      <div class="gz-orbit" aria-hidden="true">
+        <div class="gz-orbit-ring r1"></div><div class="gz-orbit-ring r2"></div>
+        <div class="gz-orbit-core">GZ</div>
+        <span class="gz-orbit-chip a">7</span><span class="gz-orbit-chip b">★</span><span class="gz-orbit-chip c">CR</span>
+      </div>
+    </section>
+
+    <section class="gz-metrics">
+      <article><span>ACTIVE GAMES</span><strong id="activeGames">1</strong><small>আরও গেম পরে যোগ হবে</small></article>
+      <article><span>SHARED BALANCE</span><strong>Draw Credits</strong><small>Events ও games একই virtual balance ব্যবহার করে</small></article>
+      <article><span>FAIRNESS</span><strong>Server-side</strong><small>Final result browser ঠিক করে না</small></article>
+    </section>
+
+    <section id="games" class="gz-section">
+      <div class="gz-section-head"><div><span class="gz-kicker">PLAY NOW</span><h2>Choose your game</h2></div><p>প্রথম game live। নতুন game একই modular architecture-এর মধ্যে পরে যোগ হবে।</p></div>
+      <div class="gz-games-grid">
+        <article class="gz-game-card featured" id="slotCard">
+          <div class="gz-card-light"></div>
+          <div class="gz-slot-preview" aria-hidden="true"><span>🍒</span><span>7</span><span>💎</span></div>
+          <div class="gz-game-copy">
+            <div class="gz-badge-row"><span class="gz-live-badge">● LIVE</span><span class="gz-type">SLOT</span></div>
+            <h3 id="slotTitle">Neon Fortune Slots</h3>
+            <p id="slotDescription">Three-reel virtual-credit slot with fixed server-side odds.</p>
+            <div class="gz-game-stats"><span><small>RTP</small><b id="slotRtp">93.73%</b></span><span><small>HOUSE EDGE</small><b id="slotEdge">6.27%</b></span><span><small>BET</small><b id="slotBet">5–50 CR</b></span></div>
+            <a id="slotPlayBtn" class="gz-play" href="slot.html"><span>Play now</span><b>→</b></a>
+          </div>
+        </article>
+
+        <article class="gz-game-card coming"><div class="gz-coming-icon">◎</div><span class="gz-type">COMING SOON</span><h3>Wheel</h3><p>Instant wheel-style virtual-credit game.</p></article>
+        <article class="gz-game-card coming"><div class="gz-coming-icon">21</div><span class="gz-type">COMING SOON</span><h3>Card Table</h3><p>Future card-based game module.</p></article>
+      </div>
+    </section>
+
+    <section class="gz-info gz-glass">
+      <div><span class="gz-kicker">HOW IT WORKS</span><h2>একই Credit, দুই ধরনের অভিজ্ঞতা</h2></div>
+      <div class="gz-info-grid">
+        <article><b>01</b><h3>Events</h3><p>Event-specific ticket কিনুন, scheduled/manual draw-এর result দেখুন।</p></article>
+        <article><b>02</b><h3>Instant Games</h3><p>Game খুলুন, bet বেছে নিন এবং server-generated instant result পান।</p></article>
+        <article><b>03</b><h3>One Ledger</h3><p>Bet, payout, ticket purchase এবং prize—সব Draw Credit movement ledger-এ থাকে।</p></article>
+      </div>
+    </section>
+  </main>
+  <script src="site-shell.js?v=10"></script>
+  <script src="game-zone.js?v=1" defer></script>
+</body>
+</html>

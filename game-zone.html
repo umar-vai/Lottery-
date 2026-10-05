@@ -7,7 +7,7 @@
   <meta name="description" content="Game Zone — virtual-credit games and event simulations.">
   <title>Game Zone</title>
   <link rel="stylesheet" href="site-shell.css?v=5">
-  <link rel="stylesheet" href="game-zone.css?v=1">
+  <link rel="stylesheet" href="game-zone.css?v=2">
 </head>
 <body>
   <header class="topbar"></header>
@@ -22,18 +22,18 @@
       <div class="gz-orbit" aria-hidden="true">
         <div class="gz-orbit-ring r1"></div><div class="gz-orbit-ring r2"></div>
         <div class="gz-orbit-core">GZ</div>
-        <span class="gz-orbit-chip a">7</span><span class="gz-orbit-chip b">★</span><span class="gz-orbit-chip c">CR</span>
+        <span class="gz-orbit-chip a">7</span><span class="gz-orbit-chip b">●</span><span class="gz-orbit-chip c">CR</span>
       </div>
     </section>
 
     <section class="gz-metrics">
-      <article><span>ACTIVE GAMES</span><strong id="activeGames">1</strong><small>আরও গেম পরে যোগ হবে</small></article>
+      <article><span>ACTIVE GAMES</span><strong id="activeGames">2</strong><small>Slot + Plinko live</small></article>
       <article><span>SHARED BALANCE</span><strong>Draw Credits</strong><small>Events ও games একই virtual balance ব্যবহার করে</small></article>
       <article><span>FAIRNESS</span><strong>Server-side</strong><small>Final result browser ঠিক করে না</small></article>
     </section>
 
     <section id="games" class="gz-section">
-      <div class="gz-section-head"><div><span class="gz-kicker">PLAY NOW</span><h2>Choose your game</h2></div><p>প্রথম game live। নতুন game একই modular architecture-এর মধ্যে পরে যোগ হবে।</p></div>
+      <div class="gz-section-head"><div><span class="gz-kicker">PLAY NOW</span><h2>Choose your game</h2></div><p>দুইটি instant game এখন live। প্রতিটি game-এর result server-side এবং প্রতিটি balance change ledger-এ থাকে।</p></div>
       <div class="gz-games-grid">
         <article class="gz-game-card featured" id="slotCard">
           <div class="gz-card-light"></div>
@@ -43,7 +43,23 @@
             <h3 id="slotTitle">Neon Fortune Slots</h3>
             <p id="slotDescription">Three-reel virtual-credit slot with fixed server-side odds.</p>
             <div class="gz-game-stats"><span><small>RTP</small><b id="slotRtp">93.73%</b></span><span><small>HOUSE EDGE</small><b id="slotEdge">6.27%</b></span><span><small>BET</small><b id="slotBet">5–50 CR</b></span></div>
-            <a id="slotPlayBtn" class="gz-play" href="slot.html"><span>Play now</span><b>→</b></a>
+            <a id="slotPlayBtn" class="gz-play" href="slot.html"><span>Play Slots</span><b>→</b></a>
+          </div>
+        </article>
+
+        <article class="gz-game-card featured plinko-feature" id="plinkoCard">
+          <div class="gz-card-light cyan"></div>
+          <div class="gz-plinko-preview" aria-hidden="true">
+            <b class="gz-mini-ball"></b>
+            <span>•</span><span>• •</span><span>• • •</span><span>• • • •</span><span>• • • • •</span>
+            <div><i>25×</i><i>.25×</i><i>25×</i></div>
+          </div>
+          <div class="gz-game-copy">
+            <div class="gz-badge-row"><span class="gz-live-badge cyan">● LIVE</span><span class="gz-type">PLINKO</span></div>
+            <h3 id="plinkoTitle">Neon Plinko</h3>
+            <p id="plinkoDescription">12-row server-side Plinko with three risk modes.</p>
+            <div class="gz-game-stats"><span><small>MEDIUM RTP</small><b id="plinkoRtp">93.89%</b></span><span><small>RISK MODES</small><b>Low · Med · High</b></span><span><small>BET</small><b id="plinkoBet">5–50 CR</b></span></div>
+            <a id="plinkoPlayBtn" class="gz-play cyan" href="plinko.html"><span>Play Plinko</span><b>→</b></a>
           </div>
         </article>
 
@@ -56,12 +72,12 @@
       <div><span class="gz-kicker">HOW IT WORKS</span><h2>একই Credit, দুই ধরনের অভিজ্ঞতা</h2></div>
       <div class="gz-info-grid">
         <article><b>01</b><h3>Events</h3><p>Event-specific ticket কিনুন, scheduled/manual draw-এর result দেখুন।</p></article>
-        <article><b>02</b><h3>Instant Games</h3><p>Game খুলুন, bet বেছে নিন এবং server-generated instant result পান।</p></article>
+        <article><b>02</b><h3>Instant Games</h3><p>Slot বা Plinko খুলুন, virtual bet বেছে নিন এবং server-generated instant result পান।</p></article>
         <article><b>03</b><h3>One Ledger</h3><p>Bet, payout, ticket purchase এবং prize—সব Draw Credit movement ledger-এ থাকে।</p></article>
       </div>
     </section>
   </main>
-  <script src="site-shell.js?v=10"></script>
-  <script src="game-zone.js?v=1" defer></script>
+  <script src="site-shell.js?v=11"></script>
+  <script src="game-zone.js?v=2" defer></script>
 </body>
 </html>

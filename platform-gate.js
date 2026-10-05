@@ -3,7 +3,7 @@
 if(window.PlatformGate)return;
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
-var state={master:true,events:true,gameZone:true,slot:true,plinko:true,configured:{events:true,gameZone:true,slot:true,plinko:true}};
+var state={master:false,events:false,gameZone:false,slot:false,plinko:false,configured:{events:true,gameZone:true,slot:true,plinko:true}};
 var resolveReady;
 var ready=new Promise(function(resolve){resolveReady=resolve});
 function api(){return fetch(BASE+'/rest/v1/rpc/get_platform_features',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:'{}'}).then(function(r){if(!r.ok)throw new Error('feature gate unavailable');return r.json()})}

@@ -14,30 +14,30 @@ function install(){
   var host=$('supportAdminPanel');
   if(!host){setTimeout(install,300);return}
   if(!$('supportWalletAdmin')){
-    host.insertAdjacentHTML('beforeend','<section id="supportWalletAdmin" class="support-wallet-admin"><div class="support-wallet-head"><div><span class="eyebrow">SUPPORT BALANCES</span><h3>Draw Credits vs Support Points</h3><p>Balances stay separate. Support Points can be adjusted here; Draw Credits remain managed from the Players tab.</p></div><button id="supportWalletRefresh" type="button">Refresh</button></div><div id="supportWalletList"><div class="support-wallet-empty">Loading balances…</div></div></section>');
+    host.insertAdjacentHTML('beforeend','<section id="supportWalletAdmin" class="support-wallet-admin"><div class="support-wallet-head"><div><span class="eyebrow">LAND POINT BALANCES</span><h3>Draw Credits vs Land Points (LP)</h3><p>Balances stay separate. LP can be adjusted here; Draw Credits remain managed from the Players tab.</p></div><button id="supportWalletRefresh" type="button">Refresh</button></div><div id="supportWalletList"><div class="support-wallet-empty">Loading balances…</div></div></section>');
     $('supportWalletRefresh').onclick=load;
   }
-  var players=$('players');if(players){var p=players.querySelector('.panel-head p');if(p)p.textContent="Manage each player's Draw Credits here. Support Points are managed only from the Support tab."}
+  var players=$('players');if(players){var p=players.querySelector('.panel-head p');if(p)p.textContent="Manage each player's Draw Credits here. Land Points (LP) are managed only from the Support tab."}
   if(!timer){load();timer=setInterval(function(){if(document.visibilityState!=='hidden')load()},5000)}
 }
 function render(list){
   var box=$('supportWalletList');if(!box)return;
   var totalSupport=(list||[]).reduce(function(a,w){return a+Number(w.balance||0)},0);
   var totalCredits=(list||[]).reduce(function(a,w){return a+Number(w.draw_credits||0)},0);
-  if($('supportSummaryPoints'))$('supportSummaryPoints').textContent=num(totalSupport)+' SP';
+  if($('supportSummaryPoints'))$('supportSummaryPoints').textContent=num(totalSupport)+' LP';
   if($('supportSummaryCredits'))$('supportSummaryCredits').textContent=num(totalCredits)+' cr';
   if(!list||!list.length){box.innerHTML='<div class="support-wallet-empty">No players found.</div>';return}
-  box.innerHTML=list.map(function(w){return '<article class="support-wallet-row"><div class="support-wallet-user"><strong>'+esc(w.display_name||'User')+'</strong><span>'+esc(w.email||'')+'</span></div><div class="support-wallet-balances"><span class="draw-balance"><small>DRAW CREDIT</small><b>'+esc(num(w.draw_credits))+' cr</b></span><span class="support-balance"><small>SUPPORT</small><b>'+esc(num(w.balance))+' SP</b></span></div><button class="support-edit-btn" data-user="'+esc(w.user_id)+'" data-balance="'+esc(w.balance)+'" data-name="'+esc(w.display_name||'User')+'" type="button">Edit Support</button></article>'}).join('');
+  box.innerHTML=list.map(function(w){return '<article class="support-wallet-row"><div class="support-wallet-user"><strong>'+esc(w.display_name||'User')+'</strong><span>'+esc(w.email||'')+'</span></div><div class="support-wallet-balances"><span class="draw-balance"><small>DRAW CREDIT</small><b>'+esc(num(w.draw_credits))+' cr</b></span><span class="support-balance"><small>LAND POINT</small><b>'+esc(num(w.balance))+' LP</b></span></div><button class="support-edit-btn" data-user="'+esc(w.user_id)+'" data-balance="'+esc(w.balance)+'" data-name="'+esc(w.display_name||'User')+'" type="button">Edit LP</button></article>'}).join('');
   box.querySelectorAll('.support-edit-btn').forEach(function(btn){btn.onclick=function(){editButton(btn)}})
 }
 function load(){return req({action:'list'}).then(function(d){wallets=d.wallets||[];render(wallets);return wallets}).catch(function(e){var box=$('supportWalletList');if(box)box.innerHTML='<div class="support-wallet-empty">'+esc(e.message)+'</div>';throw e})}
 function editButton(btn){
   var old=Number(btn.dataset.balance||0);var label=btn.dataset.name||'user';
-  var value=prompt('Set Support Points for '+label+'\n\nDraw Credits will NOT change.',String(old));if(value===null)return;
-  var n=Number(String(value).trim());if(!Number.isFinite(n)||n<0){alert('Enter a valid Support Points balance.');return}
-  var note=prompt('Admin note','Admin Support Points adjustment');if(note===null)return;
+  var value=prompt('Set Land Points (LP) for '+label+'\n\nDraw Credits will NOT change.',String(old));if(value===null)return;
+  var n=Number(String(value).trim());if(!Number.isFinite(n)||n<0){alert('Enter a valid LP balance.');return}
+  var note=prompt('Admin note','Admin LP adjustment');if(note===null)return;
   btn.disabled=true;btn.textContent='Saving…';
-  req({action:'adjust_support',userId:btn.dataset.user,newBalance:n,note:note}).then(function(){btn.textContent='Saved ✓';if(window.Draw01SupportLive)window.Draw01SupportLive.refresh();return load()}).catch(function(e){alert(e.message)}).finally(function(){setTimeout(function(){btn.disabled=false;btn.textContent='Edit Support'},800)})
+  req({action:'adjust_support',userId:btn.dataset.user,newBalance:n,note:note}).then(function(){btn.textContent='Saved ✓';if(window.Draw01SupportLive)window.Draw01SupportLive.refresh();return load()}).catch(function(e){alert(e.message)}).finally(function(){setTimeout(function(){btn.disabled=false;btn.textContent='Edit LP'},800)})
 }
 window.Draw01SupportWalletAdmin={refresh:load};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();

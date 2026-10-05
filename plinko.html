@@ -7,6 +7,7 @@
   <meta name="description" content="Neon Plinko — a server-side virtual-credit Game Zone experience.">
   <title>Neon Plinko — Game Zone</title>
   <link rel="stylesheet" href="site-shell.css?v=5">
+  <link rel="stylesheet" href="platform-gate.css?v=1">
   <link rel="stylesheet" href="plinko.css?v=1">
   <link rel="stylesheet" href="plinko-physics.css?v=1">
   <link rel="stylesheet" href="plinko-heatmap.css?v=2">
@@ -44,18 +45,12 @@
 
       <aside class="control-card">
         <div class="control-head"><span class="plinko-kicker">DROP CONTROLS</span><h2>Choose risk & bet</h2><p>Higher risk changes the payout curve, not the underlying left/right path probability.</p></div>
-
         <div class="control-group"><div class="control-label"><span>Risk</span><small id="riskDescription">Balanced payout curve</small></div><div id="riskOptions" class="segmented risk-options"><button type="button" data-risk="low">Low</button><button type="button" data-risk="medium" class="active">Medium</button><button type="button" data-risk="high">High</button></div></div>
-
         <div class="control-group"><div class="control-label"><span>Bet</span><small>Virtual Draw Credits</small></div><div id="betOptions" class="segmented bet-options"><button type="button" data-bet="5" class="active">5</button><button type="button" data-bet="10">10</button><button type="button" data-bet="25">25</button><button type="button" data-bet="50">50</button></div></div>
-
         <div class="drop-summary"><div><span>BET</span><strong id="betDisplay">5 CR</strong></div><div><span>MAX BUCKET</span><strong id="maxMultiplier">25×</strong></div></div>
-
         <button id="dropBtn" class="drop-btn" type="button"><span>DROP BALL</span><small>5 CR</small></button>
         <button id="plinkoLoginBtn" class="login-btn" type="button">Continue with Google to play</button>
-
         <div id="dropResult" class="drop-result neutral"><strong>Ready</strong><span>Choose a risk mode and drop the ball.</span></div>
-
         <div class="fairness-box"><b>How the result is decided</b><p>The backend generates 12 secure left/right decisions per ball and settles the selected batch in one database transaction. Browser animation cannot change any result.</p></div>
       </aside>
     </section>
@@ -74,10 +69,11 @@
     <section class="responsible-note"><strong>Virtual play only.</strong><span>Draw Credits have no cash value and cannot be withdrawn. Support Points are separate and cannot be used in Plinko.</span></section>
   </main>
   <script src="site-shell.js?v=11"></script>
-  <script src="plinko-auth.js?v=1"></script>
-  <script src="plinko-physics.js?v=1" defer></script>
-  <script src="plinko.js?v=1" defer></script>
-  <script src="plinko-multiball.js?v=1" defer></script>
-  <script src="plinko-audio-v2.js?v=1" defer></script>
+  <script src="platform-gate.js?v=1"></script>
+  <script data-feature="plinko" data-feature-src="plinko-auth.js?v=1"></script>
+  <script data-feature="plinko" data-feature-src="plinko-physics.js?v=1" data-defer></script>
+  <script data-feature="plinko" data-feature-src="plinko.js?v=1" data-defer></script>
+  <script data-feature="plinko" data-feature-src="plinko-multiball.js?v=1" data-defer></script>
+  <script data-feature="plinko" data-feature-src="plinko-audio-v2.js?v=1" data-defer></script>
 </body>
 </html>

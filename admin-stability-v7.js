@@ -49,8 +49,8 @@ function markCanonicalEventUI(){
     list.removeAttribute('aria-hidden');
   }
   if(legacyGrid){
-    legacyGrid.setAttribute('aria-hidden','true');
-    try{ legacyGrid.inert=true; }catch(_e){}
+    if(legacyGrid.getAttribute('aria-hidden')!=='true')legacyGrid.setAttribute('aria-hidden','true');
+    try{ if(!legacyGrid.inert)legacyGrid.inert=true; }catch(_e){}
   }
 }
 
@@ -64,11 +64,32 @@ function loadCovers(){
 function decorateEventCard(details){
   var summary=details.querySelector(':scope > summary');if(!summary)return;
   details.classList.add('admin-event-card');summary.classList.add('admin-event-card-summary');
-  var id=details.dataset.id||'',meta=coverMap[id]||{};
+  var id=details.dataset.id||'',meta=coverMap[id]||{},nextUrl=meta.url||'';
   var cover=summary.querySelector('.admin-event-cover');
-  if(!cover){cover=document.createElement('div');cover.className='admin-event-cover';cover.setAttribute('aria-hidden','true');summary.insertBefore(cover,summary.firstChild)}
-  if(meta.url){cover.classList.add('has-image');cover.style.backgroundImage='linear-gradient(180deg,rgba(3,8,10,.05),rgba(3,8,10,.48)),url("'+String(meta.url).replace(/"/g,'%22')+'")';cover.textContent=''}
-  else{cover.classList.remove('has-image');cover.style.backgroundImage='';cover.innerHTML='<span>GAME<br>ZONE</span>'}
+  if(!cover){
+    cover=document.createElement('div');
+    cover.className='admin-event-cover';
+    cover.setAttribute('aria-hidden','true');
+    summary.insertBefore(cover,summary.firstChild);
+  }
+
+  /* Important: only mutate the cover when its source actually changes.
+     Rewriting innerHTML/textContent on every observer pass creates an endless
+     childList -> observer -> childList loop and freezes the admin page. */
+  if(cover.dataset.coverUrl===nextUrl)return;
+  cover.dataset.coverUrl=nextUrl;
+
+  if(nextUrl){
+    cover.classList.add('has-image');
+    cover.style.backgroundImage='linear-gradient(180deg,rgba(3,8,10,.05),rgba(3,8,10,.48)),url("'+String(nextUrl).replace(/"/g,'%22')+'")';
+    if(cover.childNodes.length)cover.replaceChildren();
+  }else{
+    cover.classList.remove('has-image');
+    cover.style.removeProperty('background-image');
+    var span=document.createElement('span');
+    span.innerHTML='GAME<br>ZONE';
+    cover.replaceChildren(span);
+  }
 }
 
 function enhanceEventAccordions(){
@@ -94,7 +115,9 @@ function installObservers(){
   var list=$('eventList');
   if(list && !list.dataset.v7Observed){
     list.dataset.v7Observed='1';
-    new MutationObserver(function(){ enhanceEventAccordions(); }).observe(list,{childList:true,subtree:true});
+    /* We only need to know when ops-v4 replaces top-level event rows.
+       Do not observe the descendants we decorate ourselves. */
+    new MutationObserver(function(){ enhanceEventAccordions(); }).observe(list,{childList:true});
   }
 
   ['v5Backdrop','v5Modal'].forEach(function(id){
@@ -137,7 +160,6 @@ function install(){
   installObservers();
   loadCovers();
 
-  /* A previous failed V5 workspace can leave body overflow locked. Start clean. */
   if($('v5Backdrop') && overlayVisible($('v5Backdrop'))){
     closeLegacyWorkspace();
   }else{
@@ -154,14 +176,12 @@ function install(){
   window.addEventListener('error',function(){ setTimeout(recoverFromBrokenOverlay,0); });
   window.addEventListener('unhandledrejection',function(){ setTimeout(recoverFromBrokenOverlay,0); });
 
-  /* Compatibility watchdog: several historical admin modules can manipulate body overflow.
-     Only clear it when there is genuinely no active modal/overlay. */
   setInterval(function(){
     markCanonicalEventUI();
     enhanceEventAccordions();
     recoverFromBrokenOverlay();
     restoreBodyScroll();
-  },1500);
+  },3000);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});

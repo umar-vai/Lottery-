@@ -5,7 +5,7 @@ var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
 var S={session:null,data:null};
 function $(id){return document.getElementById(id)}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]})}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function unpack(x){if(!x)return null;if(x.access_token)return x;if(x.currentSession&&x.currentSession.access_token)return x.currentSession;if(x.session&&x.session.access_token)return x.session;if(x.data&&x.data.session&&x.data.session.access_token)return x.data.session;return null}
 function readSession(){try{var keys=['sb-'+REF+'-auth-token'];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(REF)>=0&&k.indexOf('auth')>=0&&keys.indexOf(k)<0)keys.push(k)}for(var j=0;j<keys.length;j++){var raw=localStorage.getItem(keys[j]);if(!raw)continue;try{var s=unpack(JSON.parse(raw));if(s)return s}catch(e){}}}catch(e){}return null}
 function req(body){S.session=readSession();if(!S.session)return Promise.reject(new Error('Admin session required'));return fetch(BASE+'/functions/v1/support-device-admin',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=t}if(!r.ok)throw new Error((d&&d.error)||(d&&d.message)||('HTTP '+r.status));return d})})}
@@ -26,7 +26,7 @@ function ensureSupportTab(){
   return section;
 }
 function install(){
-  suppressCreditRequests();ensureCreditObserver();
+  suppressCreditRequests();
   var section=ensureSupportTab();if(!section){setTimeout(install,300);return}
   var mount=$('supportAdminMount');if(!mount){setTimeout(install,300);return}
   if(!$('supportAdminPanel')){
@@ -36,10 +36,10 @@ function install(){
   }
   load()
 }
-function ensureCreditObserver(){if(document.documentElement.dataset.creditSuppressObserved)return;document.documentElement.dataset.creditSuppressObserved='1';new MutationObserver(function(){suppressCreditRequests()}).observe(document.body,{childList:true,subtree:true})}
 function render(){
   var d=S.data||{},devices=d.devices||[],tx=d.transactions||[];var dl=$('supportDeviceList'),tl=$('supportTxList');if(!dl||!tl)return;
-  dl.innerHTML=devices.length?devices.map(function(x){return '<div class="support-device"><div><strong>'+esc(x.label)+'</strong><span>'+(x.enabled?'Enabled':'Disabled')+' · Last seen '+esc(fmt(x.last_seen_at))+'</span></div><button data-id="'+esc(x.id)+'" data-action="'+(x.enabled?'revoke':'enable')+'" class="'+(x.enabled?'danger':'')+'">'+(x.enabled?'Disable':'Enable')+'</button></div>'}).join(''):'<div class="support-admin-empty">No linked phone yet.</div>';dl.querySelectorAll('button[data-id]').forEach(function(b){b.onclick=function(){toggleDevice(b.dataset.id,b.dataset.action)}});
+  dl.innerHTML=devices.length?devices.map(function(x){return '<div class="support-device"><div><strong>'+esc(x.label)+'</strong><span>'+(x.enabled?'Enabled':'Disabled')+' · Last seen '+esc(fmt(x.last_seen_at))+'</span></div><button data-id="'+esc(x.id)+'" data-action="'+(x.enabled?'revoke':'enable')+'" class="'+(x.enabled?'danger':'')+'">'+(x.enabled?'Disable':'Enable')+'</button></div>'}).join(''):'<div class="support-admin-empty">No linked phone yet.</div>';
+  dl.querySelectorAll('button[data-id]').forEach(function(b){b.onclick=function(){toggleDevice(b.dataset.id,b.dataset.action)}});
   tl.innerHTML=tx.length?tx.map(function(x){return '<div class="support-tx"><div><strong>TrxID '+esc(x.trx_id)+' · ****'+esc(x.sender_last4)+'</strong><span>'+esc(fmt(x.received_at))+(x.claimed_by_name?' · Claimed by '+esc(x.claimed_by_name):'')+'</span></div><div><b>৳'+esc(Number(x.amount||0).toLocaleString(undefined,{maximumFractionDigits:2}))+'</b><br><em class="'+(x.claimed_at?'':'pending')+'">'+(x.claimed_at?'Claimed':'Unclaimed')+'</em></div></div>'}).join(''):'<div class="support-admin-empty">No synced transfer yet.</div>';
   var totalReceived=tx.reduce(function(a,x){return a+Number(x.amount||0)},0);var enabled=devices.filter(function(x){return x.enabled}).length;
   if($('supportSummaryReceived'))$('supportSummaryReceived').textContent=money(totalReceived);if($('supportSummaryPhones'))$('supportSummaryPhones').textContent=String(enabled)

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070b0d">
+  <title>My Profile — DRAW//01</title>
+  <link rel="stylesheet" href="site-shell.css?v=5">
+  <link rel="stylesheet" href="profile.css?v=1">
+</head>
+<body>
+  <header class="topbar"></header>
+  <main class="profile-shell">
+    <section id="profileGate" class="profile-gate profile-glass">
+      <span class="profile-eyebrow">PLAYER ACCOUNT</span>
+      <h1>Your DRAW//01 profile</h1>
+      <p id="profileGateText">Checking your Google session…</p>
+      <button id="profileLogin" class="profile-primary" type="button" hidden>Continue with Google</button>
+    </section>
+
+    <div id="profileApp" hidden>
+      <section class="profile-hero profile-glass">
+        <div class="profile-person">
+          <img id="profileAvatar" alt="Player avatar">
+          <div>
+            <span class="profile-eyebrow">MY PROFILE</span>
+            <h1 id="profileName">Player</h1>
+            <p><span id="profileNickname">No nickname yet</span> · <span id="profileEmail"></span></p>
+          </div>
+        </div>
+        <div class="profile-wallets">
+          <article><span>DRAW CREDITS</span><strong id="profileCredits">0</strong><small>Virtual ticket balance</small></article>
+          <article class="support"><span>SUPPORT POINTS</span><strong id="profileSupport">0</strong><small>Development-support balance</small></article>
+        </div>
+        <button id="editProfileBtn" class="profile-secondary" type="button">Edit profile</button>
+      </section>
+
+      <section class="profile-grid two">
+        <article class="profile-card profile-glass">
+          <div class="profile-card-head"><div><span class="profile-eyebrow">ACTIVITY</span><h2>My tickets</h2></div><span id="ticketCountPill" class="profile-pill">0 tickets</span></div>
+          <p class="profile-muted">Every event you entered is grouped here. Open an event to inspect all of your tickets or buy more while it is accepting entries.</p>
+          <div id="ticketEvents" class="ticket-events"><div class="profile-empty">Loading ticket history…</div></div>
+        </article>
+
+        <article class="profile-card profile-glass referral-card">
+          <div class="profile-card-head"><div><span class="profile-eyebrow">SHARE & EARN</span><h2>My referral link</h2></div><span class="profile-pill">3 CR / signup</span></div>
+          <p class="profile-muted">Share your personal link. A genuinely new account that joins through it can give you 3 bonus Draw Credits.</p>
+          <label class="ref-code-label"><span>YOUR REFERRAL CODE</span><strong id="referralCode">—</strong></label>
+          <div class="ref-link-row"><input id="referralLink" readonly><button id="copyReferral" type="button">Copy</button></div>
+          <div class="share-actions">
+            <button id="shareNative" class="profile-primary" type="button">Share link</button>
+            <button id="shareWhatsApp" class="profile-secondary" type="button">WhatsApp</button>
+            <button id="shareFacebook" class="profile-secondary" type="button">Facebook</button>
+          </div>
+          <div class="ref-stats">
+            <article><span>JOINED</span><strong id="refTotal">0</strong></article>
+            <article><span>SIGNUP CREDITS</span><strong id="refCredits">0</strong></article>
+            <article><span>REFERRED SUPPORT</span><strong id="refSupportTotal">0 SP</strong></article>
+            <article><span>SUPPORT REWARD</span><strong id="refSupportReward">0 SP</strong></article>
+          </div>
+        </article>
+      </section>
+
+      <section class="profile-card profile-glass">
+        <div class="profile-card-head"><div><span class="profile-eyebrow">MY NETWORK</span><h2>People who joined through me</h2></div><span id="refPeopleCount" class="profile-pill">0 people</span></div>
+        <p class="profile-muted">Only public profile information is shown here. Email addresses are not exposed.</p>
+        <div id="referredPeople" class="referred-list"><div class="profile-empty">No referred players yet.</div></div>
+      </section>
+
+      <section class="profile-card profile-glass">
+        <div class="profile-card-head"><div><span class="profile-eyebrow">REFERRAL Q&A</span><h2>How sharing works</h2></div></div>
+        <div class="profile-faq">
+          <details open><summary>How do I invite someone?</summary><p>Copy or share the personal link shown above. The referral code is included automatically in the link.</p></details>
+          <details><summary>When do I receive the 3 bonus Draw Credits?</summary><p>The person must be a genuinely new DRAW//01 account and the referral must attach during the new-account window. Once linked successfully, 3 virtual Draw Credits are added to your main Draw Credit balance and recorded in the credit ledger.</p></details>
+          <details><summary>Can an existing player use my referral code?</summary><p>No referral bonus is created for an established account. A user can have only one referrer, and self-referrals are blocked.</p></details>
+          <details><summary>How does the Support Points referral reward work?</summary><p>Support rewards are cumulative. For every full 10 Support Points settled by a user who joined through your link, you receive 1 Support Point. For example, 5 SP and later another 5 SP reaches 10 total and earns 1 SP.</p></details>
+          <details><summary>Are Support Points the same as Draw Credits?</summary><p>No. They remain completely separate. Support Points cannot buy tickets, change odds, create prize eligibility, be converted into Draw Credits, or be withdrawn as cash.</p></details>
+          <details><summary>Can I earn more than one signup bonus from the same person?</summary><p>No. Each referred account can create the signup reward only once.</p></details>
+          <details><summary>Where can I see my referral results?</summary><p>The statistics and player list above update from the server. You can see joined users, signup credits earned, referred Support Points and your Support Points referral reward.</p></details>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="profileEditDialog" class="profile-dialog">
+    <form id="profileEditForm" class="profile-edit-card profile-glass">
+      <span class="profile-eyebrow">EDIT PROFILE</span>
+      <h2>Public player identity</h2>
+      <p class="profile-muted">Your email and account role are managed by your Google account/admin system. You can edit the public name and nickname here.</p>
+      <label><span>Name</span><input id="editDisplayName" maxlength="80" required></label>
+      <label><span>Nickname</span><input id="editNickname" maxlength="30" placeholder="Optional nickname"></label>
+      <div id="profileEditMsg" class="profile-form-msg"></div>
+      <div class="profile-dialog-actions"><button id="cancelProfileEdit" class="profile-secondary" type="button">Cancel</button><button class="profile-primary" type="submit">Save profile</button></div>
+    </form>
+  </dialog>
+
+  <script src="site-shell.js?v=9"></script>
+  <script src="support-live.js?v=1" defer></script>
+  <script type="module" src="profile.js?v=1"></script>
+</body>
+</html>

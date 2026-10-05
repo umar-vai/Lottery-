@@ -1,2 +1,8 @@
 [functions.draw-engine]
 verify_jwt = false
+
+[functions.binance-pay-create-order]
+verify_jwt = true
+
+[functions.binance-pay-webhook]
+verify_jwt = false

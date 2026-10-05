@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="credit-admin.css?v=1">
   <link rel="stylesheet" href="site-shell.css?v=4">
   <link rel="stylesheet" href="support-live.css?v=1">
-  <link rel="stylesheet" href="support-wallet-admin.css?v=1">
+  <link rel="stylesheet" href="support-wallet-admin.css?v=2">
 </head>
 <body>
   <div class="orb orb-a"></div><div class="orb orb-b"></div>
@@ -50,7 +50,7 @@
 
       <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">EVENT + TICKET MANAGEMENT</span><h2>Events and ticket pools</h2><p>Open an event to inspect its limits, players and every submitted ticket.</p></div><button id="createEventBtn" class="btn primary">+ Create event</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 events</span></div><div id="eventList" class="event-accordion-list"></div></article></section>
 
-      <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>New accounts start at 0 virtual credits. Only admins can adjust balances.</p></div></div><div id="playerList" class="records"></div></article></section>
+      <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>Admins can manage each player's Draw Credits and Support Points separately from this list.</p></div></div><div id="playerList" class="records"></div></article></section>
 
       <section id="ledger" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CREDIT LEDGER</span><h2>Balance movements</h2><p>Admin adjustments, ticket purchases and prize credits are recorded here.</p></div></div><div class="filter-row"><select id="ledgerUserFilter"><option value="all">All players</option></select><span id="ledgerSummary" class="muted-pill">0 entries</span></div><div id="ledgerList" class="records"></div></article></section>
 
@@ -99,6 +99,6 @@
   <script src="admin-v5.js?v=1" defer></script>
   <script src="admin-v6.js?v=1" defer></script>
   <script src="credit-admin.js?v=1" defer></script>
-  <script src="support-wallet-admin.js?v=1" defer></script>
+  <script src="support-wallet-admin.js?v=2" defer></script>
 </body>
 </html>

@@ -1,5 +1,7 @@
 # DRAW//01 — Public Powerball-style Test System
 
+> **Current developer documentation (2026-10-05):** this README mainly documents the original Powerball-style subsystem. The live product has since evolved into a multi-event platform. New developers should start with [`DEVELOPER-HANDOFF.md`](./DEVELOPER-HANDOFF.md), then [`ARCHITECTURE.md`](./ARCHITECTURE.md) and [`DATABASE.md`](./DATABASE.md).
+
 A public multiplayer draw application for GitHub Pages. It reproduces the core Powerball-style game mechanics for simulation/testing only: 5 unique white numbers from 1–69, one Powerball from 1–26, scheduled ticket cutoff, shared server-side draw results, Power Play, prize tiers, jackpot rollover, Google sign-in and user ticket history.
 
 ## Live architecture

@@ -1,0 +1,85 @@
+.d01-mobile-nav-toggle,.d01-mobile-nav-backdrop,.d01-mobile-nav-drawer{display:none}
+
+@media(max-width:560px){
+  html.d01-mobile-menu-open{overflow:hidden}
+  .d01-nav-center .d01-nav-link[href="events.html"],
+  .d01-nav-center .d01-nav-link[href="winners.html"],
+  .d01-nav-center .d01-admin-link{display:none!important}
+
+  .d01-mobile-nav-toggle{
+    display:grid;
+    place-content:center;
+    gap:4px;
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    padding:0;
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:12px;
+    background:rgba(255,255,255,.045);
+    color:#fff;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:.16s ease;
+  }
+  .d01-mobile-nav-toggle span{display:block;width:16px;height:2px;border-radius:999px;background:#f4f7f9;transition:.18s ease}
+  .d01-mobile-nav-toggle[aria-expanded="true"]{border-color:rgba(168,255,62,.34);background:rgba(168,255,62,.075)}
+  .d01-mobile-nav-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+  .d01-mobile-nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0;transform:scaleX(.35)}
+  .d01-mobile-nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+  .d01-mobile-nav-backdrop{
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:10070;
+    padding:0;
+    border:0;
+    background:rgba(0,0,0,.54);
+    -webkit-backdrop-filter:blur(4px);
+    backdrop-filter:blur(4px);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity .2s ease,visibility .2s ease;
+  }
+  .d01-mobile-nav-backdrop.open{opacity:1;visibility:visible;pointer-events:auto}
+
+  .d01-mobile-nav-drawer{
+    display:block;
+    position:fixed;
+    z-index:10080;
+    top:0;
+    right:0;
+    width:min(330px,88vw);
+    height:100vh;
+    height:100dvh;
+    padding:18px 14px max(18px,env(safe-area-inset-bottom));
+    border-left:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg,rgba(12,20,24,.985),rgba(5,10,13,.99));
+    box-shadow:-28px 0 70px rgba(0,0,0,.48);
+    transform:translateX(104%);
+    visibility:hidden;
+    pointer-events:none;
+    transition:transform .24s cubic-bezier(.22,.8,.3,1),visibility .24s ease;
+    overflow-y:auto;
+  }
+  .d01-mobile-nav-drawer.open{transform:translateX(0);visibility:visible;pointer-events:auto}
+  .d01-mobile-nav-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 3px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .d01-mobile-nav-head small{display:block;margin-bottom:4px;color:#81909b;font:800 9px/1 Archivo Black,Inter,system-ui,sans-serif;letter-spacing:.12em}
+  .d01-mobile-nav-head strong{display:block;color:#f7fafc;font:900 21px/1 Archivo Black,Inter,system-ui,sans-serif}
+  .d01-mobile-nav-close{display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.045);color:#fff;font:300 25px/1 Arial,sans-serif;cursor:pointer}
+  .d01-mobile-nav-links{display:grid;gap:8px;padding-top:14px}
+  .d01-mobile-nav-links a{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:64px;padding:11px 13px;border:1px solid rgba(255,255,255,.085);border-radius:15px;background:rgba(255,255,255,.035);color:#f2f6f8!important;text-decoration:none!important;transition:.15s ease}
+  .d01-mobile-nav-links a:active{transform:scale(.985);background:rgba(168,255,62,.07);border-color:rgba(168,255,62,.22)}
+  .d01-mobile-nav-links a span{font:900 15px/1.05 Archivo Black,Inter,system-ui,sans-serif}
+  .d01-mobile-nav-links a small{max-width:120px;color:#92a0aa;text-align:right;font:700 10px/1.35 "Noto Serif Bengali",serif}
+  .d01-mobile-nav-links a::after{content:'›';color:#a8ff3e;font:800 22px/1 Arial,sans-serif;margin-left:auto}
+  .d01-mobile-nav-links a small+a::after{margin-left:0}
+  .d01-mobile-nav-admin{border-color:rgba(168,255,62,.15)!important;background:rgba(168,255,62,.045)!important}
+}
+
+@media(max-width:370px){
+  .d01-mobile-nav-toggle{width:36px;height:36px;flex-basis:36px;border-radius:11px}
+  .d01-mobile-nav-drawer{width:min(310px,91vw)}
+}

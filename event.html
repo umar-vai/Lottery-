@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="event.css?v=1">
   <link rel="stylesheet" href="event-v2.css?v=1">
   <link rel="stylesheet" href="event-cover.css?v=1">
+  <link rel="stylesheet" href="draw-machine.css?v=1">
   <link rel="stylesheet" href="winner-display-v2.css?v=1">
   <link rel="stylesheet" href="site-shell.css?v=4">
   <link rel="stylesheet" href="platform-gate.css?v=1">
@@ -24,6 +25,7 @@
     <section id="eventApp" hidden>
       <section class="event-hero"><a class="back" href="./">← All events</a><div class="hero-grid"><div><span id="status" class="status">EVENT</span><h1 id="title">Event</h1><p id="description"></p></div><div class="prize-card glass"><span>TOTAL PRIZES</span><strong id="prize">0 credits</strong><small id="prizeMode"></small></div></div></section>
       <section class="meta-grid"><article class="meta glass"><span>Ticket price</span><strong id="ticketPrice">0 credits</strong></article><article class="meta glass"><span>Your limit</span><strong id="ticketLimit">0 tickets</strong></article><article class="meta glass"><span>Ticket cutoff</span><strong id="cutoff">—</strong></article><article class="meta glass"><span>Draw time</span><strong id="drawTime">—</strong></article></section>
+      <section id="drawMachineMount" aria-label="Automated event draw machine"></section>
       <section class="layout">
         <article class="panel glass"><div class="panel-head"><div><span class="kicker">BUILD TICKET</span><h2>Choose your numbers</h2></div><button id="quickPick" class="btn ghost compact">Quick pick</button></div><p class="help" id="rulesText"></p><div class="ticket-preview" id="ticketPreview"></div><div class="picker-block"><div class="picker-head"><span>White numbers</span><span id="whiteCount">0 / 5</span></div><div id="whiteGrid" class="number-grid"></div></div><div id="bonusBlock" class="picker-block"><div class="picker-head"><span>Bonus ball</span><span id="bonusCount">0 / 1</span></div><div id="bonusGrid" class="number-grid bonus"></div></div><div class="buy-box"><div><span>Cost</span><strong id="buyCost">0 credits</strong><small id="buyHint">Build a ticket to continue.</small></div><button id="buyBtn" class="btn primary buy" disabled>Confirm ticket</button></div><div id="notice" class="notice">You can build a ticket without signing in. Login is required only to confirm it.</div></article>
         <aside class="side"><article class="panel glass"><div class="panel-head"><div><span class="kicker">YOUR EVENT TICKETS</span><h2>My entries</h2></div><span id="ticketUsage" class="muted-pill">0 / 0</span></div><div id="myTickets" class="records"><p class="muted">Sign in to see your entries.</p></div></article><article class="panel glass result-card"><span class="kicker">DRAW RESULT</span><h2 id="resultTitle">Waiting for draw</h2><div id="resultNumbers" class="result-numbers"></div><p id="resultMeta" class="muted">Winner tickets will appear here after the event is completed.</p></article></aside>
@@ -33,7 +35,7 @@
   <script src="site-shell.js?v=10"></script>
   <script src="platform-gate.js?v=1"></script>
   <script src="support-live.js?v=1" defer></script>
-  <script data-feature="events" data-feature-src="event.js?v=4" data-module></script>
+  <script data-feature="events" data-feature-src="event.js?v=5" data-module></script>
   <script data-feature="events" data-feature-src="winner-display-v2.js?v=1" data-defer></script>
 </body>
 </html>

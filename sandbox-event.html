@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07100c">
+  <title>DRAW//01 — Demo Ticket Lab</title>
+  <link rel="stylesheet" href="site-shell.css?v=4">
+  <link rel="stylesheet" href="sandbox-event.css?v=1">
+</head>
+<body>
+  <main class="sandbox-shell">
+    <section class="sandbox-hero">
+      <span class="sandbox-kicker">SANDBOX · DEMO CREDITS ONLY</span>
+      <h1>Demo Ticket Lab</h1>
+      <p>Experience the full balance-change → ticket-purchase flow. These Demo Credits cannot enter live DRAW//01 events, winner pools, odds or prizes.</p>
+      <div class="sandbox-balances">
+        <article><span>Demo balance</span><strong id="demoBalance">—</strong></article>
+        <article><span>Ticket cost</span><strong>10 Demo CR</strong></article>
+      </div>
+    </section>
+
+    <section class="sandbox-grid">
+      <article class="sandbox-card">
+        <div class="sandbox-card-head"><div><span>PICK 5 NUMBERS</span><h2>Build a demo ticket</h2></div><button id="quickPick" type="button">Quick Pick</button></div>
+        <div id="numberGrid" class="number-grid" aria-label="Demo ticket numbers"></div>
+        <div class="selection-line">Selected: <strong id="selectedNumbers">None</strong></div>
+        <button id="buyTicket" class="buy-ticket" type="button" disabled>Confirm demo ticket · 10 CR</button>
+        <div id="notice" class="notice">Sign in with Google first. Ticket purchase uses Demo Credits only.</div>
+      </article>
+
+      <aside class="sandbox-card">
+        <span class="sandbox-section-label">MY DEMO TICKETS</span>
+        <div id="ticketList" class="ticket-list"><div class="empty">Loading…</div></div>
+      </aside>
+    </section>
+
+    <section class="sandbox-note">
+      <strong>Important separation</strong>
+      <p>This page is intentionally isolated from live draw credits. Buying here decreases only your Demo Credit wallet and creates only sandbox tickets.</p>
+    </section>
+  </main>
+  <script src="site-shell.js?v=8"></script>
+  <script src="sandbox-event.js?v=1" defer></script>
+</body>
+</html>

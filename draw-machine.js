@@ -1,4 +1,9 @@
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const WINNER_SEGMENT_MS = 60000;
+const DRAW_START_DELAY_MS = 1500;
+const BALL_PRELUDE_MS = 5000;
+const BALL_WINDOW_MS = 37000;
+const BALL_FLIGHT_MS = 3800;
+const WINNER_DECLARE_MS = 48000;
 
 function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 function pad2(n){ return String(n).padStart(2, '0'); }
@@ -14,15 +19,39 @@ function moneyTime(ms){
   if(h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
   return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
 }
-function resultFromEvent(event){
-  let whites = Array.isArray(event?.winning_numbers) ? event.winning_numbers.map(Number).filter(Number.isFinite) : [];
-  let bonus = event?.winning_bonus_ball == null ? null : Number(event.winning_bonus_ball);
-  if(!whites.length && Array.isArray(event?.winner_summary) && event.winner_summary.length){
-    const first = [...event.winner_summary].sort((a,b)=>Number(a.rank||999)-Number(b.rank||999))[0];
-    whites = Array.isArray(first?.white_numbers) ? first.white_numbers.map(Number).filter(Number.isFinite) : [];
-    if(bonus == null && first?.bonus_ball != null) bonus = Number(first.bonus_ball);
+function create(tag, cls, text){
+  const el = document.createElement(tag);
+  if(cls) el.className = cls;
+  if(text != null) el.textContent = text;
+  return el;
+}
+function motionPoint(seed, spread){
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return Math.round(((x - Math.floor(x)) * 2 - 1) * spread);
+}
+function normalizeWinner(w, index){
+  const rank = Number(w?.rank ?? w?.winner_rank ?? (index + 1));
+  const whites = Array.isArray(w?.white_numbers) ? w.white_numbers.map(Number).filter(Number.isFinite) : [];
+  const bonusRaw = w?.bonus_ball;
+  const bonus = bonusRaw == null ? null : Number(bonusRaw);
+  return {
+    rank: Number.isFinite(rank) ? rank : index + 1,
+    prize: Number(w?.prize ?? w?.prize_awarded ?? 0),
+    white_numbers: whites,
+    bonus_ball: Number.isFinite(bonus) ? bonus : null,
+    ticket_id: w?.ticket_id || null,
+    user_id: w?.user_id || null
+  };
+}
+function winnersFromEvent(event){
+  let winners = Array.isArray(event?.winner_summary) ? event.winner_summary.map(normalizeWinner).filter(w=>w.white_numbers.length) : [];
+  if(!winners.length){
+    const whites = Array.isArray(event?.winning_numbers) ? event.winning_numbers.map(Number).filter(Number.isFinite) : [];
+    const bonusRaw = event?.winning_bonus_ball;
+    const bonus = bonusRaw == null ? null : Number(bonusRaw);
+    if(whites.length) winners = [{rank:1,prize:Number(event?.prize_amount||0),white_numbers:whites,bonus_ball:Number.isFinite(bonus)?bonus:null,ticket_id:null,user_id:null}];
   }
-  return { whites, bonus: Number.isFinite(bonus) ? bonus : null };
+  return winners.sort((a,b)=>b.rank-a.rank);
 }
 function stateFor(event, now = Date.now()){
   if(!event) return 'open';
@@ -34,16 +63,6 @@ function stateFor(event, now = Date.now()){
   if(drawAt && now >= drawAt) return 'drawing';
   if(cutoffAt && now >= cutoffAt) return 'locked';
   return 'open';
-}
-function create(tag, cls, text){
-  const el = document.createElement(tag);
-  if(cls) el.className = cls;
-  if(text != null) el.textContent = text;
-  return el;
-}
-function motionPoint(seed, spread){
-  const x = Math.sin(seed * 12.9898) * 43758.5453;
-  return Math.round(((x - Math.floor(x)) * 2 - 1) * spread);
 }
 
 export class EventDrawMachine {
@@ -57,6 +76,9 @@ export class EventDrawMachine {
     this.wasWaiting = false;
     this.destroyed = false;
     this.reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
+    this.revealedRanks = new Set();
+    this.sequence = [];
+    this.activeRank = null;
     this.build();
     this.tickTimer = window.setInterval(()=>this.tick(), 1000);
   }
@@ -65,7 +87,7 @@ export class EventDrawMachine {
     this.mount.classList.add('draw-machine-section');
     this.mount.innerHTML = `
       <div class="gm-head">
-        <div><span class="gm-kicker">AUTOMATED LIVE DRAW</span><h2>Dual-chamber draw machine</h2><p>Main balls keep mixing continuously. The result sequence starts automatically when the server completes the scheduled draw.</p></div>
+        <div><span class="gm-kicker">AUTOMATED LIVE DRAW</span><h2>Ranked dual-chamber draw</h2><p>Every winner gets a full suspense reveal. The lowest prize position is drawn first and #1 is revealed last.</p></div>
         <div class="gm-status" data-state="open"><i></i><span>Preparing</span></div>
       </div>
       <div class="gm-stage">
@@ -77,10 +99,16 @@ export class EventDrawMachine {
         </div>
         <div class="gm-center">
           <div class="gm-board">
-            <div class="gm-board-top"><span class="gm-board-title">DRAW RESULT</span><strong class="gm-countdown">—</strong></div>
+            <div class="gm-board-top"><span class="gm-board-title">LIVE DRAW</span><strong class="gm-countdown">—</strong></div>
+            <div class="gm-position-banner">
+              <span class="gm-position-kicker">DRAWING POSITION</span>
+              <strong class="gm-position-rank">WAITING</strong>
+              <small class="gm-position-prize"></small>
+            </div>
             <div class="gm-display"><div class="gm-display-label">Result rail</div><div class="gm-result-rail" aria-live="polite"></div></div>
+            <div class="gm-declare" hidden><span>WINNER CONFIRMED</span><strong></strong></div>
             <div class="gm-board-message">The chambers stay active while this event is available.</div>
-            <div class="gm-actions"><button type="button" class="gm-replay" hidden>Replay draw animation</button></div>
+            <div class="gm-actions"><button type="button" class="gm-replay" hidden>Replay full ranked draw</button></div>
           </div>
         </div>
         <div class="gm-machine bonus">
@@ -99,7 +127,15 @@ export class EventDrawMachine {
     this.bonusChamber = this.bonusMachine.querySelector('.gm-chamber');
     this.livePill = this.mount.querySelector('.gm-live-pill');
     this.replay = this.mount.querySelector('.gm-replay');
+    this.positionRank = this.mount.querySelector('.gm-position-rank');
+    this.positionPrize = this.mount.querySelector('.gm-position-prize');
+    this.declareBox = this.mount.querySelector('.gm-declare');
+    this.declareText = this.declareBox.querySelector('strong');
     this.replay.addEventListener('click', ()=>this.replayDraw());
+  }
+
+  emit(type, detail={}){
+    this.mount.dispatchEvent(new CustomEvent(`gmdraw:${type}`, {detail, bubbles:true}));
   }
 
   setEvent(event, { initial = false } = {}){
@@ -116,19 +152,21 @@ export class EventDrawMachine {
     this.tick();
 
     if(event.status === 'completed'){
-      const result = resultFromEvent(event);
+      const winners = winnersFromEvent(event);
       const completedAt = toTime(event.completed_at) || Date.now();
-      const nextKey = `${event.id}:${event.completed_at || 'completed'}:${result.whites.join(',')}:${result.bonus ?? ''}`;
+      const signature = winners.map(w=>`${w.rank}:${w.white_numbers.join('.')}:${w.bonus_ball ?? ''}`).join('|');
+      const nextKey = `${event.id}:${event.completed_at || 'completed'}:${signature}`;
       if(nextKey !== this.playbackKey){
         this.playbackKey = nextKey;
-        const age = Date.now() - completedAt;
-        const shouldAnimate = !this.reduced && (this.wasWaiting || age < 90000 || previous?.status !== 'completed');
-        if(result.whites.length){
-          if(shouldAnimate) this.playSynced(result, completedAt);
-          else this.showFinal(result);
+        const revealEnd = completedAt + DRAW_START_DELAY_MS + winners.length * WINNER_SEGMENT_MS;
+        const shouldAnimate = !this.reduced && winners.length && (this.wasWaiting || Date.now() < revealEnd || previous?.status !== 'completed');
+        if(winners.length){
+          if(shouldAnimate) this.playRankedSequence(winners, completedAt);
+          else this.showFinal(winners);
         }else{
           this.setStatus('complete','Completed');
-          this.message.textContent = 'The event is completed. No displayable ball result was stored for this event.';
+          this.message.textContent = 'The event is completed. No displayable ranked winner result was stored.';
+          this.emit('complete',{winners:[]});
         }
       }
     }else if(initial){
@@ -169,8 +207,8 @@ export class EventDrawMachine {
       ball.style.setProperty('--y2',`${motionPoint(i+10.4,spread)}px`);
       ball.style.setProperty('--x3',`${motionPoint(i+12.5,spread)}px`);
       ball.style.setProperty('--y3',`${motionPoint(i+14.7,spread)}px`);
-      ball.style.setProperty('--d',`${(3.8 + ((i * 17) % 22) / 10).toFixed(1)}s`);
-      ball.style.setProperty('--delay',`${(-((i * 29) % 50) / 10).toFixed(1)}s`);
+      ball.style.setProperty('--d',`${(7.2 + ((i * 17) % 35) / 10).toFixed(1)}s`);
+      ball.style.setProperty('--delay',`${(-((i * 29) % 80) / 10).toFixed(1)}s`);
       chamber.appendChild(ball);
     }
   }
@@ -194,8 +232,13 @@ export class EventDrawMachine {
   clearResult(){
     this.cancelScheduled();
     this.playing = false;
-    this.stage.classList.remove('is-drawing');
+    this.revealedRanks.clear();
+    this.activeRank = null;
+    this.stage.classList.remove('is-drawing','winner-declared');
     this.prepareSlots();
+    this.positionRank.textContent = 'WAITING';
+    this.positionPrize.textContent = '';
+    this.declareBox.hidden = true;
     this.replay.hidden = true;
   }
 
@@ -229,7 +272,7 @@ export class EventDrawMachine {
       this.setStatus('open','Manual draw');
       this.countdown.textContent = 'ADMIN';
       this.livePill.textContent = 'Machine online';
-      this.message.textContent = 'The chambers remain active. The result sequence will start when the admin completes the draw.';
+      this.message.textContent = 'The chambers remain active. The ranked reveal starts when the admin completes the draw.';
       return;
     }
     if(state === 'drawing'){
@@ -238,10 +281,10 @@ export class EventDrawMachine {
       this.setStatus('drawing','Drawing');
       this.countdown.textContent = 'LIVE';
       this.livePill.textContent = 'Draw in progress';
-      this.message.textContent = 'Ticket sales are closed. The server is finalizing the draw result; the reveal starts automatically as soon as it is locked.';
+      this.message.textContent = 'Ticket sales are closed. The server is locking the winner order; the dramatic ranked reveal starts automatically.';
       return;
     }
-    this.stage.classList.remove('is-drawing');
+    this.stage.classList.remove('is-drawing','winner-declared');
     this.livePill.textContent = 'Machine online';
     if(state === 'locked'){
       this.setStatus('locked','Entries locked');
@@ -255,61 +298,136 @@ export class EventDrawMachine {
     }
   }
 
-  showFinal(result){
+  playRankedSequence(winners, completedAt, {replay=false}={}){
     this.cancelScheduled();
-    this.playing = false;
-    this.stage.classList.remove('is-drawing');
-    this.prepareSlots();
-    result.whites.slice(0, Number(this.event.white_ball_count || result.whites.length)).forEach((n,i)=>this.setFinalBall(String(i),n,false));
-    if(this.event.bonus_ball_enabled && result.bonus != null) this.setFinalBall('bonus',result.bonus,true);
-    this.setStatus('complete','Draw complete');
-    this.countdown.textContent = 'FINAL';
-    this.livePill.textContent = 'Result locked';
-    this.message.textContent = 'The automated draw is complete. The displayed balls are locked to the server result.';
-    this.replay.hidden = false;
-  }
-
-  playSynced(result, completedAt){
-    this.cancelScheduled();
-    this.prepareSlots();
+    this.sequence = winners.slice().sort((a,b)=>b.rank-a.rank);
+    this.revealedRanks.clear();
     this.playing = true;
     this.stage.classList.add('is-drawing');
-    this.setStatus('drawing','Revealing result');
+    this.stage.classList.remove('winner-declared');
+    this.setStatus('drawing','Ranked reveal');
     this.countdown.textContent = 'LIVE';
-    this.livePill.textContent = 'Live result reveal';
-    this.message.textContent = 'Main balls are being revealed first. The special ball is revealed last.';
+    this.livePill.textContent = 'Ranked reveal starting';
+    this.positionRank.textContent = 'GET READY';
+    this.positionPrize.textContent = `${this.sequence.length} winner${this.sequence.length===1?'':'s'} · #${this.sequence[0].rank} first, #1 last`;
+    this.message.textContent = 'One full suspense sequence is reserved for every winner position.';
+    this.declareBox.hidden = true;
     this.replay.hidden = true;
+    this.prepareSlots();
+    this.emit('reset',{winners:this.sequence,segmentMs:WINNER_SEGMENT_MS,totalMs:this.sequence.length*WINNER_SEGMENT_MS});
 
-    if(this.reduced){ this.showFinal(result); return; }
-    const whiteCount = Number(this.event.white_ball_count || result.whites.length);
-    const sequence = result.whites.slice(0,whiteCount).map((n,i)=>({ key:String(i), number:n, bonus:false }));
-    if(this.event.bonus_ball_enabled && result.bonus != null) sequence.push({ key:'bonus', number:result.bonus, bonus:true });
-    const start = Math.max(completedAt + 650, Date.now() - 15000);
-    const gap = 1320;
-    const flight = 880;
+    if(this.reduced){ this.showFinal(this.sequence); return; }
+
+    const start = replay ? Date.now() + 1200 : completedAt + DRAW_START_DELAY_MS;
     const now = Date.now();
+    this.sequence.forEach((winner,index)=>{
+      const segmentStart = start + index * WINNER_SEGMENT_MS;
+      const segmentEnd = segmentStart + WINNER_SEGMENT_MS;
+      if(now >= segmentEnd){
+        this.markRevealed(winner,index,true);
+      }else if(now >= segmentStart){
+        this.startWinnerSegment(winner,index,segmentStart,now);
+      }else{
+        this.timeouts.push(window.setTimeout(()=>this.startWinnerSegment(winner,index,segmentStart,Date.now()), Math.max(0,segmentStart-now)));
+      }
+    });
 
-    sequence.forEach((item,idx)=>{
-      const at = start + idx * gap;
-      const doneAt = at + flight;
+    const finishAt = start + this.sequence.length * WINNER_SEGMENT_MS;
+    if(now >= finishAt) this.finishSequence();
+    else this.timeouts.push(window.setTimeout(()=>this.finishSequence(), Math.max(0,finishAt-now)));
+  }
+
+  startWinnerSegment(winner,index,segmentStart,now=Date.now()){
+    if(this.destroyed || !this.playing) return;
+    this.activeRank = winner.rank;
+    this.stage.classList.add('is-drawing');
+    this.stage.classList.remove('winner-declared');
+    this.prepareSlots();
+    this.declareBox.hidden = true;
+    this.positionRank.textContent = `POSITION #${winner.rank}`;
+    this.positionPrize.textContent = winner.prize > 0 ? `${Number(winner.prize).toLocaleString()} credits prize` : 'Ranked winner draw';
+    this.setStatus('drawing',`Drawing #${winner.rank}`);
+    this.countdown.textContent = `#${winner.rank}`;
+    this.livePill.textContent = `Position #${winner.rank} · ${index+1}/${this.sequence.length}`;
+    this.message.textContent = `Hold tight — position #${winner.rank} is being drawn now. Every ball will arrive one by one.`;
+    this.emit('rankstart',{winner,index,total:this.sequence.length});
+
+    const items = winner.white_numbers.slice(0,Number(this.event.white_ball_count||winner.white_numbers.length)).map((number,i)=>({key:String(i),number,bonus:false}));
+    if(this.event.bonus_ball_enabled && winner.bonus_ball != null) items.push({key:'bonus',number:winner.bonus_ball,bonus:true});
+    const firstAt = segmentStart + BALL_PRELUDE_MS;
+    const lastStart = segmentStart + BALL_PRELUDE_MS + BALL_WINDOW_MS;
+    const gap = items.length > 1 ? BALL_WINDOW_MS/(items.length-1) : 0;
+
+    items.forEach((item,idx)=>{
+      const at = items.length > 1 ? firstAt + idx*gap : firstAt + BALL_WINDOW_MS*.45;
+      const doneAt = at + BALL_FLIGHT_MS;
       if(now >= doneAt){
         this.setFinalBall(item.key,item.number,item.bonus);
       }else if(now >= at){
-        this.flyBall(item.key,item.number,item.bonus,Math.max(240,doneAt-now));
-      }else{
-        this.timeouts.push(window.setTimeout(()=>this.flyBall(item.key,item.number,item.bonus,flight), at-now));
+        this.flyBall(item.key,item.number,item.bonus,Math.max(500,doneAt-now));
+      }else if(at <= lastStart + 10){
+        this.timeouts.push(window.setTimeout(()=>this.flyBall(item.key,item.number,item.bonus,BALL_FLIGHT_MS), Math.max(0,at-now)));
       }
     });
-    const finishAt = start + Math.max(0,sequence.length-1)*gap + flight + 450;
-    if(now >= finishAt) this.finishReveal(result);
-    else this.timeouts.push(window.setTimeout(()=>this.finishReveal(result), finishAt-now));
+
+    const declareAt = segmentStart + WINNER_DECLARE_MS;
+    if(now >= declareAt) this.declareWinner(winner,index);
+    else this.timeouts.push(window.setTimeout(()=>this.declareWinner(winner,index), Math.max(0,declareAt-now)));
+  }
+
+  markRevealed(winner,index,silent=false){
+    if(this.revealedRanks.has(winner.rank)) return;
+    this.revealedRanks.add(winner.rank);
+    this.emit('rankreveal',{winner,index,total:this.sequence.length,silent});
+  }
+
+  declareWinner(winner,index){
+    if(this.destroyed || !this.playing || this.activeRank !== winner.rank) return;
+    winner.white_numbers.slice(0,Number(this.event.white_ball_count||winner.white_numbers.length)).forEach((n,i)=>this.setFinalBall(String(i),n,false));
+    if(this.event.bonus_ball_enabled && winner.bonus_ball != null) this.setFinalBall('bonus',winner.bonus_ball,true);
+    this.stage.classList.add('winner-declared');
+    this.declareBox.hidden = false;
+    this.declareText.textContent = `POSITION #${winner.rank}`;
+    this.setStatus('drawing',`#${winner.rank} confirmed`);
+    this.livePill.textContent = `Winner #${winner.rank} confirmed`;
+    this.message.textContent = winner.prize > 0
+      ? `Position #${winner.rank} is locked — ${Number(winner.prize).toLocaleString()} credits. Next position begins automatically.`
+      : `Position #${winner.rank} is locked. The next position begins automatically.`;
+    this.markRevealed(winner,index,false);
+  }
+
+  showFinal(winners){
+    this.cancelScheduled();
+    this.sequence = winners.slice().sort((a,b)=>b.rank-a.rank);
+    this.revealedRanks = new Set(this.sequence.map(w=>w.rank));
+    this.playing = false;
+    this.stage.classList.remove('is-drawing');
+    this.stage.classList.add('winner-declared');
+    const top = this.sequence.slice().sort((a,b)=>a.rank-b.rank)[0];
+    this.prepareSlots();
+    if(top){
+      top.white_numbers.slice(0,Number(this.event.white_ball_count||top.white_numbers.length)).forEach((n,i)=>this.setFinalBall(String(i),n,false));
+      if(this.event.bonus_ball_enabled && top.bonus_ball != null) this.setFinalBall('bonus',top.bonus_ball,true);
+      this.positionRank.textContent = 'POSITION #1';
+      this.positionPrize.textContent = top.prize > 0 ? `${Number(top.prize).toLocaleString()} credits · final winner` : 'Final winner';
+      this.declareBox.hidden = false;
+      this.declareText.textContent = 'POSITION #1';
+    }
+    this.setStatus('complete','Draw complete');
+    this.countdown.textContent = 'FINAL';
+    this.livePill.textContent = 'All positions revealed';
+    this.message.textContent = 'The full ranked reveal is complete. Every displayed winner is now public.';
+    this.replay.hidden = false;
+    this.emit('reset',{winners:this.sequence,segmentMs:WINNER_SEGMENT_MS,totalMs:this.sequence.length*WINNER_SEGMENT_MS,historical:true});
+    this.sequence.forEach((winner,index)=>this.emit('rankreveal',{winner,index,total:this.sequence.length,silent:true}));
+    this.emit('complete',{winners:this.sequence});
   }
 
   replayDraw(){
     if(!this.event || this.event.status !== 'completed') return;
-    const result = resultFromEvent(this.event);
-    if(!result.whites.length) return;
-    this.playSynced(result,Date.now()-300);
+    const winners = winnersFromEvent(this.event);
+    if(!winners.length) return;
+    this.playRankedSequence(winners,Date.now(),{replay:true});
   }
 
   setFinalBall(key, number, bonus){
@@ -335,28 +453,41 @@ export class EventDrawMachine {
     ball.style.top = `${sy}px`;
     this.stage.appendChild(ball);
     const dx = tx-sx, dy = ty-sy;
-    const arc = bonus ? -54 : -72;
+    const arc = bonus ? -70 : -92;
     const animation = ball.animate([
-      { transform:'translate3d(0,0,0) rotate(0deg) scale(.78)', opacity:.25 },
-      { transform:`translate3d(${dx*.36}px,${dy*.36+arc}px,0) rotate(260deg) scale(1.08)`, opacity:1, offset:.42 },
-      { transform:`translate3d(${dx*.76}px,${dy*.76-20}px,0) rotate(620deg) scale(1)`, opacity:1, offset:.78 },
-      { transform:`translate3d(${dx}px,${dy}px,0) rotate(900deg) scale(1)`, opacity:1 }
-    ],{ duration, easing:'cubic-bezier(.19,.78,.25,1)', fill:'forwards' });
+      { transform:'translate3d(0,0,0) rotate(0deg) scale(.72)', opacity:.18 },
+      { transform:`translate3d(${dx*.22}px,${dy*.22+arc*.78}px,0) rotate(190deg) scale(1.08)`, opacity:1, offset:.28 },
+      { transform:`translate3d(${dx*.58}px,${dy*.58+arc}px,0) rotate(520deg) scale(1.04)`, opacity:1, offset:.60 },
+      { transform:`translate3d(${dx*.84}px,${dy*.84-26}px,0) rotate(820deg) scale(1)`, opacity:1, offset:.84 },
+      { transform:`translate3d(${dx}px,${dy}px,0) rotate(1080deg) scale(1)`, opacity:1 }
+    ],{ duration, easing:'cubic-bezier(.12,.72,.2,1)', fill:'forwards' });
     animation.onfinish=()=>{ ball.remove(); this.setFinalBall(key,number,bonus); };
     animation.oncancel=()=>ball.remove();
   }
 
-  finishReveal(result){
-    if(this.destroyed) return;
-    result.whites.slice(0,Number(this.event.white_ball_count || result.whites.length)).forEach((n,i)=>this.setFinalBall(String(i),n,false));
-    if(this.event.bonus_ball_enabled && result.bonus != null) this.setFinalBall('bonus',result.bonus,true);
+  finishSequence(){
+    if(this.destroyed || !this.sequence.length) return;
+    this.sequence.forEach((winner,index)=>this.markRevealed(winner,index,true));
+    const top = this.sequence.slice().sort((a,b)=>a.rank-b.rank)[0];
     this.playing = false;
+    this.activeRank = null;
     this.stage.classList.remove('is-drawing');
+    this.stage.classList.add('winner-declared');
+    if(top){
+      this.prepareSlots();
+      top.white_numbers.slice(0,Number(this.event.white_ball_count||top.white_numbers.length)).forEach((n,i)=>this.setFinalBall(String(i),n,false));
+      if(this.event.bonus_ball_enabled && top.bonus_ball != null) this.setFinalBall('bonus',top.bonus_ball,true);
+      this.positionRank.textContent = 'POSITION #1';
+      this.positionPrize.textContent = top.prize > 0 ? `${Number(top.prize).toLocaleString()} credits · final winner` : 'Final winner';
+      this.declareBox.hidden = false;
+      this.declareText.textContent = 'POSITION #1';
+    }
     this.setStatus('complete','Draw complete');
     this.countdown.textContent = 'FINAL';
-    this.livePill.textContent = 'Result locked';
-    this.message.textContent = 'Reveal complete. The result shown here is the locked server result for this event.';
+    this.livePill.textContent = 'All positions revealed';
+    this.message.textContent = 'Ranked reveal complete — the full winner board is now unlocked.';
     this.replay.hidden = false;
+    this.emit('complete',{winners:this.sequence});
   }
 
   cancelScheduled(){

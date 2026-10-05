@@ -1,0 +1,123 @@
+/* Plinko bucket heatmap: center = warm yellow, outer buckets = deep red/crimson.
+   Loaded after plinko.css + plinko-physics.css so these colors win reliably. */
+
+/* Shared bucket finish */
+#bucketLayer .plinko-bucket,
+#paytableBuckets > span {
+  color:#fff !important;
+  border-color:rgba(255,255,255,.16) !important;
+  font-weight:1000 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -14px 24px rgba(92,10,5,.18),
+    0 4px 10px rgba(0,0,0,.2) !important;
+}
+
+/* Symmetrical heat spectrum: crimson -> red -> orange -> gold/yellow -> orange -> red -> crimson */
+#bucketLayer .plinko-bucket:nth-child(1),
+#bucketLayer .plinko-bucket:nth-child(13),
+#paytableBuckets > span:nth-child(1),
+#paytableBuckets > span:nth-child(13) {
+  background:linear-gradient(180deg,#f32651 0%,#d70f3c 54%,#a9002d 100%) !important;
+  border-color:rgba(255,67,104,.72) !important;
+}
+
+#bucketLayer .plinko-bucket:nth-child(2),
+#bucketLayer .plinko-bucket:nth-child(12),
+#paytableBuckets > span:nth-child(2),
+#paytableBuckets > span:nth-child(12) {
+  background:linear-gradient(180deg,#ff3d3d 0%,#e72431 55%,#b81027 100%) !important;
+  border-color:rgba(255,91,91,.68) !important;
+}
+
+#bucketLayer .plinko-bucket:nth-child(3),
+#bucketLayer .plinko-bucket:nth-child(11),
+#paytableBuckets > span:nth-child(3),
+#paytableBuckets > span:nth-child(11) {
+  background:linear-gradient(180deg,#ff5c32 0%,#ed3d25 58%,#be271d 100%) !important;
+  border-color:rgba(255,117,78,.66) !important;
+}
+
+#bucketLayer .plinko-bucket:nth-child(4),
+#bucketLayer .plinko-bucket:nth-child(10),
+#paytableBuckets > span:nth-child(4),
+#paytableBuckets > span:nth-child(10) {
+  background:linear-gradient(180deg,#ff7a28 0%,#ef571f 58%,#c13d17 100%) !important;
+  border-color:rgba(255,145,74,.64) !important;
+}
+
+#bucketLayer .plinko-bucket:nth-child(5),
+#bucketLayer .plinko-bucket:nth-child(9),
+#paytableBuckets > span:nth-child(5),
+#paytableBuckets > span:nth-child(9) {
+  background:linear-gradient(180deg,#ff9b21 0%,#ed741b 58%,#bf5512 100%) !important;
+  border-color:rgba(255,176,70,.62) !important;
+}
+
+#bucketLayer .plinko-bucket:nth-child(6),
+#bucketLayer .plinko-bucket:nth-child(8),
+#paytableBuckets > span:nth-child(6),
+#paytableBuckets > span:nth-child(8) {
+  background:linear-gradient(180deg,#ffc233 0%,#ee981f 60%,#bd7312 100%) !important;
+  border-color:rgba(255,210,99,.64) !important;
+  color:#171007 !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.18) !important;
+}
+
+#bucketLayer .plinko-bucket:nth-child(7),
+#paytableBuckets > span:nth-child(7) {
+  background:linear-gradient(180deg,#ffe46a 0%,#f5bf31 58%,#c98e18 100%) !important;
+  border-color:rgba(255,236,137,.75) !important;
+  color:#151006 !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.22) !important;
+}
+
+/* Gloss on the physical board buckets */
+#bucketLayer .plinko-bucket::before {
+  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.10)) !important;
+  border-color:rgba(255,255,255,.20) !important;
+  opacity:.72;
+}
+
+/* Winning/landing bucket: keep its heat color, add a bright physical flash instead of turning green */
+#bucketLayer .plinko-bucket.hot {
+  color:#fff !important;
+  border-color:#fff3c0 !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.72),
+    0 0 22px rgba(255,220,79,.85),
+    0 0 48px rgba(255,73,38,.58),
+    inset 0 1px 0 rgba(255,255,255,.52),
+    inset 0 -14px 24px rgba(90,0,0,.16) !important;
+  animation:plinkoHeatWin .62s cubic-bezier(.2,.86,.25,1) 2;
+  z-index:8;
+}
+
+@keyframes plinkoHeatWin {
+  0%   {filter:brightness(1);transform:translateY(0) scale(1)}
+  30%  {filter:brightness(1.55) saturate(1.18);transform:translateY(-7px) scale(1.08)}
+  65%  {filter:brightness(1.18);transform:translateY(2px) scale(.98)}
+  100% {filter:brightness(1);transform:translateY(-3px) scale(1.035)}
+}
+
+/* Paytable gets the same visual language, but flatter and easier to scan. */
+#paytableBuckets > span {
+  min-height:56px;
+  letter-spacing:.01em;
+  position:relative;
+  overflow:hidden;
+}
+#paytableBuckets > span::after {
+  content:"";
+  position:absolute;
+  left:7%;right:7%;top:4px;height:34%;
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,0));
+  pointer-events:none;
+}
+
+@media (max-width:720px) {
+  #bucketLayer .plinko-bucket {font-size:8.5px !important}
+  #paytableBuckets > span {min-height:48px}
+}

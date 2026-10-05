@@ -5,13 +5,13 @@ var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
 var S={session:null,data:null};
 function $(id){return document.getElementById(id)}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]})}
 function unpack(x){if(!x)return null;if(x.access_token)return x;if(x.currentSession&&x.currentSession.access_token)return x.currentSession;if(x.session&&x.session.access_token)return x.session;if(x.data&&x.data.session&&x.data.session.access_token)return x.data.session;return null}
 function readSession(){try{var keys=['sb-'+REF+'-auth-token'];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(REF)>=0&&k.indexOf('auth')>=0&&keys.indexOf(k)<0)keys.push(k)}for(var j=0;j<keys.length;j++){var raw=localStorage.getItem(keys[j]);if(!raw)continue;try{var s=unpack(JSON.parse(raw));if(s)return s}catch(e){}}}catch(e){}return null}
 function req(body){S.session=readSession();if(!S.session)return Promise.reject(new Error('Admin session required'));return fetch(BASE+'/functions/v1/support-device-admin',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=t}if(!r.ok)throw new Error((d&&d.error)||(d&&d.message)||('HTTP '+r.status));return d})})}
 function fmt(v){return v?new Date(v).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Never'}
 function money(v){return '৳'+Number(v||0).toLocaleString(undefined,{maximumFractionDigits:2})}
-function suppressCreditRequests(){var box=$('creditAdminBox');if(box)box.remove();var players=$('players');if(players){var p=players.querySelector('.panel-head p');if(p)p.textContent="Manage each player's Draw Credits here. Support Points and phone-bridge tools are kept in the Support tab."}}
+function suppressCreditRequests(){var box=$('creditAdminBox');if(box)box.remove();var players=$('players');if(players){var p=players.querySelector('.panel-head p'),text="Manage each player's Draw Credits here. Support Points and phone-bridge tools are kept in the Support tab.";if(p&&p.textContent!==text)p.textContent=text}}
 function ensureSupportTab(){
   var tabs=document.querySelector('.tabs'),app=$('app');if(!tabs||!app)return null;
   var section=$('support');

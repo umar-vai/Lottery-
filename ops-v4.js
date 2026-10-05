@@ -147,7 +147,7 @@ function renderEvents(){
     var cover=card.querySelector('.admin-event-cover');
     if(e.cover_image_url){cover.classList.add('has-image');cover.style.backgroundImage='linear-gradient(180deg,rgba(3,8,10,.03),rgba(3,8,10,.62)),url("'+String(e.cover_image_url).replace(/"/g,'%22')+'")';cover.innerHTML=''}
     var actions=card.querySelector('.admin-event-card-actions');actions.addEventListener('click',function(ev){ev.stopPropagation()});appendEventActions(actions,e);
-    card.onclick=function(){openEdit(e)};card.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openEdit(e)}};
+    card.onclick=function(){openEdit(e)};card.onkeydown=function(ev){if(ev.target!==card)return;if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openEdit(e)}};
     root.appendChild(card)
   })
 }

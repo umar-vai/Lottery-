@@ -1,3 +1,5 @@
+@import url('https://fonts.maateen.me/solaiman-lipi/font.css');
+
 /* Global Bangla typography — SolaimanLipi */
 :root{
   --gz-bangla-font:'SolaimanLipi','Noto Sans Bengali','Hind Siliguri',Inter,system-ui,-apple-system,'Segoe UI',sans-serif;

@@ -14,10 +14,10 @@ function install(){
   var host=$('supportAdminPanel');
   if(!host){setTimeout(install,300);return}
   if(!$('supportWalletAdmin')){
-    host.insertAdjacentHTML('beforeend','<section id="supportWalletAdmin" class="support-wallet-admin"><div class="support-wallet-head"><div><span class="eyebrow">LOVE POINT BALANCES</span><h3>Draw Credits vs Love Points (LP)</h3><p>Balances stay separate. LP can be adjusted here; Draw Credits remain managed from the Players tab.</p></div><button id="supportWalletRefresh" type="button">Refresh</button></div><div id="supportWalletList"><div class="support-wallet-empty">Loading balances…</div></div></section>');
+    host.insertAdjacentHTML('beforeend','<section id="supportWalletAdmin" class="support-wallet-admin"><div class="support-wallet-head"><div><span class="eyebrow">LOVE POINT BALANCES</span><h3>Draw Credits vs Love Points (LP)</h3><p>Balances stay separate. LP can be adjusted from either Players or Support; Draw Credits remain managed from Players.</p></div><button id="supportWalletRefresh" type="button">Refresh</button></div><div id="supportWalletList"><div class="support-wallet-empty">Loading balances…</div></div></section>');
     $('supportWalletRefresh').onclick=load;
   }
-  var players=$('players');if(players){var p=players.querySelector('.panel-head p');if(p)p.textContent="Manage each player's Draw Credits here. Love Points (LP) are managed only from the Support tab."}
+  var players=$('players');if(players){var p=players.querySelector('.panel-head p');if(p)p.textContent="Manage each player's Draw Credits and Love Points (LP) here. Phone Bridge and support transactions remain in the Support tab."}
   if(!timer){load();timer=setInterval(function(){if(document.visibilityState!=='hidden')load()},5000)}
 }
 function render(list){

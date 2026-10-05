@@ -1,0 +1,87 @@
+/* Admin stability layer v7
+   Keeps the proven ops-v4 event accordion as the canonical Events & Tickets UI.
+   The V5 card workspace remains available to its own code but is no longer used for event clicks,
+   which avoids the body-scroll lock / blank workspace failure mode. */
+
+/* V5 hid the stable ops-v4 event list and replaced it with a full-screen workspace.
+   Reverse only that event-management override; keep V5/V6 winner tools intact. */
+#events #eventList.admin-v7-event-list,
+#events #eventList {
+  display: grid !important;
+  gap: 10px;
+}
+#events #v5EventGrid {
+  display: none !important;
+}
+
+/* Make large ticket pools contained and scrollable instead of making the entire admin page enormous. */
+#events .event-accordion,
+#events .event-accordion-body,
+#events .participant-card,
+#events .ticket-line {
+  min-width: 0;
+}
+#events .participant-list {
+  max-height: min(58vh, 680px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 4px;
+}
+#events .event-accordion[open] {
+  scroll-margin-top: 92px;
+}
+#events .event-accordion summary {
+  touch-action: manipulation;
+}
+
+/* Native admin dialogs must always have an internal scrolling surface on short screens. */
+dialog.event-form-modal,
+dialog.balance-modal {
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.event-form-card,
+.balance-card {
+  max-width: 100%;
+}
+
+/* Defensive styling for legacy V5 overlays if another feature opens one. */
+.v5-backdrop:not([hidden]),
+.v5-modal:not([hidden]) {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.v5-backdrop:not([hidden]) {
+  align-items: flex-start;
+}
+.v5-workspace {
+  margin: auto;
+  max-height: calc(100dvh - 36px);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Never let a hidden overlay continue intercepting pointer/wheel events. */
+.v5-backdrop[hidden],
+.v5-modal[hidden] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+@media (max-width: 720px) {
+  #events .participant-list {
+    max-height: 54vh;
+  }
+  dialog.event-form-modal,
+  dialog.balance-modal {
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+  .v5-workspace {
+    max-height: calc(100dvh - 16px);
+  }
+}

@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="site-shell.css?v=4">
   <link rel="stylesheet" href="support-live.css?v=1">
   <link rel="stylesheet" href="support-wallet-admin.css?v=2">
+  <link rel="stylesheet" href="platform-controls-admin.css?v=1">
 </head>
 <body>
   <div class="orb orb-a"></div><div class="orb orb-b"></div>
@@ -64,24 +65,20 @@
       <label><span>Event title</span><input id="fTitle" required placeholder="Friday Mega Draw"></label>
       <label><span>Public slug</span><input id="fSlug" placeholder="friday-mega-draw"></label>
       <label class="full"><span>Description</span><textarea id="fDescription" placeholder="Describe this event for players."></textarea></label>
-
       <label><span>Ticket price (credits)</span><input id="fPrice" type="number" min="0" step="1" value="10" required></label>
       <label><span>Max tickets per player</span><input id="fLimit" type="number" min="1" max="1000" value="5" required></label>
       <label><span>Maximum players</span><input id="fMaxPlayers" type="number" min="1" max="1000000" placeholder="Unlimited"></label>
       <label><span>Maximum total tickets</span><input id="fMaxTotalTickets" type="number" min="1" max="10000000" placeholder="Unlimited"></label>
-
       <label><span>Numbers to pick</span><input id="fWhiteCount" type="number" min="1" max="10" value="5" required></label>
       <label><span>Number range max</span><input id="fWhiteMax" type="number" min="2" max="500" value="69" required></label>
       <label class="inline-check"><input id="fBonusEnabled" type="checkbox" checked><span>Use bonus ball</span></label>
       <label><span>Bonus range max</span><input id="fBonusMax" type="number" min="1" max="500" value="26" required></label>
-
       <label><span>Schedule mode</span><select id="fScheduleMode"><option value="scheduled">Scheduled draw</option><option value="manual">Open until I draw it</option></select></label>
       <label><span>Opens at</span><input id="fOpen" type="datetime-local"></label>
       <label class="schedule-only"><span>Ticket cutoff</span><input id="fCutoff" type="datetime-local"></label>
       <label class="schedule-only"><span>Draw time</span><input id="fDraw" type="datetime-local"></label>
       <label><span>Status</span><select id="fStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></label>
       <label><span>Number of winners</span><input id="fWinnerCount" type="number" min="1" max="100" value="1" required></label>
-
       <div class="full capacity-note">Leave Maximum Players or Maximum Total Tickets blank to keep that limit unlimited. The backend enforces all limits atomically when a ticket is confirmed.</div>
       <div class="full prize-builder"><div class="prize-builder-head"><div><span class="eyebrow">RANKED PRIZES</span><h3>Prize per winner</h3></div><strong id="prizeTotal">Total: 0 cr</strong></div><div id="winnerPrizeFields" class="winner-prize-grid"></div></div>
     </div>
@@ -100,5 +97,6 @@
   <script src="admin-v6.js?v=1" defer></script>
   <script src="credit-admin.js?v=1" defer></script>
   <script src="support-wallet-admin.js?v=2" defer></script>
+  <script src="platform-controls-admin.js?v=1" defer></script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+/* Global Bangla typography — SolaimanLipi */
+:root{
+  --gz-bangla-font:'SolaimanLipi','Noto Sans Bengali','Hind Siliguri',Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+html,body,
+button,input,textarea,select,option,
+label,p,span,a,strong,b,small,
+h1,h2,h3,h4,h5,h6,
+li,td,th,legend,summary{
+  font-family:var(--gz-bangla-font)!important;
+}
+
+/* Keep code/data snippets readable where a monospace face is intentional. */
+code,pre,kbd,samp{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace!important;
+}
+
+body{
+  font-feature-settings:'kern' 1;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}

@@ -4,7 +4,7 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],editing:null,balanceUser:null,timer:null};
+var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -12,6 +12,7 @@ function credits(v){return Number(v||0).toLocaleString(undefined,{maximumFractio
 function fmt(v){return v?new Date(v).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—'}
 function localInput(v){if(!v)return'';var d=new Date(v);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
 function slugify(v){return String(v||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')}
+function normalize(v){return String(v||'').toLowerCase().trim()}
 function nullableInt(id){var raw=$(id).value.trim();if(!raw)return null;var n=Number(raw);if(!Number.isInteger(n)||n<1)throw new Error($(id).previousElementSibling?$(id).previousElementSibling.textContent+' must be a positive whole number':'Invalid limit');return n}
 function session(){try{var x=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'null');if(x&&x.access_token)return x;if(x&&x.currentSession&&x.currentSession.access_token)return x.currentSession;if(x&&x.session&&x.session.access_token)return x.session;return null}catch(e){return null}}
 function req(path,opt){opt=opt||{};var h=Object.assign({},opt.headers||{});h.apikey=KEY;if(S.session)h.Authorization='Bearer '+S.session.access_token;if(opt.body)h['Content-Type']='application/json';return fetch(BASE+path,Object.assign({},opt,{headers:h})).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=t}if(!r.ok)throw new Error((d&&d.message)||(d&&d.error_description)||(d&&d.error)||('HTTP '+r.status));return d})})}
@@ -78,7 +79,7 @@ function load(){
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
 
-function render(){renderStats();renderOverview();renderEvents();renderPlayers();renderLedger();renderAudit();startCountdown()}
+function render(){renderStats();renderOverview();renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit();startCountdown()}
 function renderStats(){
   var open=S.events.filter(function(e){return statusView(e)==='open'}).length;
   var totalCredits=S.profiles.reduce(function(a,p){return a+Number(p.balance||0)},0);
@@ -123,43 +124,63 @@ function renderOverview(){
 function canRun(e){if(e.status!=='published')return false;if(ticketCount(e.id)<Number(e.winner_count||1))return false;if(e.schedule_mode==='manual')return true;return !e.cutoff_at||Date.now()>=new Date(e.cutoff_at).getTime()}
 function appendEventActions(root,e){
   root.appendChild(button('View public page','ghost',function(){window.open('event.html?e='+encodeURIComponent(e.slug),'_blank')}));
-  if(e.status!=='completed')root.appendChild(button('Edit','ghost',function(){openEdit(e)}));
+  root.appendChild(button('Edit','ghost',function(){openEdit(e)}));
   if(e.status==='draft')root.appendChild(button('Publish','primary',function(){changeStatus(e,'published')}));
   if(canRun(e))root.appendChild(button('Run draw','primary',function(){runEvent(e)}));
   if(e.status==='published'||e.status==='draft')root.appendChild(button('Cancel','danger',function(){changeStatus(e,'cancelled')}));
   if((e.status==='draft'||e.status==='cancelled')&&ticketCount(e.id)===0)root.appendChild(button('Delete','danger',function(){deleteEvent(e)}));
 }
 function prizeTierHtml(e){var ts=tiersFor(e.id);if(!ts.length)return'<div class="empty-sub">No prize tiers configured.</div>';return'<div class="tier-strip">'+ts.map(function(t){return'<div><span>#'+t.rank+'</span><strong>'+credits(t.prize_amount)+'</strong></div>'}).join('')+'</div>'}
-function participantHtml(e){
-  var ts=ticketsFor(e.id),pm=pmap();if(!ts.length)return'<div class="empty-sub">No tickets in this event yet.</div>';
+function participantHtml(e,tickets){
+  var ts=tickets||ticketsFor(e.id),pm=pmap();if(!ts.length)return'<div class="empty-sub">No tickets in this event yet.</div>';
   var groups={};ts.forEach(function(t){(groups[t.user_id]||(groups[t.user_id]=[])).push(t)});
-  return Object.keys(groups).map(function(uid){var p=pm[uid]||{},arr=groups[uid];return'<div class="participant-card"><div class="participant-head"><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+arr.length+' ticket'+(arr.length===1?'':'s')+'</span></div><span class="credit-balance">'+credits(p.balance||0)+'</span></div><div class="participant-tickets">'+arr.map(function(t){return'<div class="ticket-line"><div><b>Ticket '+esc(String(t.id).slice(0,8))+'</b>'+(t.is_winner?'<span class="winner-rank">#'+t.winner_rank+' WINNER</span>':'')+'</div>'+numbersHtml(t)+'<div class="ticket-meta"><span>'+credits(t.price_paid)+'</span><span>'+esc(fmt(t.created_at))+'</span>'+(t.is_winner?'<strong>'+credits(t.prize_awarded)+' prize</strong>':'')+'</div></div>'}).join('')+'</div></div>'}).join('')
+  return Object.keys(groups).map(function(uid){var p=pm[uid]||{},arr=groups[uid];return'<div class="participant-card"><div class="participant-head"><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+' · '+arr.length+' ticket'+(arr.length===1?'':'s')+'</span></div><span class="credit-balance">'+credits(p.balance||0)+'</span></div><div class="participant-tickets">'+arr.map(function(t){return'<div class="ticket-line"><div><b>Ticket '+esc(String(t.id).slice(0,8))+'</b>'+(t.is_winner?'<span class="winner-rank">#'+t.winner_rank+' WINNER</span>':'')+'</div>'+numbersHtml(t)+'<div class="ticket-meta"><span>'+credits(t.price_paid)+'</span><span>'+esc(fmt(t.created_at))+'</span>'+(t.is_winner?'<strong>'+credits(t.prize_awarded)+' prize</strong>':'')+'</div></div>'}).join('')+'</div></div>'}).join('')
 }
-function capacityProgress(current,max){if(max==null)return'<span>'+current+' / Unlimited</span>';var pct=Math.min(100,Math.round((current/Math.max(1,Number(max)))*100));return'<span>'+current+' / '+Number(max).toLocaleString()+'</span><i><b style="width:'+pct+'%"></b></i>'}
 function renderEvents(){
   var f=$('eventStatusFilter').value||'all',rows=S.events.filter(function(e){return f==='all'||e.status===f}),root=$('eventList');
-  var openIds={};root.querySelectorAll('details[open]').forEach(function(d){openIds[d.dataset.id]=true});
-  $('eventSummary').textContent=rows.length+' events · '+S.tickets.length+' tickets';root.innerHTML='';
+  $('eventSummary').textContent=rows.length+' events';root.innerHTML='';
   if(!rows.length){root.innerHTML='<div class="empty-sub">No events found.</div>';return}
   rows.forEach(function(e){
-    var tc=ticketCount(e.id),pc=playerCount(e.id),need=Math.max(0,Number(e.winner_count||1)-tc);
-    var d=document.createElement('details');d.className='event-accordion';d.dataset.id=e.id;if(openIds[e.id])d.open=true;
-    d.innerHTML='<summary><div class="event-accordion-main"><div class="event-title-line"><strong>'+esc(e.title)+'</strong><span class="status-pill '+statusView(e)+'">'+esc(statusLabel(e))+'</span></div><div class="event-summary-meta"><span>'+tc+' tickets</span><span>'+pc+' players</span><span>'+Number(e.winner_count||1)+' winners</span><span>'+esc(scheduleLabel(e))+'</span></div></div><span class="accordion-chevron">⌄</span></summary>'+
-      '<div class="event-accordion-body">'+
-        '<div class="capacity-grid"><div class="capacity-card"><small>PLAYERS</small><strong>'+pc+' / '+capacity(e.max_players)+'</strong>'+capacityProgress(pc,e.max_players)+'</div><div class="capacity-card"><small>TOTAL TICKETS</small><strong>'+tc+' / '+capacity(e.max_total_tickets)+'</strong>'+capacityProgress(tc,e.max_total_tickets)+'</div><div class="capacity-card"><small>PER PLAYER</small><strong>'+e.max_tickets_per_user+'</strong><span>Maximum tickets each player can hold</span></div></div>'+
-        '<div class="event-detail-grid">'+info('Ticket price',credits(e.ticket_price))+info('Total prizes',credits(e.prize_amount))+info('Winners',String(e.winner_count||1))+info('Number rules',e.white_ball_count+' / '+e.white_ball_max+(e.bonus_ball_enabled?' + 1 / '+e.bonus_ball_max:''))+info('Opens',fmt(e.opens_at))+info('Schedule',e.schedule_mode==='manual'?'Manual / unlimited':'Scheduled')+'</div>'+
-        '<div class="section-label">Prize ranking</div>'+prizeTierHtml(e)+
-        (need?'<div class="draw-readiness">Need '+need+' more ticket'+(need===1?'':'s')+' before '+e.winner_count+' configured winner'+(e.winner_count===1?'':'s')+' can be drawn.</div>':'<div class="draw-readiness ready">Ticket pool is large enough for this draw.</div>')+
-        '<div class="record-actions event-inline-actions" id="act-'+e.id+'"></div>'+
-        '<div class="event-pool-head"><div><span class="eyebrow">TICKET POOL</span><h3>'+pc+' players · '+tc+' tickets</h3></div><span>Winners are selected only from these tickets.</span></div><div class="participant-list">'+participantHtml(e)+'</div></div>';
-    root.appendChild(d);appendEventActions(d.querySelector('#act-'+e.id),e)
+    var tc=ticketCount(e.id),pc=playerCount(e.id),card=document.createElement('article');
+    card.className='admin-event-record-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','Edit '+(e.title||'event'));
+    card.innerHTML='<div class="admin-event-cover"><span>EVENT</span></div><div class="admin-event-card-body"><div class="admin-event-card-top"><span class="status-pill '+statusView(e)+'">'+esc(statusLabel(e))+'</span><small>'+esc(scheduleLabel(e))+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||'No event description yet.')+'</p><div class="admin-event-card-metrics"><span><b>'+tc+'</b> tickets</span><span><b>'+pc+'</b> players</span><span><b>'+Number(e.winner_count||1)+'</b> winners</span><span><b>'+credits(e.ticket_price)+'</b> entry</span></div><div class="admin-event-card-actions"></div></div>';
+    var cover=card.querySelector('.admin-event-cover');
+    if(e.cover_image_url){cover.classList.add('has-image');cover.style.backgroundImage='linear-gradient(180deg,rgba(3,8,10,.03),rgba(3,8,10,.62)),url("'+String(e.cover_image_url).replace(/"/g,'%22')+'")';cover.innerHTML=''}
+    var actions=card.querySelector('.admin-event-card-actions');actions.addEventListener('click',function(ev){ev.stopPropagation()});appendEventActions(actions,e);
+    card.onclick=function(){openEdit(e)};card.onkeydown=function(ev){if(ev.target!==card)return;if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openEdit(e)}};
+    root.appendChild(card)
   })
 }
 
+function ticketMatches(t,e,pm,q){if(!q)return true;var p=pm[t.user_id]||{};return normalize([t.id,e&&e.title,p.display_name,p.email,t.winner_rank].join(' ')).indexOf(q)>=0}
+function renderTickets(){
+  var filter=$('ticketEventFilter'),root=$('ticketEventList'),pm=pmap(),prev=filter.value||'all';
+  filter.innerHTML='<option value="all">All events</option>'+S.events.map(function(e){return'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>'}).join('');
+  if(Array.prototype.some.call(filter.options,function(o){return o.value===prev}))filter.value=prev;
+  var selected=filter.value||'all',q=S.ticketQuery,shown=0,groups=[];
+  S.events.forEach(function(e){
+    if(selected!=='all'&&selected!==e.id)return;
+    var ts=ticketsFor(e.id).filter(function(t){return ticketMatches(t,e,pm,q)});if(!ts.length)return;
+    shown+=ts.length;groups.push({event:e,tickets:ts})
+  });
+  $('ticketSummary').textContent=shown+' ticket'+(shown===1?'':'s');root.innerHTML='';
+  if(!groups.length){root.innerHTML='<div class="empty-sub">No tickets matched this view.</div>';return}
+  groups.forEach(function(g){var e=g.event,section=document.createElement('section');section.className='ticket-event-group';section.innerHTML='<div class="ticket-event-head"><div><span class="eyebrow">'+esc(statusLabel(e))+'</span><h3>'+esc(e.title)+'</h3><p>'+g.tickets.length+' ticket'+(g.tickets.length===1?'':'s')+' shown · '+playerCount(e.id)+' total players</p></div><button class="btn ghost compact" type="button">Edit event</button></div><div class="participant-list">'+participantHtml(e,g.tickets)+'</div>';
+    section.querySelector('button').onclick=function(){openEdit(e)};root.appendChild(section)
+  })
+}
+
+function renderWinners(){
+  var root=$('winnerList'),pm=pmap();root.innerHTML='';
+  var events=S.events.filter(function(e){return ticketsFor(e.id).some(function(t){return t.is_winner})});
+  if(!events.length){root.innerHTML='<div class="empty-sub">No completed-event winners yet.</div>';return}
+  events.forEach(function(e){var wins=ticketsFor(e.id).filter(function(t){return t.is_winner}).sort(function(a,b){return Number(a.winner_rank||999)-Number(b.winner_rank||999)}),group=document.createElement('section');group.className='winner-admin-event';group.innerHTML='<div class="winner-admin-event-head"><div><span class="eyebrow">RESULT ARCHIVE</span><h3>'+esc(e.title)+'</h3><p>'+wins.length+' winning ticket'+(wins.length===1?'':'s')+' · '+esc(fmt(e.drawn_at||e.draw_at))+'</p></div><span class="status-pill completed">COMPLETED</span></div><div class="winner-admin-grid">'+wins.map(function(t){var p=pm[t.user_id]||{};return'<article class="winner-admin-card"><div class="winner-rank-badge">#'+esc(t.winner_rank||'—')+'</div><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+'</span></div>'+numbersHtml(t)+'<b>'+credits(t.prize_awarded)+' prize</b></article>'}).join('')+'</div>';root.appendChild(group)})
+}
+
 function renderPlayers(){
-  var root=$('playerList');root.innerHTML='';
-  if(!S.profiles.length){root.innerHTML='<div class="record-card"><strong>No users yet</strong></div>';return}
-  S.profiles.forEach(function(p){
+  var root=$('playerList'),q=S.playerQuery,rows=S.profiles.filter(function(p){return !q||normalize([p.display_name,p.email,p.role,p.balance].join(' ')).indexOf(q)>=0});root.innerHTML='';$('playerSummary').textContent=rows.length+' of '+S.profiles.length+' players';
+  if(!rows.length){root.innerHTML='<div class="record-card"><strong>No users matched this search</strong></div>';return}
+  rows.forEach(function(p){
     var row=document.createElement('div');row.className='record-card';
     var main=document.createElement('div');main.className='record-main';
     main.innerHTML='<div class="record-title"><strong>'+esc(p.display_name||'Player')+'</strong><span class="status-pill">'+esc((p.role||'player').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(p.email||'')+'</span><span class="credit-balance">'+credits(p.balance)+'</span><span>Joined '+esc(fmt(p.created_at))+'</span></div>';
@@ -180,7 +201,10 @@ function renderTimeline(root,rows){root.innerHTML='';var pm=pmap();if(!rows.leng
 function renderAudit(){renderTimeline($('auditList'),S.audit)}
 
 function defaults(){var n=Date.now();return{open:new Date(n+5*60000),cut:new Date(n+65*60000),draw:new Date(n+70*60000)}}
-function setLockedFields(locked){['fPrice','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax'].forEach(function(id){if($(id))$(id).disabled=!!locked});$('eventFormHint').textContent=locked?'Ticket price and number rules are locked because this event already has tickets. Capacity limits, prizes and schedule may still be increased or adjusted within current usage.':'';$('eventFormHint').className='form-hint'+(locked?' warn':'')}
+function setFieldDisabled(ids,disabled){ids.forEach(function(id){if($(id))$(id).disabled=!!disabled})}
+function setLockedFields(locked){setFieldDisabled(['fPrice','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax'],locked);$('eventFormHint').textContent=locked?'Ticket price and number rules are locked because this event already has tickets. Capacity limits, prizes and schedule can still be adjusted within backend safety rules.':'';$('eventFormHint').className='form-hint'+(locked?' warn':'')}
+function setCompletedFields(completed){setFieldDisabled(['fPrice','fLimit','fMaxPlayers','fMaxTotalTickets','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax','fScheduleMode','fOpen','fCutoff','fDraw','fStatus','fWinnerCount'],completed);$('winnerPrizeFields').querySelectorAll('input').forEach(function(x){x.disabled=completed});if(completed){$('eventFormHint').textContent='This draw is completed. Historical ticket rules, schedule, winners and prizes are locked. You can safely edit the title, slug, description and cover photo.';$('eventFormHint').className='form-hint warn'}}
+function resetEventDisabled(){setFieldDisabled(['fPrice','fLimit','fMaxPlayers','fMaxTotalTickets','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax','fScheduleMode','fOpen','fCutoff','fDraw','fStatus','fWinnerCount'],false);$('winnerPrizeFields').querySelectorAll('input').forEach(function(x){x.disabled=false})}
 function syncBonusField(){if(!$('fBonusEnabled').disabled)$('fBonusMax').disabled=!$('fBonusEnabled').checked}
 function syncSchedule(){var manual=$('fScheduleMode').value==='manual';document.querySelectorAll('.schedule-only').forEach(function(x){x.style.display=manual?'none':''});$('fCutoff').required=!manual;$('fDraw').required=!manual}
 function renderPrizeFields(values){
@@ -190,14 +214,14 @@ function renderPrizeFields(values){
 }
 function syncPrizeTotal(){var total=Array.from($('winnerPrizeFields').querySelectorAll('input')).reduce(function(a,x){return a+Number(x.value||0)},0);$('prizeTotal').textContent='Total: '+credits(total)}
 function openCreate(){
-  S.editing=null;var d=defaults();$('eventModalKicker').textContent='CREATE EVENT';$('eventModalTitle').textContent='New public event';$('saveEventBtn').textContent='Create event';
+  S.editing=null;S.editingCompleted=false;resetEventDisabled();var d=defaults();$('eventModalKicker').textContent='CREATE EVENT';$('eventModalTitle').textContent='New public event';$('saveEventBtn').textContent='Create event';
   $('fTitle').value='';$('fSlug').value='';delete $('fSlug').dataset.touched;$('fDescription').value='';$('fPrice').value=10;$('fLimit').value=5;$('fMaxPlayers').value='';$('fMaxTotalTickets').value='';$('fWhiteCount').value=5;$('fWhiteMax').value=69;$('fBonusEnabled').checked=true;$('fBonusMax').value=26;$('fScheduleMode').value='scheduled';$('fOpen').value=localInput(d.open);$('fCutoff').value=localInput(d.cut);$('fDraw').value=localInput(d.draw);$('fStatus').value='draft';$('fWinnerCount').value=1;
   setLockedFields(false);syncBonusField();syncSchedule();renderPrizeFields([1000]);$('eventDialog').showModal()
 }
 function openEdit(e){
-  S.editing=e;$('eventModalKicker').textContent='EDIT EVENT';$('eventModalTitle').textContent=e.title;$('saveEventBtn').textContent='Save changes';
-  $('fTitle').value=e.title||'';$('fSlug').value=e.slug||'';$('fSlug').dataset.touched='1';$('fDescription').value=e.description||'';$('fPrice').value=Number(e.ticket_price);$('fLimit').value=e.max_tickets_per_user;$('fMaxPlayers').value=e.max_players==null?'':e.max_players;$('fMaxTotalTickets').value=e.max_total_tickets==null?'':e.max_total_tickets;$('fWhiteCount').value=e.white_ball_count;$('fWhiteMax').value=e.white_ball_max;$('fBonusEnabled').checked=!!e.bonus_ball_enabled;$('fBonusMax').value=e.bonus_ball_max;$('fScheduleMode').value=e.schedule_mode||'scheduled';$('fOpen').value=localInput(e.opens_at);$('fCutoff').value=localInput(e.cutoff_at);$('fDraw').value=localInput(e.draw_at);$('fStatus').value=e.status==='completed'?'published':e.status;$('fWinnerCount').value=e.winner_count||prizesFor(e.id).length||1;
-  setLockedFields(ticketCount(e.id)>0);syncBonusField();syncSchedule();renderPrizeFields(prizesFor(e.id));$('eventDialog').showModal()
+  S.editing=e;S.editingCompleted=e.status==='completed';resetEventDisabled();$('eventModalKicker').textContent=e.status==='completed'?'EDIT COMPLETED EVENT':'EDIT EVENT';$('eventModalTitle').textContent=e.title;$('saveEventBtn').textContent='Save changes';
+  $('fTitle').value=e.title||'';$('fSlug').value=e.slug||'';$('fSlug').dataset.touched='1';$('fDescription').value=e.description||'';$('fPrice').value=Number(e.ticket_price);$('fLimit').value=e.max_tickets_per_user;$('fMaxPlayers').value=e.max_players==null?'':e.max_players;$('fMaxTotalTickets').value=e.max_total_tickets==null?'':e.max_total_tickets;$('fWhiteCount').value=e.white_ball_count;$('fWhiteMax').value=e.white_ball_max;$('fBonusEnabled').checked=!!e.bonus_ball_enabled;$('fBonusMax').value=e.bonus_ball_max;$('fScheduleMode').value=e.schedule_mode||'scheduled';$('fOpen').value=localInput(e.opens_at);$('fCutoff').value=localInput(e.cutoff_at);$('fDraw').value=localInput(e.draw_at);$('fStatus').value=e.status;$('fWinnerCount').value=e.winner_count||prizesFor(e.id).length||1;
+  renderPrizeFields(prizesFor(e.id));setLockedFields(ticketCount(e.id)>0);syncBonusField();syncSchedule();if(S.editingCompleted)setCompletedFields(true);$('eventDialog').showModal()
 }
 function formArgs(){
   var manual=$('fScheduleMode').value==='manual';var open=$('fOpen').value?new Date($('fOpen').value):new Date();var cut=manual?null:new Date($('fCutoff').value),draw=manual?null:new Date($('fDraw').value);
@@ -215,10 +239,11 @@ function formArgs(){
   }
 }
 function saveEvent(ev){
-  ev.preventDefault();var a;try{a=formArgs()}catch(e){note(e.message,true);return}
-  var p;if(S.editing){a.p_event_id=S.editing.id;a.p_status=$('fStatus').value;p=rpc('admin_update_lottery_event_v3',a)}else{a.p_publish=$('fStatus').value==='published';p=rpc('admin_create_lottery_event_v3',a)}
+  ev.preventDefault();var p,label=S.editing?'Event updated':'Event created';
+  if(S.editingCompleted){p=rpc('admin_update_completed_event_metadata',{p_event_id:S.editing.id,p_title:$('fTitle').value.trim(),p_slug:$('fSlug').value.trim()||slugify($('fTitle').value),p_description:$('fDescription').value.trim()})}
+  else{var a;try{a=formArgs()}catch(e){note(e.message,true);return}if(S.editing){a.p_event_id=S.editing.id;a.p_status=$('fStatus').value;p=rpc('admin_update_lottery_event_v3',a)}else{a.p_publish=$('fStatus').value==='published';p=rpc('admin_create_lottery_event_v3',a)}}
   $('saveEventBtn').disabled=true;
-  p.then(function(){$('eventDialog').close();note(S.editing?'Event updated':'Event created');S.editing=null;return load()}).catch(function(e){note(e.message,true)}).finally(function(){$('saveEventBtn').disabled=false})
+  p.then(function(){$('eventDialog').close();note(label);S.editing=null;S.editingCompleted=false;return load()}).catch(function(e){note(e.message,true)}).finally(function(){$('saveEventBtn').disabled=false})
 }
 function statusArgs(e,status){return{
   p_event_id:e.id,p_title:e.title,p_slug:e.slug,p_description:e.description||'',p_ticket_price:Number(e.ticket_price),p_max_tickets_per_user:e.max_tickets_per_user,
@@ -237,11 +262,13 @@ function runEvent(e){
 function openBalance(p){S.balanceUser=p;$('balanceTitle').textContent=p.display_name||'Player';$('balanceEmail').textContent=(p.email||'')+' · Current '+credits(p.balance);$('balanceInput').value=Number(p.balance||0);$('balanceNote').value='';$('balanceDialog').showModal()}
 function saveBalance(ev){ev.preventDefault();if(!S.balanceUser)return;var amount=Number($('balanceInput').value);if(!Number.isFinite(amount)||amount<0){note('Balance must be zero or greater',true);return}rpc('admin_set_user_balance',{p_user_id:S.balanceUser.id,p_balance:amount,p_note:$('balanceNote').value.trim()||'Admin balance adjustment'}).then(function(){$('balanceDialog').close();note('Balance updated');return load()}).catch(function(e){note(e.message,true)})}
 
+function activateTab(buttonEl){var target=$(buttonEl.dataset.tab);if(!target)return;document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});buttonEl.classList.add('active');target.classList.add('active');if(buttonEl.dataset.tab==='support'){if(window.Draw01SupportAdmin)window.Draw01SupportAdmin.refresh();if(window.Draw01SupportWalletAdmin)window.Draw01SupportWalletAdmin.refresh()}}
 function bind(){
-  document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});b.classList.add('active');$(b.dataset.tab).classList.add('active')}});
+  document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){activateTab(b)}});
   $('retryBtn').onclick=boot;
   if($('topCreate'))$('topCreate').onclick=openCreate;
-  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('eventStatusFilter').onchange=renderEvents;$('ledgerUserFilter').onchange=renderLedger;
+  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('refreshTickets').onclick=load;$('refreshWinners').onclick=load;
+  $('eventStatusFilter').onchange=renderEvents;$('ticketEventFilter').onchange=renderTickets;$('ticketSearch').oninput=function(){S.ticketQuery=normalize(this.value);renderTickets()};$('playerSearch').oninput=function(){S.playerQuery=normalize(this.value);renderPlayers()};$('ledgerUserFilter').onchange=renderLedger;
   $('closeEventModal').onclick=$('cancelEventModal').onclick=function(){$('eventDialog').close()};$('eventForm').onsubmit=saveEvent;
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};
   $('fBonusEnabled').onchange=syncBonusField;$('fScheduleMode').onchange=syncSchedule;$('fWinnerCount').oninput=function(){renderPrizeFields()};

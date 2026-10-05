@@ -1,8 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Noto+Serif+Bengali:wght@400;500;600;700;800;900&display=swap');
 
-/* Global Bangla typography test — Noto Serif Bengali */
+/* Global bilingual typography
+   - English / Latin glyphs: Archivo Black
+   - Bengali glyphs: Noto Serif Bengali
+   Archivo Black has no Bengali glyphs, so Bengali automatically falls back to Noto Serif Bengali.
+*/
 :root{
-  --gz-bangla-font:'Noto Serif Bengali','Noto Sans Bengali','Hind Siliguri',Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --gz-ui-font:'Archivo Black','Noto Serif Bengali','Noto Sans Bengali','Hind Siliguri',Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 
 html,body,
@@ -10,7 +14,7 @@ button,input,textarea,select,option,
 label,p,span,a,strong,b,small,
 h1,h2,h3,h4,h5,h6,
 li,td,th,legend,summary{
-  font-family:var(--gz-bangla-font)!important;
+  font-family:var(--gz-ui-font)!important;
 }
 
 /* Keep code/data snippets readable where a monospace face is intentional. */

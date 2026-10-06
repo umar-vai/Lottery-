@@ -31,3 +31,16 @@ The advisor-reported duplicate permissive policies were consolidated while prese
 Write policies are unchanged.
 
 The runtime test verifies index presence, policy shape, policy counts, and player/admin profile visibility.
+
+
+## Production advisor result
+
+After applying the migration and rerunning the Supabase advisors:
+
+- `unindexed_foreign_keys`: **11 → 0**
+- `auth_rls_initplan`: **5 → 0**
+- `multiple_permissive_policies`: **4 → 0**
+
+The performance advisor now reports only `unused_index` INFO findings. Newly created foreign-key indexes can appear unused immediately after creation because PostgreSQL has not yet observed workload using them. They are retained intentionally as FK-support indexes and should be evaluated after a meaningful production observation window rather than deleted immediately.
+
+All Phase 1/Phase 2 database regression suites passed after the production migration.

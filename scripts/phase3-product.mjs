@@ -13,6 +13,8 @@ const lifecycleMigration='supabase/migrations/202610062150_phase3_guided_lifecyc
 const lifecycleTest='supabase/tests/phase3_guided_lifecycle_verification.sql';
 const investigationMigration='supabase/migrations/202610062220_phase3_investigation_workspace.sql';
 const investigationTest='supabase/tests/phase3_investigation_workspace.sql';
+const scalabilityMigration='supabase/migrations/202610062245_phase3_admin_scalability.sql';
+const scalabilityTest='supabase/tests/phase3_admin_scalability.sql';
 
 if(!exists(migration)) fail('Missing Phase 3 Control Room migration.');
 else {
@@ -97,7 +99,38 @@ else {
   ]) if(!sql.includes(marker)) fail('Investigation test missing marker: '+marker);
 }
 
-for(const file of ['phase3-control-room.js','phase3-control-room.css','PHASE-3-LIVE-DRAW-CONTROL-ROOM.md','phase3-lifecycle.js','phase3-lifecycle.css','PHASE-3-GUIDED-LIFECYCLE.md','phase3-investigation.js','phase3-investigation.css','PHASE-3-INVESTIGATION-WORKSPACE.md']){
+if(!exists(scalabilityMigration)) fail('Missing Phase 3 admin scalability migration.');
+else {
+  const sql=read(scalabilityMigration);
+  for(const marker of [
+    'admin_get_admin_scalability_snapshot',
+    'admin_list_players_page',
+    'admin_list_tickets_page',
+    'admin_list_balance_ledger_page',
+    'admin_list_winner_events_page',
+    'profiles_created_id_idx',
+    'event_tickets_created_id_idx',
+    'balance_ledger_created_id_idx',
+    'public.is_admin()',
+    'revoke all on function public.admin_list_players_page',
+    'grant execute on function public.admin_list_balance_ledger_page'
+  ]) if(!sql.includes(marker)) fail('Scalability migration missing marker: '+marker);
+}
+
+if(!exists(scalabilityTest)) fail('Missing Phase 3 admin scalability runtime test.');
+else {
+  const sql=read(scalabilityTest);
+  for(const marker of [
+    'Anon can execute scalable admin RPC',
+    'Scalability snapshot totals do not match authoritative tables',
+    'Player keyset pages overlap',
+    'Ticket keyset pages overlap',
+    'Ledger keyset pages overlap',
+    'Normal player could execute scalable admin paging'
+  ]) if(!sql.includes(marker)) fail('Scalability test missing marker: '+marker);
+}
+
+for(const file of ['phase3-control-room.js','phase3-control-room.css','PHASE-3-LIVE-DRAW-CONTROL-ROOM.md','phase3-lifecycle.js','phase3-lifecycle.css','PHASE-3-GUIDED-LIFECYCLE.md','phase3-investigation.js','phase3-investigation.css','PHASE-3-INVESTIGATION-WORKSPACE.md','phase3-scalability.js','phase3-scalability.css','PHASE-3-ADMIN-SCALABILITY.md']){
   if(!exists(file)) fail('Missing Phase 3 artifact: '+file);
 }
 
@@ -115,6 +148,11 @@ if(exists('ops-v4.html')){
   if(!html.includes('id="investigationTicketDialog"')) fail('Admin page is missing ticket investigation dialog.');
   if(!html.includes('phase3-investigation.js')) fail('Admin page does not load investigation JS.');
   if(!html.includes('phase3-investigation.css')) fail('Admin page does not load investigation styles.');
+  if(!html.includes('phase3-scalability.js')) fail('Admin page does not load scalable paging JS.');
+  if(!html.includes('phase3-scalability.css')) fail('Admin page does not load scalable paging styles.');
+  for(const id of ['playerLoadMore','ticketLoadMore','winnerLoadMore','ledgerLoadMore','playerRoleFilter','ledgerSearch','ledgerTypeFilter']){
+    if(!html.includes('id="'+id+'"')) fail('Admin scalable paging control missing: '+id);
+  }
 }
 
 if(exists('phase3-control-room.js')){
@@ -176,9 +214,49 @@ if(exists('ops-v4.js')){
   ]) if(!js.includes(marker)) fail('Admin investigation integration missing marker: '+marker);
 }
 
+if(exists('admin-canonical-v9.js')){
+  const js=read('admin-canonical-v9.js');
+  if(js.includes("req({action:'list'})")) fail('Players canonical enhancer restored bulk Support Point list preload.');
+  if(js.includes('loadWallets(')) fail('Players canonical enhancer restored bulk wallet polling.');
+  if(js.includes("setInterval(function(){if(document.visibilityState!=='hidden')loadWallets")) fail('Players canonical enhancer restored periodic bulk wallet polling.');
+  for(const marker of ['row.dataset.userId','row.dataset.supportPoints','adjust_support','draw01:admin-data-changed']){
+    if(!js.includes(marker)) fail('Canonical paged Love Point integration missing marker: '+marker);
+  }
+}
+
+if(exists('phase3-scalability.js')){
+  const js=read('phase3-scalability.js');
+  for(const marker of [
+    'admin_list_players_page',
+    'admin_list_tickets_page',
+    'admin_list_balance_ledger_page',
+    'admin_list_winner_events_page',
+    'p_cursor_created_at',
+    'playerLoadMore',
+    'ticketLoadMore',
+    'winnerLoadMore',
+    'ledgerLoadMore',
+    'Draw01ScalableAdmin'
+  ]) if(!js.includes(marker)) fail('Scalable admin JS missing marker: '+marker);
+}
+
+if(exists('ops-v4.js')){
+  const js=read('ops-v4.js');
+  if(!js.includes('admin_get_admin_scalability_snapshot')) fail('Base admin does not load scalable dashboard snapshot.');
+  for(const forbidden of [
+    "event_tickets?select=id,event_id,user_id,white_numbers,bonus_ball,price_paid,is_winner,winner_rank,prize_awarded,created_at&order=created_at.desc&limit=5000",
+    "profiles?select=id,display_name,email,role,balance,created_at&order=created_at.desc&limit=1000",
+    "balance_ledger?select=*&order=created_at.desc&limit=2000"
+  ]) if(js.includes(forbidden)) fail('Large browser preload returned: '+forbidden);
+  if(js.includes('renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit()')) fail('Base render still owns scalable data tabs.');
+  for(const marker of ['eventStats','Draw01AdminCore','draw01:admin-data-changed']){
+    if(!js.includes(marker)) fail('Base scalable integration missing marker: '+marker);
+  }
+}
+
 if(failures.length){
   console.error('\nPHASE 3 PRODUCT CHECK FAILED');
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 3 PRODUCT CHECK PASSED — Control Room, guided lifecycle, and player/ticket investigation contracts are present.');
+console.log('PHASE 3 PRODUCT CHECK PASSED — Control Room, guided lifecycle, investigation, and scalable admin paging contracts are present.');

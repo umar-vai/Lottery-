@@ -4,7 +4,7 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,adminChanges:null,editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
+var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,adminChanges:null,scalability:null,eventStats:{},editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -38,8 +38,9 @@ function statusLabel(e){var s=statusView(e);return s==='awaiting'?'AWAITING DRAW
 function pmap(){var m={};S.profiles.forEach(function(p){m[p.id]=p});return m}
 function emap(){var m={};S.events.forEach(function(e){m[e.id]=e});return m}
 function ticketsFor(id){return S.tickets.filter(function(t){return t.event_id===id})}
-function ticketCount(id){return ticketsFor(id).length}
-function playerCount(id){var x={};ticketsFor(id).forEach(function(t){x[t.user_id]=1});return Object.keys(x).length}
+function eventStat(id){return S.eventStats&&S.eventStats[id]||{}}
+function ticketCount(id){return Number(eventStat(id).ticket_count||0)}
+function playerCount(id){return Number(eventStat(id).player_count||0)}
 function tiersFor(id){return S.tiers.filter(function(t){return t.event_id===id}).sort(function(a,b){return a.rank-b.rank})}
 function prizesFor(id){var p=tiersFor(id).map(function(t){return Number(t.prize_amount||0)});return p.length?p:[0]}
 function scheduleLabel(e){return e.schedule_mode==='manual'?'Manual · open until admin draw':fmt(e.draw_at)}
@@ -72,31 +73,28 @@ function boot(){
 function load(){
   return Promise.all([
     safe(rest('lottery_events?select=*&order=created_at.desc&limit=500'),[]),
-    safe(rest('event_tickets?select=id,event_id,user_id,white_numbers,bonus_ball,price_paid,is_winner,winner_rank,prize_awarded,created_at&order=created_at.desc&limit=5000'),[]),
     safe(rest('event_prize_tiers?select=event_id,rank,prize_amount&order=event_id,rank&limit=5000'),[]),
-    safe(rest('profiles?select=id,display_name,email,role,balance,created_at&order=created_at.desc&limit=1000'),[]),
-    safe(rest('balance_ledger?select=*&order=created_at.desc&limit=2000'),[]),
     safe(rest('audit_logs?select=*&order=created_at.desc&limit=500'),[]),
+    safe(rpc('admin_get_admin_scalability_snapshot',{}),null),
     safe(rpc('admin_get_draw_credit_integrity_report',{}),null),
     safe(rpc('admin_get_lottery_operational_health',{}),null),
     safe(rpc('admin_get_operations_incident_center',{}),null),
     safe(rpc('admin_get_admin_change_audit',{p_limit:150}),null)
   ]).then(function(x){
-    S.events=x[0]||[];S.tickets=x[1]||[];S.tiers=x[2]||[];S.profiles=x[3]||[];S.ledger=x[4]||[];S.audit=x[5]||[];S.integrity=x[6]||null;S.opsHealth=x[7]||null;S.incidents=x[8]||null;S.adminChanges=x[9]||null;
+    S.events=x[0]||[];S.tiers=x[1]||[];S.audit=x[2]||[];S.scalability=x[3]||null;S.integrity=x[4]||null;S.opsHealth=x[5]||null;S.incidents=x[6]||null;S.adminChanges=x[7]||null;
+    S.tickets=[];S.ledger=[];S.eventStats=S.scalability&&S.scalability.event_stats||{};S.profiles=S.scalability&&Array.isArray(S.scalability.actor_profiles)?S.scalability.actor_profiles:[];
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
 
-function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderAdminChanges();renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderAdminChanges();renderEvents();renderAudit();startCountdown()}
 function renderStats(){
-  var open=S.events.filter(function(e){return statusView(e)==='open'}).length;
-  var totalCredits=S.profiles.reduce(function(a,p){return a+Number(p.balance||0)},0);
-  var n=nextEvent();
-  $('statEvents').textContent=S.events.length;
-  $('statOpen').textContent=open;
-  $('statTickets').textContent=S.tickets.length;
-  $('statPlayers').textContent=S.profiles.length;
-  $('statCredits').textContent=Number(totalCredits).toLocaleString(undefined,{maximumFractionDigits:0});
+  var summary=S.scalability&&S.scalability.summary||{},n=nextEvent();
+  $('statEvents').textContent=Number(summary.lotteries!=null?summary.lotteries:S.events.length).toLocaleString();
+  $('statOpen').textContent=Number(summary.open_events||0).toLocaleString();
+  $('statTickets').textContent=Number(summary.tickets||0).toLocaleString();
+  $('statPlayers').textContent=Number(summary.players||0).toLocaleString();
+  $('statCredits').textContent=Number(summary.draw_credits||0).toLocaleString(undefined,{maximumFractionDigits:0});
   if(!n){$('statNext').textContent='—';$('statNextMeta').textContent='Not scheduled'}
   else if(n.schedule_mode==='manual'){$('statNext').textContent='MANUAL';$('statNextMeta').textContent=n.title+' · '+ticketCount(n.id)+' tickets'}
   else{$('statNext').textContent='…';$('statNextMeta').textContent=n.title+' · '+fmt(n.draw_at)}
@@ -413,15 +411,15 @@ function runEvent(e){
 }
 
 function openBalance(p){S.balanceUser=p;$('balanceTitle').textContent=p.display_name||'Player';$('balanceEmail').textContent=(p.email||'')+' · Current '+credits(p.balance);$('balanceInput').value=Number(p.balance||0);$('balanceNote').value='';$('balanceDialog').showModal()}
-function saveBalance(ev){ev.preventDefault();if(!S.balanceUser)return;var amount=Number($('balanceInput').value),reason=$('balanceNote').value.trim();if(!Number.isFinite(amount)||amount<0){note('Balance must be zero or greater',true);return}if(!reason){note('Admin reason is required.',true);return}rpc('admin_set_user_balance',{p_user_id:S.balanceUser.id,p_balance:amount,p_note:reason},reason).then(function(){$('balanceDialog').close();note('Balance updated');return load()}).catch(function(e){note(e.message,true)})}
+function saveBalance(ev){ev.preventDefault();if(!S.balanceUser)return;var amount=Number($('balanceInput').value),reason=$('balanceNote').value.trim();if(!Number.isFinite(amount)||amount<0){note('Balance must be zero or greater',true);return}if(!reason){note('Admin reason is required.',true);return}rpc('admin_set_user_balance',{p_user_id:S.balanceUser.id,p_balance:amount,p_note:reason},reason).then(function(){$('balanceDialog').close();note('Balance updated');document.dispatchEvent(new CustomEvent('draw01:admin-data-changed',{detail:{scope:'balance',user_id:S.balanceUser.id}}));return load()}).catch(function(e){note(e.message,true)})}
 
 function activateTab(buttonEl){var target=$(buttonEl.dataset.tab);if(!target)return;document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});buttonEl.classList.add('active');target.classList.add('active');if(buttonEl.dataset.tab==='support'){if(window.Draw01SupportAdmin)window.Draw01SupportAdmin.refresh();if(window.Draw01SupportWalletAdmin)window.Draw01SupportWalletAdmin.refresh()}}
 function bind(){
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){activateTab(b)}});
   $('retryBtn').onclick=boot;
   if($('topCreate'))$('topCreate').onclick=openCreate;
-  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('refreshTickets').onclick=load;$('refreshWinners').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;if($('refreshAdminChanges'))$('refreshAdminChanges').onclick=refreshAdminChanges;
-  $('eventStatusFilter').onchange=renderEvents;$('ticketEventFilter').onchange=renderTickets;$('ticketSearch').oninput=function(){S.ticketQuery=normalize(this.value);renderTickets()};$('playerSearch').oninput=function(){S.playerQuery=normalize(this.value);renderPlayers()};$('ledgerUserFilter').onchange=renderLedger;
+  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;if($('refreshAdminChanges'))$('refreshAdminChanges').onclick=refreshAdminChanges;
+  $('eventStatusFilter').onchange=renderEvents;
   $('closeEventModal').onclick=$('cancelEventModal').onclick=function(){$('eventDialog').close()};$('eventForm').onsubmit=saveEvent;
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};
   $('fBonusEnabled').onchange=syncBonusField;$('fScheduleMode').onchange=syncSchedule;$('fWinnerCount').oninput=function(){renderPrizeFields()};
@@ -429,5 +427,12 @@ function bind(){
   document.addEventListener('draw01:lifecycle-changed',function(){load()});
 }
 
+window.Draw01AdminCore={
+  openBalance:openBalance,
+  openEvent:function(id){var e=S.events.find(function(x){return x.id===id});if(e)openEdit(e);else note('Lottery is not in the current admin event window.',true)},
+  refreshBase:load,
+  toast:note,
+  currentUserId:function(){return S.user&&S.user.id||null}
+};
 bind();boot();
 })();

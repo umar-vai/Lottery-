@@ -1,0 +1,6 @@
+/* Phase 3 — scalable admin paging */
+.sc-page-actions{display:flex;justify-content:center;margin-top:14px}.sc-page-actions .btn{min-width:160px}
+.sc-loading,.sc-error{padding:22px;text-align:center;border:1px dashed rgba(255,255,255,.09);border-radius:14px;color:#7d8991;font-size:12px}.sc-error{color:#ffbac2}
+.sc-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sc-filter-row input,.sc-filter-row select{min-height:42px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(3,8,10,.55);color:#fff;padding:8px 10px;outline:0}.sc-filter-row input{flex:1;min-width:220px}.sc-filter-row input:focus,.sc-filter-row select:focus{border-color:rgba(168,255,62,.28)}
+.sc-winner-ticket{margin-top:7px}
+@media(max-width:650px){.sc-filter-row{align-items:stretch}.sc-filter-row input,.sc-filter-row select{width:100%;min-width:0}.sc-page-actions .btn{width:100%}}

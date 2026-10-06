@@ -70,9 +70,9 @@ function renderPlayers(){
   if(!S.players.length){root.innerHTML='<div class="record-card"><strong>No users matched this search</strong></div>';syncButtons();return}
   root.innerHTML='';
   S.players.forEach(function(p){
-    var row=document.createElement('div');row.className='record-card';
+    var row=document.createElement('div');row.className='record-card';row.dataset.userId=p.id||'';row.dataset.supportPoints=Number(p.support_points||0);row.dataset.email=p.email||'';
     var main=document.createElement('div');main.className='record-main';
-    main.innerHTML='<div class="record-title"><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span class="status-pill">'+esc(String(p.role||'player').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(p.email||'')+'</span><span class="credit-balance">'+credits(p.balance)+'</span><span>'+points(p.support_points)+' support</span><span>Joined '+esc(fmt(p.created_at))+'</span></div>';
+    main.innerHTML='<div class="record-title"><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span class="status-pill">'+esc(String(p.role||'player').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(p.email||'')+'</span><span class="credit-balance">'+credits(p.balance)+'</span><span>Joined '+esc(fmt(p.created_at))+'</span></div>';
     var actions=document.createElement('div');actions.className='record-actions';
     actions.appendChild(makeButton('Investigate','ghost',function(){if(window.Draw01Investigation)window.Draw01Investigation.openPlayer(p.id);else toast('Investigation workspace is still loading.',true)}));
     actions.appendChild(makeButton('Ledger','ghost',function(){openLedgerForPlayer(p)}));

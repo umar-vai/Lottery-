@@ -26,6 +26,9 @@ jobs:
       - name: Phase 0 production smoke gate
         run: node scripts/phase0-smoke.mjs
 
+      - name: Phase 1 security gate
+        run: node scripts/phase1-security.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

@@ -15,6 +15,8 @@ const investigationMigration='supabase/migrations/202610062220_phase3_investigat
 const investigationTest='supabase/tests/phase3_investigation_workspace.sql';
 const scalabilityMigration='supabase/migrations/202610062245_phase3_admin_scalability.sql';
 const scalabilityTest='supabase/tests/phase3_admin_scalability.sql';
+const remainingScalabilityMigration='supabase/migrations/202610061755_phase3_remaining_admin_scalability.sql';
+const remainingScalabilityTest='supabase/tests/phase3_remaining_admin_scalability.sql';
 
 if(!exists(migration)) fail('Missing Phase 3 Control Room migration.');
 else {
@@ -130,7 +132,40 @@ else {
   ]) if(!sql.includes(marker)) fail('Scalability test missing marker: '+marker);
 }
 
-for(const file of ['phase3-control-room.js','phase3-control-room.css','PHASE-3-LIVE-DRAW-CONTROL-ROOM.md','phase3-lifecycle.js','phase3-lifecycle.css','PHASE-3-GUIDED-LIFECYCLE.md','phase3-investigation.js','phase3-investigation.css','PHASE-3-INVESTIGATION-WORKSPACE.md','phase3-scalability.js','phase3-scalability.css','PHASE-3-ADMIN-SCALABILITY.md']){
+if(!exists(remainingScalabilityMigration)) fail('Missing Phase 3 remaining admin scalability migration.');
+else {
+  const sql=read(remainingScalabilityMigration);
+  for(const marker of [
+    'admin_get_admin_base_focus',
+    'admin_get_lottery_event_detail',
+    'admin_list_lottery_events_page',
+    'admin_list_audit_logs_page',
+    'admin_list_admin_changes_page',
+    'admin_get_support_operations_summary',
+    'admin_list_support_wallets_page',
+    'admin_list_support_transactions_page',
+    'admin_list_support_devices_page',
+    'support_transactions_received_id_idx',
+    'public.is_admin()',
+    'revoke all on function public.admin_list_support_transactions_page',
+    'grant execute on function public.admin_list_audit_logs_page'
+  ]) if(!sql.includes(marker)) fail('Remaining scalability migration missing marker: '+marker);
+}
+
+if(!exists(remainingScalabilityTest)) fail('Missing Phase 3 remaining admin scalability runtime test.');
+else {
+  const sql=read(remainingScalabilityTest);
+  for(const marker of [
+    'Anon can execute remaining scalability RPC',
+    'Lottery keyset pages overlap',
+    'Audit keyset pages overlap',
+    'Support wallet keyset pages overlap',
+    'Sensitive support fields leaked',
+    'Normal player could execute remaining admin scalability RPC'
+  ]) if(!sql.includes(marker)) fail('Remaining scalability test missing marker: '+marker);
+}
+
+for(const file of ['phase3-control-room.js','phase3-control-room.css','PHASE-3-LIVE-DRAW-CONTROL-ROOM.md','phase3-lifecycle.js','phase3-lifecycle.css','PHASE-3-GUIDED-LIFECYCLE.md','phase3-investigation.js','phase3-investigation.css','PHASE-3-INVESTIGATION-WORKSPACE.md','phase3-scalability.js','phase3-scalability.css','PHASE-3-ADMIN-SCALABILITY.md','phase3-remaining-scalability.js','phase3-remaining-scalability.css','PHASE-3-REMAINING-ADMIN-SCALABILITY.md']){
   if(!exists(file)) fail('Missing Phase 3 artifact: '+file);
 }
 
@@ -152,6 +187,12 @@ if(exists('ops-v4.html')){
   if(!html.includes('phase3-scalability.css')) fail('Admin page does not load scalable paging styles.');
   for(const id of ['playerLoadMore','ticketLoadMore','winnerLoadMore','ledgerLoadMore','playerRoleFilter','ledgerSearch','ledgerTypeFilter']){
     if(!html.includes('id="'+id+'"')) fail('Admin scalable paging control missing: '+id);
+  }
+  if(!html.includes('phase3-remaining-scalability.js')) fail('Admin page does not load remaining scalability JS.');
+  if(!html.includes('phase3-remaining-scalability.css')) fail('Admin page does not load remaining scalability styles.');
+  if(!html.includes('support-admin.js')) fail('Admin page does not explicitly load Support admin JS.');
+  for(const id of ['eventSearch','eventLoadMore','auditSearch','auditLoadMore','adminChangeSearch','adminChangeTableFilter','adminChangeLoadMore']){
+    if(!html.includes('id="'+id+'"')) fail('Remaining scalability control missing: '+id);
   }
 }
 
@@ -254,9 +295,62 @@ if(exists('ops-v4.js')){
   }
 }
 
+if(exists('phase3-remaining-scalability.js')){
+  const js=read('phase3-remaining-scalability.js');
+  for(const marker of [
+    'admin_list_lottery_events_page',
+    'admin_list_audit_logs_page',
+    'admin_list_admin_changes_page',
+    'eventLoadMore',
+    'auditLoadMore',
+    'adminChangeLoadMore',
+    'Draw01RemainingScalability'
+  ]) if(!js.includes(marker)) fail('Remaining scalability JS missing marker: '+marker);
+}
+
+if(exists('support-admin.js')){
+  const js=read('support-admin.js');
+  for(const marker of [
+    'admin_get_support_operations_summary',
+    'admin_list_support_devices_page',
+    'admin_list_support_transactions_page',
+    'supportDeviceMore',
+    'supportTxMore'
+  ]) if(!js.includes(marker)) fail('Support admin pagination missing marker: '+marker);
+  if(js.includes("action:'list'")) fail('Support admin restored bulk Edge list read.');
+}
+
+if(exists('support-wallet-admin.js')){
+  const js=read('support-wallet-admin.js');
+  for(const marker of ['admin_list_support_wallets_page','supportWalletMore','supportWalletSearch']){
+    if(!js.includes(marker)) fail('Support wallet pagination missing marker: '+marker);
+  }
+  if(js.includes("action:'list'")) fail('Support wallet restored bulk Edge list read.');
+  if(js.includes('setInterval(')) fail('Support wallet restored periodic polling.');
+}
+
+if(exists('supabase/functions/support-device-admin/index.ts')){
+  const js=read('supabase/functions/support-device-admin/index.ts');
+  if(js.includes('limit=2000')) fail('Support Edge Function restored 2,000-row compatibility preload.');
+  if(!js.includes("compatibility_note:'Wallet listing moved to admin_list_support_wallets_page'")) fail('Support Edge compatibility list is not bounded/documented.');
+}
+
+if(exists('ops-v4.js')){
+  const js=read('ops-v4.js');
+  for(const forbidden of [
+    "lottery_events?select=*&order=created_at.desc&limit=500",
+    "event_prize_tiers?select=event_id,rank,prize_amount&order=event_id,rank&limit=5000",
+    "audit_logs?select=*&order=created_at.desc&limit=500",
+    "admin_get_admin_change_audit',{p_limit:150}"
+  ]) if(js.includes(forbidden)) fail('Remaining fixed admin preload returned: '+forbidden);
+  for(const marker of ['admin_get_admin_base_focus','admin_get_lottery_event_detail','buildEventCard','focusEvent']){
+    if(!js.includes(marker)) fail('Base remaining scalability integration missing marker: '+marker);
+  }
+}
+
 if(failures.length){
   console.error('\nPHASE 3 PRODUCT CHECK FAILED');
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 3 PRODUCT CHECK PASSED — Control Room, guided lifecycle, investigation, and scalable admin paging contracts are present.');
+console.log('PHASE 3 PRODUCT CHECK PASSED — Control Room, lifecycle, investigation, and all admin pagination contracts are present.');

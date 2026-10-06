@@ -18,7 +18,8 @@ else {
     'public.is_admin()',
     'lottery_draw_runtime_state',
     'lottery_operational_health_report',
-    'draw_credit_integrity_report',
+    'draw-credit-integrity-hourly',
+    'cron.job_run_details',
     'revoke all on function public.admin_get_live_draw_control_room() from public,anon,authenticated',
     'grant execute on function public.admin_get_live_draw_control_room() to authenticated'
   ]) if(!sql.includes(marker)) fail('Phase 3 migration missing marker: '+marker);

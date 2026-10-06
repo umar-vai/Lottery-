@@ -391,7 +391,7 @@ function saveEvent(ev){
   }
 
   $('saveEventBtn').disabled=true;
-  p.then(function(){$('eventDialog').close();note(label);S.editing=null;S.editingCompleted=false;return load()}).catch(function(e){note(e.message,true)}).finally(function(){$('saveEventBtn').disabled=false})
+  p.then(function(){$('eventDialog').close();note(label);S.editing=null;S.editingCompleted=false;document.dispatchEvent(new CustomEvent('draw01:admin-data-changed',{detail:{scope:'events'}}));return load()}).catch(function(e){note(e.message,true)}).finally(function(){$('saveEventBtn').disabled=false})
 }
 function statusArgs(e,status){return{
   p_event_id:e.id,p_title:e.title,p_slug:e.slug,p_description:e.description||'',p_ticket_price:Number(e.ticket_price),p_max_tickets_per_user:e.max_tickets_per_user,
@@ -399,13 +399,13 @@ function statusArgs(e,status){return{
   p_white_ball_count:e.white_ball_count,p_white_ball_max:e.white_ball_max,p_bonus_ball_enabled:e.bonus_ball_enabled,p_bonus_ball_max:e.bonus_ball_max,
   p_schedule_mode:e.schedule_mode||'scheduled',p_opens_at:e.opens_at,p_cutoff_at:e.cutoff_at,p_draw_at:e.draw_at,p_winner_prizes:prizesFor(e.id),p_status:status
 }}
-function changeStatus(e,status){var msg=status==='cancelled'?'Cancel this lottery? Existing tickets remain recorded.':'Publish this lottery to the public site?';if(!confirm(msg))return;var reason=requireReason('Why are you '+(status==='cancelled'?'cancelling':'publishing')+' this lottery?',status==='cancelled'?'Lottery cancelled by admin':'Lottery approved for publication');if(reason===null)return;rpc('admin_update_lottery_event_v3',statusArgs(e,status),reason).then(function(){note('Lottery '+status);return load()}).catch(function(x){note(x.message,true)})}
-function deleteEvent(e){if(!confirm('Permanently delete this lottery? This is only allowed when it has no tickets.'))return;var reason=requireReason('Why are you permanently deleting this lottery?','Unused lottery cleanup');if(reason===null)return;rpc('admin_delete_lottery_event',{p_event_id:e.id},reason).then(function(){note('Lottery deleted');return load()}).catch(function(x){note(x.message,true)})}
+function changeStatus(e,status){var msg=status==='cancelled'?'Cancel this lottery? Existing tickets remain recorded.':'Publish this lottery to the public site?';if(!confirm(msg))return;var reason=requireReason('Why are you '+(status==='cancelled'?'cancelling':'publishing')+' this lottery?',status==='cancelled'?'Lottery cancelled by admin':'Lottery approved for publication');if(reason===null)return;rpc('admin_update_lottery_event_v3',statusArgs(e,status),reason).then(function(){note('Lottery '+status);document.dispatchEvent(new CustomEvent('draw01:admin-data-changed',{detail:{scope:'events'}}));return load()}).catch(function(x){note(x.message,true)})}
+function deleteEvent(e){if(!confirm('Permanently delete this lottery? This is only allowed when it has no tickets.'))return;var reason=requireReason('Why are you permanently deleting this lottery?','Unused lottery cleanup');if(reason===null)return;rpc('admin_delete_lottery_event',{p_event_id:e.id},reason).then(function(){note('Lottery deleted');document.dispatchEvent(new CustomEvent('draw01:admin-data-changed',{detail:{scope:'events'}}));return load()}).catch(function(x){note(x.message,true)})}
 function runEvent(e){
   var tc=ticketCount(e.id),wc=Number(e.winner_count||1);if(tc<wc){note('This lottery needs at least '+wc+' tickets before drawing '+wc+' winners.',true);return}
   if(!confirm('Run the secure ticket-pool draw now? Winners will be selected only from this lottery’s '+tc+' existing tickets.'))return;
   var reason=requireReason('Why are you manually running this draw?','Manual draw execution');if(reason===null)return;
-  rpc('admin_run_lottery_event',{p_event_id:e.id},reason).then(function(){note('Lottery draw completed');return load()}).catch(function(x){note(x.message,true)})
+  rpc('admin_run_lottery_event',{p_event_id:e.id},reason).then(function(){note('Lottery draw completed');document.dispatchEvent(new CustomEvent('draw01:admin-data-changed',{detail:{scope:'events'}}));return load()}).catch(function(x){note(x.message,true)})
 }
 
 function openBalance(p){S.balanceUser=p;$('balanceTitle').textContent=p.display_name||'Player';$('balanceEmail').textContent=(p.email||'')+' · Current '+credits(p.balance);$('balanceInput').value=Number(p.balance||0);$('balanceNote').value='';$('balanceDialog').showModal()}

@@ -162,10 +162,30 @@ if (fs.existsSync(migrationsDir)) {
   }
 }
 
+const liveEdgeFunctions = [
+  'support-phone-bridge',
+  'support-device-admin',
+  'claim-support-points',
+  'binance-pay-create-order',
+  'binance-pay-webhook',
+  'phone-bridge',
+  'bridge-device-admin',
+  'claim-demo-credit'
+];
+
+for (const slug of liveEdgeFunctions) {
+  const entry = 'supabase/functions/' + slug + '/index.ts';
+  if (!exists(entry)) fail('Missing source-controlled production Edge Function: ' + entry);
+}
+
+if (!exists('supabase/functions/PRODUCTION-SNAPSHOT.md')) {
+  fail('Missing production Edge Function version/JWT snapshot.');
+}
+
 if (failures.length) {
   console.error('\nPHASE 1 SECURITY CHECK FAILED');
   failures.forEach((message, i) => console.error((i + 1) + '. ' + message));
   process.exit(1);
 }
 
-console.log('PHASE 1 SECURITY CHECK PASSED — RPC authorization, least-privilege grants, secure defaults, and DB invariant tests are present.');
+console.log('PHASE 1 SECURITY CHECK PASSED — RPC authorization, least-privilege grants, secure defaults, DB invariants, and production Edge Function sources are present.');

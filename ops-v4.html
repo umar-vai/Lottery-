@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="admin-canonical-v8.css?v=1">
   <link rel="stylesheet" href="admin-canonical-v9.css?v=1">
   <link rel="stylesheet" href="phase3-control-room.css?v=1">
+  <link rel="stylesheet" href="phase3-lifecycle.css?v=1">
   <script src="support-center.js?v=8" data-d01-support-center="1" defer></script>
 </head>
 <body>
@@ -140,12 +141,36 @@
 
   <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin reason<input id="balanceNote" placeholder="Why is this balance being changed?" required></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
 
+  <dialog id="lifecycleDialog" class="lifecycle-modal">
+    <section class="lifecycle-card glass">
+      <div class="lifecycle-head">
+        <div><span id="lifecycleKicker" class="eyebrow">GUIDED LOTTERY LIFECYCLE</span><h2 id="lifecycleTitle">Lottery review</h2><p id="lifecycleMeta">Loading current lifecycle state…</p></div>
+        <div class="lifecycle-head-right"><span id="lifecycleVerification"></span><button type="button" id="closeLifecycleModal" class="icon-btn">×</button></div>
+      </div>
+      <div id="lifecycleSteps" class="lc-steps"></div>
+      <div id="lifecycleMetrics" class="lc-metrics"></div>
+      <div class="lc-action-panel">
+        <div class="lc-action-head"><div><span class="eyebrow">SERVER CHECKLIST</span><h3 id="lifecycleActionTitle">Reviewing…</h3><p id="lifecycleActionCopy"></p></div><button type="button" id="lifecycleRefresh" class="btn ghost compact">Refresh state</button></div>
+        <div id="lifecycleBanner" class="lc-banner"><strong>Checking</strong><span>Reading current server state.</span></div>
+        <div id="lifecycleChecks" class="lc-checks"></div>
+        <label id="lifecycleNoteWrap" class="lc-note"><span id="lifecycleNoteLabel">Admin note</span><textarea id="lifecycleNote" maxlength="500" placeholder="Add an operational note"></textarea></label>
+        <div id="lifecycleVerifiedMeta" class="lc-verified-meta"></div>
+        <div class="lc-actions">
+          <button type="button" id="lifecycleClose" class="btn ghost">Close</button>
+          <button type="button" id="lifecycleRelaunch" class="btn warn" hidden>Relaunch as fresh draft</button>
+          <button type="button" id="lifecyclePrimary" class="btn primary" disabled>Continue</button>
+        </div>
+      </div>
+    </section>
+  </dialog>
+
   <div id="toast"></div>
   <script src="site-shell.js?v=29"></script>
   <script src="support-live.js?v=8" defer></script>
   <script src="ops-v4.js?v=8" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script src="phase3-control-room.js?v=1" defer></script>
+  <script src="phase3-lifecycle.js?v=1" defer></script>
   <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>
   <script src="platform-controls-admin.js?v=4" defer></script>

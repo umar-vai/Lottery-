@@ -234,11 +234,13 @@ function refreshAdminChanges(){
 }
 
 function canRun(e){if(e.status!=='published')return false;if(ticketCount(e.id)<Number(e.winner_count||1))return false;if(e.schedule_mode==='manual')return true;return !e.cutoff_at||Date.now()>=new Date(e.cutoff_at).getTime()}
+function lifecycleOpen(e,intent){if(window.Draw01Lifecycle)window.Draw01Lifecycle.open(e,intent);else note('Lifecycle review is still loading. Try again.',true)}
 function appendEventActions(root,e){
   root.appendChild(button('View public page','ghost',function(){window.open('lottery.html?e='+encodeURIComponent(e.slug),'_blank')}));
   root.appendChild(button('Edit','ghost',function(){openEdit(e)}));
-  if(e.status==='draft')root.appendChild(button('Publish','primary',function(){changeStatus(e,'published')}));
-  if(canRun(e))root.appendChild(button('Run draw','primary',function(){runEvent(e)}));
+  if(e.status==='draft')root.appendChild(button('Review & publish','primary',function(){lifecycleOpen(e,'publish')}));
+  if(e.status==='published')root.appendChild(button(canRun(e)?'Pre-draw review':'Review readiness',canRun(e)?'primary':'ghost',function(){lifecycleOpen(e,'draw')}));
+  if(e.status==='completed')root.appendChild(button('Verify result','primary',function(){lifecycleOpen(e,'verify')}));
   if(e.status==='published'||e.status==='draft')root.appendChild(button('Cancel','danger',function(){changeStatus(e,'cancelled')}));
   if((e.status==='draft'||e.status==='cancelled')&&ticketCount(e.id)===0)root.appendChild(button('Delete','danger',function(){deleteEvent(e)}));
 }
@@ -351,13 +353,39 @@ function formArgs(){
   }
 }
 function saveEvent(ev){
-  ev.preventDefault();var p,label=S.editing?'Lottery updated':'Lottery created',reason;
+  ev.preventDefault();
+  var p,label=S.editing?'Lottery updated':'Lottery created',reason,targetStatus=$('fStatus').value,wantsPublish=targetStatus==='published';
   if(S.editing){
     reason=requireReason('Why are you changing this lottery?',S.editingCompleted?'Completed lottery metadata correction':'Lottery configuration update');
     if(reason===null)return
   }else reason='Created lottery: '+($('fTitle').value.trim()||'Untitled lottery');
-  if(S.editingCompleted){p=rpc('admin_update_completed_event_metadata',{p_event_id:S.editing.id,p_title:$('fTitle').value.trim(),p_slug:$('fSlug').value.trim()||slugify($('fTitle').value),p_description:$('fDescription').value.trim()},reason)}
-  else{var a;try{a=formArgs()}catch(e){note(e.message,true);return}if(S.editing){a.p_event_id=S.editing.id;a.p_status=$('fStatus').value;p=rpc('admin_update_lottery_event_v3',a,reason)}else{a.p_publish=$('fStatus').value==='published';p=rpc('admin_create_lottery_event_v3',a,reason)}}
+
+  if(S.editingCompleted){
+    p=rpc('admin_update_completed_event_metadata',{p_event_id:S.editing.id,p_title:$('fTitle').value.trim(),p_slug:$('fSlug').value.trim()||slugify($('fTitle').value),p_description:$('fDescription').value.trim()},reason)
+  }else{
+    var a;try{a=formArgs()}catch(e){note(e.message,true);return}
+    if(S.editing){
+      a.p_event_id=S.editing.id;
+      if(wantsPublish&&S.editing.status!=='published'){
+        if(S.editing.status!=='draft'){note('Cancelled lotteries cannot be republished. Create or relaunch a fresh draft instead.',true);return}
+        a.p_status='draft';
+        p=rpc('admin_update_lottery_event_v3',a,reason).then(function(){
+          return rpc('admin_publish_lottery_event',{p_event_id:S.editing.id},reason)
+        })
+      }else{
+        a.p_status=targetStatus;
+        p=rpc('admin_update_lottery_event_v3',a,reason)
+      }
+    }else{
+      var publishAfterCreate=wantsPublish,title=$('fTitle').value.trim()||'Untitled lottery';
+      a.p_publish=false;
+      p=rpc('admin_create_lottery_event_v3',a,reason).then(function(id){
+        if(!publishAfterCreate)return id;
+        return rpc('admin_publish_lottery_event',{p_event_id:id},'Initial publish approved: '+title)
+      })
+    }
+  }
+
   $('saveEventBtn').disabled=true;
   p.then(function(){$('eventDialog').close();note(label);S.editing=null;S.editingCompleted=false;return load()}).catch(function(e){note(e.message,true)}).finally(function(){$('saveEventBtn').disabled=false})
 }
@@ -390,6 +418,7 @@ function bind(){
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};
   $('fBonusEnabled').onchange=syncBonusField;$('fScheduleMode').onchange=syncSchedule;$('fWinnerCount').oninput=function(){renderPrizeFields()};
   $('cancelBalance').onclick=function(){$('balanceDialog').close()};$('balanceForm').onsubmit=saveBalance;
+  document.addEventListener('draw01:lifecycle-changed',function(){load()});
 }
 
 bind();boot();

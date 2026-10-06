@@ -14,6 +14,8 @@ const grantsMigration = 'supabase/migrations/202610061520_phase1_least_privilege
 const defaultsMigration = 'supabase/migrations/202610061525_phase1_secure_public_defaults.sql';
 const dbInvariantTest = 'supabase/tests/phase1_security_invariants.sql';
 const rlsRuntimeTest = 'supabase/tests/phase1_rls_runtime_isolation.sql';
+const concurrencyTest = 'supabase/tests/phase1_concurrency_contracts.sql';
+const concurrencyMigration = 'supabase/migrations/202610061620_phase1_game_nonce_concurrency.sql';
 
 if (!exists(profileMigration)) {
   fail('Missing Phase 1 profile hardening migration: ' + profileMigration);
@@ -131,6 +133,28 @@ if (!exists(rlsRuntimeTest)) {
   for (const marker of ['set local role authenticated','auth.uid()','public.is_admin()','event_tickets','balance_ledger','support_wallets','support_claim_requests','audit_logs','admin_set_user_balance']) {
     if (!sql.includes(marker)) fail('Runtime RLS test is missing check marker: ' + marker);
   }
+}
+
+if (!exists(concurrencyTest)) {
+  fail('Missing Phase 1 concurrency contract test: ' + concurrencyTest);
+} else {
+  const sql = read(concurrencyTest);
+  for (const marker of ['purchase_event_ticket','pg_advisory_xact_lock','slot_spins','plinko_drops','drop_plinko_batch']) {
+    if (!sql.includes(marker)) fail('Concurrency test is missing marker: ' + marker);
+  }
+}
+
+if (!exists(concurrencyMigration)) {
+  fail('Missing Phase 1 game nonce concurrency migration: ' + concurrencyMigration);
+} else {
+  const sql = read(concurrencyMigration);
+  for (const marker of ["'slot:'","'plinko:'",'pg_advisory_xact_lock']) {
+    if (!sql.includes(marker)) fail('Concurrency migration is missing marker: ' + marker);
+  }
+}
+
+if (!exists('supabase/functions/DEPRECATED-CLEANUP.md')) {
+  fail('Missing deprecated Edge Function cleanup verification.');
 }
 
 if (!exists('profile.js')) {

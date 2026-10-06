@@ -35,7 +35,7 @@ function editButton(btn){
   var old=Number(btn.dataset.balance||0);var label=btn.dataset.name||'user';
   var value=prompt('Set Love Points (LP) for '+label+'\n\nDraw Credits will NOT change.',String(old));if(value===null)return;
   var n=Number(String(value).trim());if(!Number.isFinite(n)||n<0){alert('Enter a valid LP balance.');return}
-  var note=prompt('Admin note','Admin LP adjustment');if(note===null)return;
+  var note=prompt('Admin reason','Admin LP adjustment');if(note===null)return;note=String(note).trim();if(!note){alert('A reason is required.');return;}
   btn.disabled=true;btn.textContent='Saving…';
   req({action:'adjust_support',userId:btn.dataset.user,newBalance:n,note:note}).then(function(){btn.textContent='Saved ✓';if(window.Draw01SupportLive)window.Draw01SupportLive.refresh();return load()}).catch(function(e){alert(e.message)}).finally(function(){setTimeout(function(){btn.disabled=false;btn.textContent='Edit LP'},800)})
 }

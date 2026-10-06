@@ -2,6 +2,7 @@
 
 @media(max-width:560px){
   html.d01-mobile-menu-open{overflow:hidden}
+  .d01-nav-center .d01-nav-link[href="lotteries.html"],
   .d01-nav-center .d01-nav-link[href="events.html"],
   .d01-nav-center .d01-nav-link[href="winners.html"],
   .d01-nav-center .d01-admin-link{display:none!important}

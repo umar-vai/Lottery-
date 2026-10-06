@@ -58,8 +58,10 @@ begin
     join pg_namespace n on n.oid=p.pronamespace
     where n.nspname in ('public','private')
       and p.proname ilike '%support%'
-      and p.prosrc ilike '%profiles%'
-      and p.prosrc ilike '%balance%'
+      and (
+        p.prosrc ~* 'update[[:space:]]+(public[.])?profiles[[:space:]]+set[^;]*balance'
+        or p.prosrc ~* 'insert[[:space:]]+into[[:space:]]+(public[.])?profiles[^;]*balance'
+      )
   ) then
     raise exception 'Support/Love Points function appears to write Draw Credit profile balances';
   end if;

@@ -73,7 +73,7 @@ begin
     raise exception 'Investigation report arrays are incomplete';
   end if;
 
-  if coalesce((private.draw_credit_integrity_report()->>'ok')::boolean,false)
+  if coalesce((public.admin_get_draw_credit_integrity_report()->>'ok')::boolean,false)
      and not coalesce((r->'draw_credits'->>'accounting_ok')::boolean,false) then
     raise exception 'Per-player accounting report disagrees with globally clean Draw Credit integrity';
   end if;

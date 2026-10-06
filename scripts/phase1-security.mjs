@@ -12,7 +12,7 @@ const profileMigration = 'supabase/migrations/202610061440_phase1_lock_profile_w
 const adminRpcMigration = 'supabase/migrations/202610061455_phase1_lock_admin_rpc_execute.sql';
 const grantsMigration = 'supabase/migrations/202610061520_phase1_least_privilege_table_grants.sql';
 const defaultsMigration = 'supabase/migrations/202610061525_phase1_secure_public_defaults.sql';
-const dbInvariantTest = 'supabase/tests/phase1_security_invariants.sql';
+const dbInvariantTest = 'supabase/tests/phase1_security_invariants.sql';\nconst rlsRuntimeTest = 'supabase/tests/phase1_rls_runtime_isolation.sql';
 
 if (!exists(profileMigration)) {
   fail('Missing Phase 1 profile hardening migration: ' + profileMigration);
@@ -120,6 +120,15 @@ if (!exists(dbInvariantTest)) {
     'search_path'
   ]) {
     if (!sql.includes(marker)) fail('Database invariant suite is missing check marker: ' + marker);
+  }
+}
+
+if (!exists(rlsRuntimeTest)) {
+  fail('Missing runtime RLS isolation test: ' + rlsRuntimeTest);
+} else {
+  const sql = read(rlsRuntimeTest);
+  for (const marker of ['set local role authenticated','auth.uid()','public.is_admin()','event_tickets','balance_ledger','support_wallets','support_claim_requests','audit_logs','admin_set_user_balance']) {
+    if (!sql.includes(marker)) fail('Runtime RLS test is missing check marker: ' + marker);
   }
 }
 

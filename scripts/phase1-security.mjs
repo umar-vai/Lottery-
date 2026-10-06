@@ -8,12 +8,13 @@ function fail(message){ failures.push(message); }
 function exists(rel){ return fs.existsSync(path.join(root, rel)); }
 function read(rel){ return fs.readFileSync(path.join(root, rel), 'utf8'); }
 
-const migration = 'supabase/migrations/202610061440_phase1_lock_profile_writes.sql';
+const profileMigration = 'supabase/migrations/202610061440_phase1_lock_profile_writes.sql';
+const adminRpcMigration = 'supabase/migrations/202610061455_phase1_lock_admin_rpc_execute.sql';
 
-if (!exists(migration)) {
-  fail('Missing Phase 1 profile hardening migration: ' + migration);
+if (!exists(profileMigration)) {
+  fail('Missing Phase 1 profile hardening migration: ' + profileMigration);
 } else {
-  const sql = read(migration);
+  const sql = read(profileMigration);
 
   if (!/revoke\s+update\s+on\s+table\s+public\.profiles\s+from\s+authenticated/i.test(sql)) {
     fail('Phase 1 migration must revoke table-level UPDATE on public.profiles from authenticated.');
@@ -54,6 +55,23 @@ if (!exists(migration)) {
   }
 }
 
+if (!exists(adminRpcMigration)) {
+  fail('Missing Phase 1 admin RPC execute hardening migration: ' + adminRpcMigration);
+} else {
+  const sql = read(adminRpcMigration);
+  const adminFunctions = [
+    'admin_relaunch_lottery_event\\(uuid\\)',
+    'admin_update_completed_event_metadata\\(uuid,text,text,text\\)'
+  ];
+
+  for (const fn of adminFunctions) {
+    const revoke = new RegExp('revoke\\s+all\\s+on\\s+function\\s+public\\.' + fn + '\\s+from\\s+public\\s*,\\s*anon', 'i');
+    const grant = new RegExp('grant\\s+execute\\s+on\\s+function\\s+public\\.' + fn + '\\s+to\\s+authenticated', 'i');
+    if (!revoke.test(sql)) fail('Admin RPC must revoke PUBLIC/anon EXECUTE: ' + fn);
+    if (!grant.test(sql)) fail('Admin RPC must remain callable by authenticated sessions: ' + fn);
+  }
+}
+
 if (!exists('profile.js')) {
   fail('profile.js is missing.');
 } else {
@@ -77,4 +95,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('PHASE 1 SECURITY CHECK PASSED — direct profile writes are blocked by migration contract and frontend edits use RPC.');
+console.log('PHASE 1 SECURITY CHECK PASSED — profile writes are RPC-only and sensitive admin RPCs are not exposed to anonymous callers.');

@@ -11,6 +11,8 @@ const migration='supabase/migrations/202610061705_phase2_draw_exactly_once.sql';
 const test='supabase/tests/phase2_draw_exactly_once.sql';
 const reconciliationMigration='supabase/migrations/202610061835_phase2_credit_reconciliation.sql';
 const reconciliationTest='supabase/tests/phase2_credit_reconciliation.sql';
+const recoveryMigration='supabase/migrations/202610061900_phase2_draw_recovery_ops.sql';
+const recoveryTest='supabase/tests/phase2_draw_failure_recovery.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -55,6 +57,33 @@ else {
   ]) if(!sql.includes(marker)) fail('Draw Credit reconciliation test missing marker: '+marker);
 }
 
+if(!exists(recoveryMigration)) fail('Missing Phase 2 draw recovery migration.');
+else {
+  const sql=read(recoveryMigration);
+  for(const marker of [
+    'lottery_draw_runtime_state',
+    'record_lottery_draw_failure',
+    'record_lottery_draw_success',
+    'lottery_operational_health_report',
+    'admin_get_lottery_operational_health',
+    'admin_retry_due_lottery_events',
+    'lottery-operational-health'
+  ]) if(!sql.includes(marker)) fail('Draw recovery migration missing marker: '+marker);
+}
+
+if(!exists(recoveryTest)) fail('Missing Phase 2 draw failure recovery test.');
+else {
+  const sql=read(recoveryTest);
+  for(const marker of [
+    'phase2 simulated prize-ledger interruption',
+    'Interrupted draw did not roll back atomically',
+    'Draw retry did not recover exactly once',
+    'lottery-operational-health'
+  ]) if(!sql.includes(marker)) fail('Draw failure recovery test missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-DRAW-RECOVERY.md')) fail('Missing Phase 2 draw recovery documentation.');
+
 if(!exists('PHASE-2-STRESS-RESULTS.md')) fail('Missing production ticket concurrency probe evidence.');
 
 if(!exists('site-shell.js')) fail('site-shell.js missing.');
@@ -76,6 +105,8 @@ else {
   if(!js.includes('function ensureSession(force)')) fail('Admin session recovery helper missing.');
   if(!js.includes("e.status===401||e.status===403")) fail('Admin protected requests do not retry after auth rejection.');
   if(!js.includes('admin_get_draw_credit_integrity_report')) fail('Admin dashboard does not load Draw Credit integrity report.');
+  if(!js.includes('admin_get_lottery_operational_health')) fail('Admin dashboard does not load draw operational health.');
+  if(!js.includes('admin_retry_due_lottery_events')) fail('Admin dashboard does not expose guarded due-draw retry.');
 }
 
 if(failures.length){
@@ -83,4 +114,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw exactly-once, concurrency evidence, and Draw Credit reconciliation guards are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw exactly-once, concurrency, credit reconciliation, and draw recovery monitoring are present.');

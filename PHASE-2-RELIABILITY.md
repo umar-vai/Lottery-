@@ -64,3 +64,12 @@ A separate `lottery-operational-health` job runs every five minutes. Its report 
 The admin Overview now shows Recovery & cron health, with manual health refresh and a guarded Retry due draws action.
 
 The rollback-only runtime test `supabase/tests/phase2_draw_failure_recovery.sql` injects an interruption before prize-ledger insertion, proves the entire draw rolled back, removes the failpoint, retries, and proves the draw completes with exactly one prize credit.
+
+
+## 2.6 Admin audit hardening and Incident Center
+
+Sensitive admin mutations now produce a private canonical row-change audit independent of the broader public activity feed. The canonical audit stores actor, action, affected row, human reason, request context, and exact before/after JSON.
+
+The Admin UI sends the human reason through the PostgREST `x-admin-reason` request header for high-impact operations including balance changes, role changes, lottery configuration/status/delete/draw/retry actions and platform availability switches. Love Point adjustments retain their existing actor and note and are mirrored into the same canonical trail.
+
+The Operations Incident Center combines current draw health, Draw Credit reconciliation, all cron failures, failed/error Support claims, failed/error Binance Pay orders, failed/error credit requests and recent database/application failure audit events. HTTP-level Supabase Auth, REST and Edge Function logs remain platform-log sources and are not duplicated into application tables.

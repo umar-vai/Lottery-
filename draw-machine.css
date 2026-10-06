@@ -1040,3 +1040,48 @@
 @media(prefers-reduced-motion:reduce){
   .gm-result-ball{animation:none!important}
 }
+
+
+/* --- Stability pass: 2D ultra result sprites, no per-ball WebGL contexts --- */
+.gm-ultra-sphere .gm-ultra-canvas{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  pointer-events:none;
+}
+.gm-flight .gm-ultra-sphere::before{
+  content:"";
+  position:absolute;
+  inset:5%;
+  z-index:3;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 28% 18%,
+      rgba(255,255,255,calc(.20 + var(--flight-glint, .5) * .34)) 0 4%,
+      rgba(255,255,255,calc(.06 + var(--flight-glint, .5) * .12)) 11%,
+      transparent 24%);
+  mix-blend-mode:screen;
+  filter:blur(.35px);
+}
+.gm-result-ball .gm-ultra-sphere{
+  transform:translateZ(0);
+}
+.gm-result-ball[data-number]::before{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  border-radius:50%;
+  pointer-events:none;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.045),
+    0 0 10px rgba(231,247,255,.035);
+}
+.gm-result-ball.bonus[data-number]::before{
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.055),
+    0 0 12px rgba(255,65,93,.07);
+}

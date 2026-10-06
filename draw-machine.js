@@ -114,7 +114,7 @@ class ChamberPhysics {
     const size=Math.max(1,Math.min(this.chamber.clientWidth||0,this.chamber.clientHeight||0));
     if(size<2)return;
     const sample=this.balls[0]?.el;
-    const ballSize=sample?Math.max(18,sample.getBoundingClientRect().width||28):28;
+    const ballSize=sample?Math.max(14,sample.getBoundingClientRect().width||21):21;
     const nextBallR=ballSize/2;
     const nextChamberR=size/2;
     const previous=this.chamberRadius;
@@ -308,7 +308,7 @@ export class EventDrawMachine {
         <div class="gm-flash"></div>
         <div class="gm-live-pill">Machine online</div>
         <div class="gm-machine main">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
           <div class="gm-machine-label">Main ball chamber</div>
         </div>
         <div class="gm-center">
@@ -326,7 +326,7 @@ export class EventDrawMachine {
           </div>
         </div>
         <div class="gm-machine bonus">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
           <div class="gm-machine-label">Special ball chamber</div>
         </div>
       </div>`;
@@ -393,8 +393,11 @@ export class EventDrawMachine {
     this.mainChamber.querySelectorAll('.gm-ball').forEach(x=>x.remove());
     this.bonusChamber.querySelectorAll('.gm-ball').forEach(x=>x.remove());
     const compact = window.matchMedia?.('(max-width:430px)').matches;
-    const mainVisible = clamp(Math.round(Number(this.event.white_ball_max || 30) * .42), 14, compact ? 22 : 30);
-    const bonusVisible = clamp(Math.round(Number(this.event.bonus_ball_max || 20) * .55), 9, compact ? 12 : 20);
+    const mainBase = clamp(Math.round(Number(this.event.white_ball_max || 30) * .42), 14, compact ? 22 : 30);
+    const bonusBase = clamp(Math.round(Number(this.event.bonus_ball_max || 20) * .55), 9, compact ? 12 : 20);
+    // Roughly 13% less visual density than the previous chamber so collisions read clearly.
+    const mainVisible = Math.max(compact ? 11 : 12, Math.round(mainBase * .87));
+    const bonusVisible = Math.max(compact ? 7 : 8, Math.round(bonusBase * .87));
     this.addPool(this.mainChamber, mainVisible, Number(this.event.white_ball_max || 69), false);
     this.mainPhysics?.setBalls(this.mainChamber.querySelectorAll('.gm-ball'));
     if(this.event.bonus_ball_enabled){
@@ -418,8 +421,10 @@ export class EventDrawMachine {
       const ball = create('span','gm-ball');
       ball.dataset.number=String(n);
       ball.setAttribute('aria-hidden','true');
+      const surface=create('span','gm-ball-surface');
       const print=create('span','gm-ball-print',pad2(n));
-      ball.appendChild(print);
+      surface.appendChild(print);
+      ball.appendChild(surface);
       chamber.appendChild(ball);
     }
   }

@@ -305,3 +305,246 @@
   100%{filter:brightness(1) saturate(1)}
 }
 @media(prefers-reduced-motion:reduce){.gm-ball.gm-impact{animation:none!important}}
+
+
+/* --- Logo-matched chamber balls + ultra glass v3 ------------------------- */
+/* Match the physical size of the live Lootera logo balls. */
+.gm-ball{
+  width:21px!important;
+  height:21px!important;
+  left:calc(50% - 10.5px)!important;
+  top:calc(50% - 10.5px)!important;
+  border:0!important;
+  border-radius:50%;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 30% 22%,#fff 0 16%,#f8fafb 36%,#d7dfe6 72%,#9aa7b2 100%)!important;
+  box-shadow:
+    inset -4px -5px 8px rgba(40,54,66,.17),
+    inset 3px 3px 5px rgba(255,255,255,.85),
+    0 0 8px rgba(168,255,62,.10),
+    0 4px 8px rgba(0,0,0,.28)!important;
+  filter:none;
+}
+.gm-machine.bonus .gm-ball{
+  background:
+    radial-gradient(circle at 30% 22%,#ffd9de 0 8%,#ff798a 25%,#ff304c 52%,#a80018 100%)!important;
+  box-shadow:
+    inset -4px -5px 8px rgba(70,0,8,.28),
+    inset 3px 3px 5px rgba(255,255,255,.48),
+    0 0 9px rgba(255,59,78,.12),
+    0 4px 8px rgba(0,0,0,.30)!important;
+}
+.gm-ball::before{
+  left:11%!important;
+  top:8%!important;
+  width:38%!important;
+  height:27%!important;
+  border-radius:50%!important;
+  background:radial-gradient(ellipse at center,rgba(255,255,255,.98),rgba(255,255,255,.26) 45%,transparent 72%)!important;
+  filter:blur(.25px)!important;
+  opacity:.92;
+  z-index:5!important;
+}
+.gm-ball::after{
+  inset:1px!important;
+  border:1px solid rgba(255,255,255,.21)!important;
+  box-shadow:
+    inset -2px -3px 4px rgba(0,0,0,.09),
+    inset 1px 1px 2px rgba(255,255,255,.26)!important;
+  z-index:5!important;
+}
+.gm-ball-surface{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  overflow:hidden;
+  transform:rotate(var(--spin));
+  transform-origin:50% 50%;
+  will-change:transform;
+  background:
+    repeating-linear-gradient(
+      112deg,
+      rgba(255,255,255,0) 0 3px,
+      rgba(255,255,255,.045) 4px,
+      rgba(90,112,126,.025) 6px,
+      rgba(255,255,255,0) 9px
+    );
+  opacity:.92;
+}
+.gm-machine.bonus .gm-ball-surface{
+  background:
+    repeating-linear-gradient(
+      112deg,
+      rgba(255,255,255,0) 0 3px,
+      rgba(255,215,220,.05) 4px,
+      rgba(96,0,15,.035) 6px,
+      rgba(255,255,255,0) 9px
+    );
+}
+.gm-ball-print{
+  left:24%!important;
+  top:24%!important;
+  width:52%!important;
+  height:52%!important;
+  border:1px solid rgba(112,126,138,.30)!important;
+  background:radial-gradient(circle at 34% 28%,#fff 0 16%,#fbfcfd 55%,#e6ebef 100%)!important;
+  color:#071019!important;
+  font-size:7px!important;
+  font-weight:950!important;
+  letter-spacing:-.06em!important;
+  text-shadow:none!important;
+  transform:none!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.gm-machine.bonus .gm-ball-print{
+  border-color:rgba(255,255,255,.80)!important;
+  background:radial-gradient(circle at 34% 28%,#fff 0 16%,#fbfcfd 55%,#e6ebef 100%)!important;
+  color:#071019!important;
+}
+.gm-stage.is-drawing .gm-ball{
+  filter:brightness(1.04) saturate(1.03);
+}
+
+/* Deep acrylic/glass dome: thick rim, scene reflections and lower caustic. */
+.gm-chamber{
+  border:1px solid rgba(228,244,252,.38)!important;
+  background:
+    radial-gradient(circle at 26% 17%,rgba(255,255,255,.18),transparent 14%),
+    radial-gradient(circle at 70% 82%,rgba(185,225,242,.055),transparent 31%),
+    radial-gradient(circle at 50% 48%,rgba(16,33,41,.08) 0 55%,rgba(3,9,13,.30) 74%,rgba(0,2,4,.50) 100%)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.10),
+    inset 0 0 0 4px rgba(180,219,235,.035),
+    inset 10px 7px 30px rgba(255,255,255,.07),
+    inset -16px -20px 38px rgba(0,0,0,.36),
+    0 0 0 1px rgba(255,255,255,.055),
+    0 1px 0 rgba(255,255,255,.18),
+    0 18px 42px rgba(0,0,0,.30)!important;
+  backdrop-filter:blur(1.2px) saturate(1.08);
+  -webkit-backdrop-filter:blur(1.2px) saturate(1.08);
+}
+.gm-machine.bonus .gm-chamber{
+  border-color:rgba(255,170,181,.34)!important;
+  background:
+    radial-gradient(circle at 26% 17%,rgba(255,255,255,.17),transparent 14%),
+    radial-gradient(circle at 70% 82%,rgba(255,87,108,.065),transparent 31%),
+    radial-gradient(circle at 50% 48%,rgba(34,9,14,.07) 0 55%,rgba(11,2,5,.31) 74%,rgba(2,0,1,.52) 100%)!important;
+}
+.gm-chamber::before{
+  inset:2.2%!important;
+  border:1px solid rgba(238,249,255,.18)!important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,.10),
+    inset -2px -2px 0 rgba(0,0,0,.18),
+    0 0 10px rgba(210,240,252,.035)!important;
+}
+.gm-chamber::after{
+  left:15%!important;
+  right:30%!important;
+  top:4%!important;
+  height:27%!important;
+  border-radius:54% 46% 58% 42%!important;
+  background:
+    linear-gradient(154deg,rgba(255,255,255,.44) 0%,rgba(255,255,255,.12) 32%,rgba(255,255,255,.025) 58%,transparent 76%)!important;
+  filter:blur(3.2px)!important;
+  opacity:.82!important;
+}
+.gm-glass-rim{
+  position:absolute;
+  inset:0;
+  z-index:10;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    conic-gradient(
+      from 210deg,
+      rgba(255,255,255,.02),
+      rgba(238,249,255,.42) 9%,
+      rgba(255,255,255,.04) 19%,
+      rgba(255,255,255,.015) 52%,
+      rgba(175,218,236,.24) 72%,
+      rgba(255,255,255,.04) 86%,
+      rgba(255,255,255,.02)
+    );
+  -webkit-mask:radial-gradient(circle,transparent 0 91%,#000 92% 100%);
+  mask:radial-gradient(circle,transparent 0 91%,#000 92% 100%);
+  opacity:.88;
+  filter:drop-shadow(0 0 2px rgba(222,245,255,.18));
+}
+.gm-glass-reflection{
+  position:absolute;
+  z-index:8;
+  pointer-events:none;
+  left:4%;
+  top:13%;
+  width:23%;
+  height:62%;
+  border-radius:50%;
+  border-left:2px solid rgba(255,255,255,.23);
+  border-right:1px solid rgba(255,255,255,.025);
+  transform:rotate(13deg);
+  filter:blur(.35px);
+  opacity:.58;
+}
+.gm-glass-reflection::after{
+  content:"";
+  position:absolute;
+  left:48%;
+  top:12%;
+  width:35%;
+  height:34%;
+  border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),transparent);
+  filter:blur(3px);
+}
+.gm-glass-caustic{
+  left:12%!important;
+  right:12%!important;
+  bottom:2%!important;
+  height:24%!important;
+  background:
+    radial-gradient(ellipse at center,rgba(223,247,255,.23),rgba(141,201,225,.07) 38%,transparent 70%)!important;
+  filter:blur(6px)!important;
+  opacity:.86!important;
+}
+.gm-machine.bonus .gm-glass-caustic{
+  background:
+    radial-gradient(ellipse at center,rgba(255,210,217,.19),rgba(255,73,96,.065) 40%,transparent 70%)!important;
+}
+.gm-glass-glint{
+  right:12%!important;
+  top:11%!important;
+  width:9%!important;
+  background:radial-gradient(circle,rgba(255,255,255,.90),rgba(255,255,255,.21) 28%,transparent 66%)!important;
+  opacity:.50!important;
+}
+.gm-glass-sheen{
+  width:34%!important;
+  opacity:.36!important;
+  background:
+    linear-gradient(90deg,transparent,rgba(255,255,255,.018) 22%,rgba(255,255,255,.22) 49%,rgba(255,255,255,.035) 70%,transparent)!important;
+  filter:blur(1.4px)!important;
+}
+
+/* Logo-size chamber balls across breakpoints. */
+@media(max-width:980px){
+  .gm-ball{
+    width:18px!important;
+    height:18px!important;
+    left:calc(50% - 9px)!important;
+    top:calc(50% - 9px)!important;
+  }
+  .gm-ball-print{font-size:6px!important}
+}
+@media(max-width:430px){
+  .gm-ball{
+    width:16px!important;
+    height:16px!important;
+    left:calc(50% - 8px)!important;
+    top:calc(50% - 8px)!important;
+  }
+  .gm-ball-print{font-size:5.5px!important}
+  .gm-glass-reflection{opacity:.44}
+  .gm-glass-rim{opacity:.72}
+}

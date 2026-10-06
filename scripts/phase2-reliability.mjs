@@ -9,6 +9,8 @@ const fail=(m)=>failures.push(m);
 
 const migration='supabase/migrations/202610061705_phase2_draw_exactly_once.sql';
 const test='supabase/tests/phase2_draw_exactly_once.sql';
+const reconciliationMigration='supabase/migrations/202610061835_phase2_credit_reconciliation.sql';
+const reconciliationTest='supabase/tests/phase2_credit_reconciliation.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -31,6 +33,30 @@ else {
   ]) if(!sql.includes(marker)) fail('Phase 2 draw test missing marker: '+marker);
 }
 
+if(!exists(reconciliationMigration)) fail('Missing Phase 2 Draw Credit reconciliation migration.');
+else {
+  const sql=read(reconciliationMigration);
+  for(const marker of [
+    'draw_credit_integrity_report',
+    'run_draw_credit_integrity_check',
+    'admin_get_draw_credit_integrity_report',
+    'balance_ledger_one_ticket_purchase_per_ticket_idx',
+    'draw-credit-integrity-hourly'
+  ]) if(!sql.includes(marker)) fail('Draw Credit reconciliation migration missing marker: '+marker);
+}
+
+if(!exists(reconciliationTest)) fail('Missing Phase 2 Draw Credit reconciliation runtime test.');
+else {
+  const sql=read(reconciliationTest);
+  for(const marker of [
+    'draw_credit_integrity_report',
+    'issue_total',
+    'draw-credit-integrity-hourly'
+  ]) if(!sql.includes(marker)) fail('Draw Credit reconciliation test missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-STRESS-RESULTS.md')) fail('Missing production ticket concurrency probe evidence.');
+
 if(!exists('site-shell.js')) fail('site-shell.js missing.');
 else {
   const js=read('site-shell.js');
@@ -49,6 +75,7 @@ else {
   const js=read('ops-v4.js');
   if(!js.includes('function ensureSession(force)')) fail('Admin session recovery helper missing.');
   if(!js.includes("e.status===401||e.status===403")) fail('Admin protected requests do not retry after auth rejection.');
+  if(!js.includes('admin_get_draw_credit_integrity_report')) fail('Admin dashboard does not load Draw Credit integrity report.');
 }
 
 if(failures.length){
@@ -56,4 +83,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — stale-session recovery and draw exactly-once guards are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw exactly-once, concurrency evidence, and Draw Credit reconciliation guards are present.');

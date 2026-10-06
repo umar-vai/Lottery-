@@ -214,6 +214,16 @@ if(exists('ops-v4.js')){
   ]) if(!js.includes(marker)) fail('Admin investigation integration missing marker: '+marker);
 }
 
+if(exists('admin-canonical-v9.js')){
+  const js=read('admin-canonical-v9.js');
+  if(js.includes("req({action:'list'})")) fail('Players canonical enhancer restored bulk Support Point list preload.');
+  if(js.includes('loadWallets(')) fail('Players canonical enhancer restored bulk wallet polling.');
+  if(js.includes("setInterval(function(){if(document.visibilityState!=='hidden')loadWallets")) fail('Players canonical enhancer restored periodic bulk wallet polling.');
+  for(const marker of ['row.dataset.userId','row.dataset.supportPoints','adjust_support','draw01:admin-data-changed']){
+    if(!js.includes(marker)) fail('Canonical paged Love Point integration missing marker: '+marker);
+  }
+}
+
 if(exists('phase3-scalability.js')){
   const js=read('phase3-scalability.js');
   for(const marker of [

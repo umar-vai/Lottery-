@@ -11,6 +11,8 @@ const migration='supabase/migrations/202610062130_phase3_live_draw_control_room.
 const test='supabase/tests/phase3_live_draw_control_room.sql';
 const lifecycleMigration='supabase/migrations/202610062150_phase3_guided_lifecycle_verification.sql';
 const lifecycleTest='supabase/tests/phase3_guided_lifecycle_verification.sql';
+const investigationMigration='supabase/migrations/202610062220_phase3_investigation_workspace.sql';
+const investigationTest='supabase/tests/phase3_investigation_workspace.sql';
 
 if(!exists(migration)) fail('Missing Phase 3 Control Room migration.');
 else {
@@ -66,7 +68,36 @@ else {
   ]) if(!sql.includes(marker)) fail('Guided lifecycle test missing marker: '+marker);
 }
 
-for(const file of ['phase3-control-room.js','phase3-control-room.css','PHASE-3-LIVE-DRAW-CONTROL-ROOM.md','phase3-lifecycle.js','phase3-lifecycle.css','PHASE-3-GUIDED-LIFECYCLE.md']){
+if(!exists(investigationMigration)) fail('Missing Phase 3 investigation migration.');
+else {
+  const sql=read(investigationMigration);
+  for(const marker of [
+    'private.admin_player_investigation_report',
+    'admin_search_investigation_subjects',
+    'admin_get_player_investigation',
+    'admin_get_ticket_investigation',
+    'ticket_purchase_ledger_mismatch',
+    'game_ledger_mismatch',
+    'separate_from_draw_credits',
+    'public.is_admin()',
+    'revoke all on function public.admin_get_player_investigation(uuid) from public,anon,authenticated',
+    'grant execute on function public.admin_get_ticket_investigation(uuid) to authenticated'
+  ]) if(!sql.includes(marker)) fail('Investigation migration missing marker: '+marker);
+}
+
+if(!exists(investigationTest)) fail('Missing Phase 3 investigation runtime test.');
+else {
+  const sql=read(investigationTest);
+  for(const marker of [
+    'Anon can execute investigation RPC',
+    'Investigation report did not keep Draw Credits and Support Points separate',
+    'Per-player accounting report disagrees with globally clean Draw Credit integrity',
+    'Known ticket failed number or purchase-ledger investigation checks',
+    'Normal player could execute admin player investigation'
+  ]) if(!sql.includes(marker)) fail('Investigation test missing marker: '+marker);
+}
+
+for(const file of ['phase3-control-room.js','phase3-control-room.css','PHASE-3-LIVE-DRAW-CONTROL-ROOM.md','phase3-lifecycle.js','phase3-lifecycle.css','PHASE-3-GUIDED-LIFECYCLE.md','phase3-investigation.js','phase3-investigation.css','PHASE-3-INVESTIGATION-WORKSPACE.md']){
   if(!exists(file)) fail('Missing Phase 3 artifact: '+file);
 }
 
@@ -79,6 +110,11 @@ if(exists('ops-v4.html')){
   if(!html.includes('id="lifecycleDialog"')) fail('Admin page is missing guided lifecycle dialog.');
   if(!html.includes('phase3-lifecycle.js')) fail('Admin page does not load guided lifecycle JS.');
   if(!html.includes('phase3-lifecycle.css')) fail('Admin page does not load guided lifecycle styles.');
+  if(!html.includes('data-tab="investigations"')) fail('Admin navigation is missing Investigations tab.');
+  if(!html.includes('id="investigations"')) fail('Admin page is missing Investigation Workspace section.');
+  if(!html.includes('id="investigationTicketDialog"')) fail('Admin page is missing ticket investigation dialog.');
+  if(!html.includes('phase3-investigation.js')) fail('Admin page does not load investigation JS.');
+  if(!html.includes('phase3-investigation.css')) fail('Admin page does not load investigation styles.');
 }
 
 if(exists('phase3-control-room.js')){
@@ -118,9 +154,31 @@ if(exists('ops-v4.js')){
   ]) if(!js.includes(marker)) fail('Admin base lifecycle integration missing marker: '+marker);
 }
 
+if(exists('phase3-investigation.js')){
+  const js=read('phase3-investigation.js');
+  for(const marker of [
+    'admin_search_investigation_subjects',
+    'admin_get_player_investigation',
+    'admin_get_ticket_investigation',
+    'Draw01Investigation',
+    'separate',
+    'data-inv-ticket'
+  ]) if(!js.includes(marker)) fail('Investigation JS missing marker: '+marker);
+}
+
+if(exists('ops-v4.js')){
+  const js=read('ops-v4.js');
+  for(const marker of [
+    'data-investigate-player',
+    'data-investigate-ticket',
+    'Draw01Investigation.openPlayer',
+    'Draw01Investigation.openTicket'
+  ]) if(!js.includes(marker)) fail('Admin investigation integration missing marker: '+marker);
+}
+
 if(failures.length){
   console.error('\nPHASE 3 PRODUCT CHECK FAILED');
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 3 PRODUCT CHECK PASSED — Live Draw Control Room plus guided publish/draw/verify lifecycle contracts are present.');
+console.log('PHASE 3 PRODUCT CHECK PASSED — Control Room, guided lifecycle, and player/ticket investigation contracts are present.');

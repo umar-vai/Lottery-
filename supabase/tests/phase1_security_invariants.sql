@@ -146,7 +146,7 @@ begin
   if src is null
      or src !~* 'from public\.event_tickets[\s\S]*where[\s\S]*event_id\s*=\s*p_event_id'
      or src !~* 'v_ticket_count\s*<\s*v_event\.winner_count'
-     or src !~* 'update public\.event_tickets set is_winner=true'
+     or src !~* 'update\\s+public\\.event_tickets[\\s\\S]*set\\s+is_winner\\s*=\\s*true'
      or src !~* 'insert into public\.balance_ledger'
      or src !~* 'status=''completed''' then
     raise exception 'Phase 1 invariant failed: winner-pool/prize-ledger contract changed';

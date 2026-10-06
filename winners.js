@@ -16,6 +16,44 @@ function avatar(w){const name=w.display_name||'Winner';return w.avatar_url?`<img
 function balls(w){return `<div class="wh-balls">${(w.white_numbers||[]).map(n=>`<span>${String(n).padStart(2,'0')}</span>`).join('')}${w.bonus_ball!=null?`<span class="bonus">${String(w.bonus_ball).padStart(2,'0')}</span>`:''}</div>`}
 function normalizeWinner(w){return{...w,winner_rank:Number(w.winner_rank||999),prize_awarded:Number(w.prize_awarded||0)}}
 
+const SAMPLE_NAMES=['Rafi H.','Sadia M.','Tanvir A.','Nabila R.','Mahin S.','Farhan K.','Tanzim N.','Raisa A.','Nafis R.','Maliha T.','Siam H.','Anika F.','Shafin M.','Tasnim J.','Arian S.','Mim R.','Zubair H.','Fariha N.','Adnan K.','Lamisa A.','Sakib R.','Nusrat S.','Rahat M.','Mehnaz T.'];
+
+function sampleNumbers(seed,count=5,max=49){
+  const out=[];let x=(seed*17+11)%max;
+  while(out.length<count){x=(x*13+7)%max;const n=x+1;if(!out.includes(n))out.push(n)}
+  return out.sort((a,b)=>a-b);
+}
+function buildSampleHistory(){
+  const base=Date.UTC(2026,8,26,14,0,0);
+  return Array.from({length:24},(_,i)=>{
+    const drawNo=24-i;
+    const completedAt=new Date(base-(i*7*86400000)).toISOString();
+    const winners=Array.from({length:3},(__,rank)=>{
+      const seed=(i+1)*31+(rank+1)*11;
+      return normalizeWinner({
+        winner_rank:rank+1,
+        display_name:SAMPLE_NAMES[(i*3+rank)%SAMPLE_NAMES.length],
+        avatar_url:'',
+        white_numbers:sampleNumbers(seed),
+        bonus_ball:((seed*7)%20)+1,
+        prize_awarded:[5000,2500,1000][rank]
+      });
+    });
+    return {
+      event:{title:'Lootera Weekly Draw #'+String(drawNo).padStart(2,'0'),completed_at:completedAt,prize_amount:8500},
+      winners
+    };
+  });
+}
+function sampleCard(item){
+  const e=item.event,w=item.winners;
+  return `<article class="wh-event wh-sample-event"><div class="wh-event-top"><div class="wh-event-title"><span>COMPLETED LOTTERY</span><span class="wh-demo-badge">SAMPLE</span><h3>${esc(e.title)}</h3></div></div><div class="wh-event-body"><div class="wh-event-meta"><span>${esc(fmt(e.completed_at))}</span><span>${w.length} winners</span><span>${credits(e.prize_amount)} cr prizes</span></div><div class="wh-winner-list">${w.map(x=>`<div class="wh-winner">${avatar(x)}<div class="wh-winner-main"><div class="wh-winner-head"><strong>#${x.winner_rank} · ${esc(x.display_name||'Winner')}</strong><b>${credits(x.prize_awarded)} cr</b></div>${balls(x)}</div></div>`).join('')}</div><div class="wh-sample-footer"><span>Preview winner record</span><span>SAMPLE</span></div></div></article>`;
+}
+function renderSampleArchive(){
+  const root=$('sampleArchiveGrid');if(!root)return;
+  root.innerHTML=buildSampleHistory().map(sampleCard).join('');
+}
+
 async function eventWinners(e){const {data,error}=await supabase.rpc('get_public_event_winners',{p_event_id:e.id});if(error)return[];return (data||[]).map(normalizeWinner).sort((a,b)=>a.winner_rank-b.winner_rank)}
 
 function renderLive(events){const sec=$('liveRevealSection'),root=$('liveRevealList');if(!events.length){sec.hidden=true;return}sec.hidden=false;root.innerHTML=events.map(e=>{const remain=Math.max(0,revealEnd(e)-Date.now()),m=Math.ceil(remain/60000);return `<a class="wh-live-card" href="lottery.html?e=${encodeURIComponent(e.slug)}"><div><strong>${esc(e.title)}</strong><span>${Number(e.winner_count||1)} ranked winner${Number(e.winner_count||1)===1?'':'s'} · reveal protected</span></div><b>${m>0?`~${m} min left`:'Finishing…'}</b></a>`}).join('')}
@@ -40,5 +78,6 @@ async function load(){
 }
 
 $('winnerSearch')?.addEventListener('input',renderArchive);
+renderSampleArchive();
 load();
 setInterval(()=>{const liveEvents=document.querySelectorAll('.wh-live-card');if(liveEvents.length)load()},60000);

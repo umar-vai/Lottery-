@@ -46,3 +46,11 @@ Internal configured sub-switch values and `updatedAt` are no longer exposed.
 `love_point_payment_providers.public_visible` is now enforced by RLS. Anonymous/authenticated browser sessions can only read providers that are both `public_visible=true` and `enabled=true`.
 
 Service-role payment functions are unaffected.
+
+
+## Realtime row payloads
+
+The public lottery page no longer subscribes directly to `postgres_changes` on
+`lottery_events`. Public event state uses the existing adaptive polling path,
+which requests only the explicitly allowed column list. This avoids exposing
+unneeded row columns through a Realtime network payload.

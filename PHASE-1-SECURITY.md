@@ -82,9 +82,37 @@ before deployment.
 
 The Phase 1 gate also rejects later migrations that reintroduce browser write grants on the audited read-only tables.
 
+## Phase 1.7 — runtime RLS/authorization test
+
+`supabase/tests/phase1_rls_runtime_isolation.sql` runs inside a rollback-only transaction and impersonates the PostgreSQL `authenticated` role with JWT claims.
+
+It verifies that a normal player:
+
+- can read their own profile but not another player's profile;
+- cannot see another user's event tickets, Draw Credit ledger, Support wallet, or Support claims;
+- cannot read admin audit logs;
+- cannot directly update `profiles`;
+- is rejected by `admin_set_user_balance(...)`.
+
+It also verifies that a real admin identity is recognized by `public.is_admin()`, can read player/admin data permitted by RLS, but still cannot bypass the RPC-only profile-write rule.
+
+The committed runtime test was executed successfully against production during this Phase 1 audit.
+
+## Phase 1.8 — production Edge Functions source-controlled
+
+All eight currently deployed Edge Functions are mirrored under `supabase/functions/`:
+
+- current support bridge/device/claim functions;
+- current Binance Pay create-order/webhook functions;
+- legacy phone-bridge/device-admin functions;
+- the decommissioned `claim-demo-credit` 410 stub.
+
+`supabase/functions/PRODUCTION-SNAPSHOT.md` records the production version, JWT-verification setting, and bundle SHA-256 observed during the audit.
+
+No live Edge Function was redeployed or behavior-changed during this snapshot. Phase 0 secret scanning now covers the mirrored sources, and the Phase 1 CI gate requires all production entrypoints to stay source-controlled.
+
 ## Still remaining in Phase 1
 
-- source-control all live Supabase Edge Functions;
-- add executable authenticated-user isolation tests using dedicated test identities/staging;
+- verify callers and then remove deprecated Edge Functions when safe;
 - extend concurrency testing for ticket capacity and duplicate game requests;
 - periodically rerun Supabase security advisors after schema changes.

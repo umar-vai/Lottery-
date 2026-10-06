@@ -15,6 +15,8 @@ const recoveryMigration='supabase/migrations/202610061900_phase2_draw_recovery_o
 const recoveryTest='supabase/tests/phase2_draw_failure_recovery.sql';
 const adminAuditMigration='supabase/migrations/202610061930_phase2_admin_audit_incident_center.sql';
 const adminAuditTest='supabase/tests/phase2_admin_audit_incidents.sql';
+const performanceRlsMigration='supabase/migrations/202610061945_phase2_performance_rls_cleanup.sql';
+const performanceRlsTest='supabase/tests/phase2_performance_rls_cleanup.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -111,6 +113,34 @@ else {
 
 if(!exists('PHASE-2-ADMIN-AUDIT-INCIDENTS.md')) fail('Missing admin audit / Incident Center documentation.');
 
+if(!exists(performanceRlsMigration)) fail('Missing Phase 2 performance/RLS cleanup migration.');
+else {
+  const sql=read(performanceRlsMigration);
+  for(const marker of [
+    'audit_logs_actor_user_id_idx',
+    'support_transactions_device_id_idx',
+    '(select auth.uid())',
+    '(select public.is_admin())',
+    'authenticated can read visible or admin draws',
+    'users or admins can read profiles'
+  ]) if(!sql.includes(marker)) fail('Performance/RLS migration missing marker: '+marker);
+}
+
+if(!exists(performanceRlsTest)) fail('Missing Phase 2 performance/RLS runtime test.');
+else {
+  const sql=read(performanceRlsTest);
+  for(const marker of [
+    'RLS performance invariant failed',
+    'duplicate authenticated SELECT policies',
+    'Player lost own-profile SELECT',
+    'Admin lost cross-profile SELECT'
+  ]) if(!sql.includes(marker)) fail('Performance/RLS test missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-PERFORMANCE-RLS.md')) fail('Missing Phase 2 performance/RLS documentation.');
+
+
+
 
 
 if(!exists('PHASE-2-STRESS-RESULTS.md')) fail('Missing production ticket concurrency probe evidence.');
@@ -146,4 +176,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, and Incident Center are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, and Supabase performance/RLS cleanup are present.');

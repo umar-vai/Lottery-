@@ -23,9 +23,9 @@
 /* Custom logo L: a real vertical-to-right L with a soft curved turn. */
 .lootera-letter-l{
   display:block;
-  width:15px;
+  width:17px;
   height:23px;
-  flex:0 0 15px;
+  flex:0 0 17px;
   margin-right:-1px;
   overflow:visible;
   filter:drop-shadow(0 4px 5px rgba(255,255,255,.035)) drop-shadow(0 7px 8px rgba(0,0,0,.25));
@@ -195,7 +195,7 @@
 .lootera-live-brand:focus-visible{outline:2px solid var(--d01-green,#a8ff3e);outline-offset:6px;border-radius:8px}
 
 @media(max-width:560px){
-  .lootera-letter-l{width:13px;height:20px;flex-basis:13px}
+  .lootera-letter-l{width:15px;height:20px;flex-basis:15px}
   .lootera-word-rest{font-size:17px}
   .lootera-balls{width:40px;height:25px;flex-basis:40px}
   .lootera-fallback-ball{width:18px;height:18px;font-size:9px}
@@ -203,7 +203,7 @@
 }
 
 @media(max-width:390px){
-  .lootera-letter-l{width:11px;height:18px;flex-basis:11px}
+  .lootera-letter-l{width:13px;height:18px;flex-basis:13px}
   .lootera-word-rest{font-size:15px}
   .lootera-balls{width:35px;height:22px;flex-basis:35px}
   .lootera-fallback-ball{width:16px;height:16px;font-size:8px}

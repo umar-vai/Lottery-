@@ -29,6 +29,9 @@ jobs:
       - name: Phase 1 security gate
         run: node scripts/phase1-security.mjs
 
+      - name: Phase 2 reliability gate
+        run: node scripts/phase2-reliability.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

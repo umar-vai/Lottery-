@@ -19,6 +19,7 @@ const performanceRlsMigration='supabase/migrations/202610061945_phase2_performan
 const performanceRlsTest='supabase/tests/phase2_performance_rls_cleanup.sql';
 const publicPrivacyMigration='supabase/migrations/202610062050_phase2_public_api_privacy.sql';
 const publicPrivacyTest='supabase/tests/phase2_public_api_privacy.sql';
+const disasterRecoveryTest='supabase/tests/phase2_disaster_recovery_drill.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -167,6 +168,23 @@ else {
 
 if(!exists('PHASE-2-PUBLIC-API-PRIVACY.md')) fail('Missing public API privacy documentation.');
 
+if(!exists(disasterRecoveryTest)) fail('Missing Phase 2 disaster-recovery drill.');
+else {
+  const sql=read(disasterRecoveryTest);
+  for(const marker of [
+    'PHASE2_DR_CORRUPTION',
+    'DR restore mismatch: lottery_events',
+    'DR restore mismatch: event_tickets',
+    'DR restore mismatch: balance_ledger',
+    'draw_credit_integrity_report',
+    'rollback;'
+  ]) if(!sql.includes(marker)) fail('Disaster-recovery drill missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-DISASTER-RECOVERY.md')) fail('Missing Phase 2 disaster-recovery runbook.');
+
+
+
 for(const file of ['home-v2.js','winner-display-v2.js','event.js']){
   if(!exists(file)) { fail(file+' missing for public winner compatibility.'); continue; }
   const js=read(file);
@@ -219,4 +237,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, performance/RLS cleanup, and public API privacy guards are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, performance/RLS cleanup, public API privacy, and disaster-recovery guards are present.');

@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07100c">
-  <title>Winners Hall — Game Zone</title>
+  <title>Winners Hall — Lootera.win</title>
   <link rel="stylesheet" href="site-shell.css?v=4">
   <link rel="stylesheet" href="winners.css?v=1">
 </head>
 <body>
   <div class="wh-ambient wh-a"></div><div class="wh-ambient wh-b"></div>
   <main class="wh-shell">
-    <header class="topbar"><a href="./" class="wh-brand">GAME ZONE</a></header>
+    <header class="topbar"><a href="./" class="wh-brand">LOOTERA.WIN</a></header>
 
     <section class="wh-hero">
       <div class="wh-hero-copy">
         <span class="wh-kicker">WINNERS HALL</span>
         <h1>Every draw.<br><em>Every winner.</em></h1>
-        <p>A permanent history of fully revealed events. Live results remain protected until every ranked draw animation is complete.</p>
-        <div class="wh-hero-actions"><a href="./#events" class="wh-btn primary">Explore live events</a><a href="#archive" class="wh-btn ghost">Browse winner archive</a></div>
+        <p>A permanent history of fully revealed lotteries. Live results remain protected until every ranked draw animation is complete.</p>
+        <div class="wh-hero-actions"><a href="lotteries.html" class="wh-btn primary">Explore live lotteries</a><a href="#archive" class="wh-btn ghost">Browse winner archive</a></div>
       </div>
       <div class="wh-stats">
-        <article><span>Completed events</span><strong id="statEvents">0</strong></article>
+        <article><span>Completed lotteries</span><strong id="statEvents">0</strong></article>
         <article><span>Winning tickets</span><strong id="statWinners">0</strong></article>
         <article><span>Prizes awarded</span><strong id="statPrizes">0</strong><small>credits</small></article>
       </div>
@@ -29,21 +29,21 @@
 
     <section id="liveRevealSection" class="wh-live" hidden>
       <div class="wh-section-head"><div><span class="wh-kicker">LIVE NOW</span><h2>Winner reveal in progress</h2></div><span class="wh-live-dot"><i></i> Results protected</span></div>
-      <p>These events are already locked by the server, but winner identities and numbers stay hidden until the complete ranked animation finishes.</p>
+      <p>These lotteries are already locked by the server, but winner identities and numbers stay hidden until the complete ranked animation finishes.</p>
       <div id="liveRevealList" class="wh-live-list"></div>
     </section>
 
     <section id="latestSection" class="wh-latest" hidden>
-      <div class="wh-section-head"><div><span class="wh-kicker">LATEST COMPLETED DRAW</span><h2>Fresh from the machine</h2></div><a id="latestEventLink" class="wh-text-link" href="#">Open event ↗</a></div>
+      <div class="wh-section-head"><div><span class="wh-kicker">LATEST COMPLETED DRAW</span><h2>Fresh from the machine</h2></div><a id="latestEventLink" class="wh-text-link" href="#">Open lottery ↗</a></div>
       <article id="latestEvent" class="wh-feature"></article>
     </section>
 
     <section id="archive" class="wh-archive">
-      <div class="wh-section-head archive-head"><div><span class="wh-kicker">FULL HISTORY</span><h2>Winner archive</h2></div><div class="wh-tools"><input id="winnerSearch" type="search" placeholder="Search event or winner…" autocomplete="off"><span id="archiveCount">0 events</span></div></div>
+      <div class="wh-section-head archive-head"><div><span class="wh-kicker">FULL HISTORY</span><h2>Winner archive</h2></div><div class="wh-tools"><input id="winnerSearch" type="search" placeholder="Search lottery or winner…" autocomplete="off"><span id="archiveCount">0 lotteries</span></div></div>
       <div id="archiveGrid" class="wh-archive-grid"><div class="wh-loading">Loading winner history…</div></div>
     </section>
   </main>
-  <script src="site-shell.js?v=24"></script>
+  <script src="site-shell.js?v=25"></script>
   <script type="module" src="winners.js?v=1"></script>
 </body>
 </html>

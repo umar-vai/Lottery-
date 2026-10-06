@@ -116,3 +116,18 @@ No live Edge Function was redeployed or behavior-changed during this snapshot. P
 - verify callers and then remove deprecated Edge Functions when safe;
 - extend concurrency testing for ticket capacity and duplicate game requests;
 - periodically rerun Supabase security advisors after schema changes.
+
+
+## Phase 1.9 — concurrency and duplicate-request hardening
+
+Ticket capacity safety was re-audited. `purchase_event_ticket(...)` locks the lottery event row with `FOR UPDATE` before counting total tickets/players, which serializes concurrent purchases for the same event. The player profile is also locked before balance mutation, and ticket + ledger writes remain in the same database transaction.
+
+Slot and Plinko already had unique `(user_id, client_nonce)` constraints, but two simultaneous requests with the same nonce could race before the duplicate lookup and make the losing request surface a unique-constraint error. Phase 1 now takes a transaction advisory lock keyed by user + nonce before duplicate lookup, turning concurrent retries into an idempotent replay of the committed result.
+
+`supabase/tests/phase1_concurrency_contracts.sql` protects these contracts.
+
+## Phase 1.10 — deprecated Edge Function cleanup
+
+Caller analysis plus the previous 24 hours of Edge Function logs showed zero invocations for `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit`. All three are decommissioned `410 Gone` endpoints. Their response text is standardized to point away from obsolete flows.
+
+The available Supabase connector does not expose physical Edge Function deletion, so source-controlled 410 stubs remain until they can be deleted through Dashboard/CLI after an additional observation window.

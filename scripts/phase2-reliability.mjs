@@ -171,6 +171,7 @@ if(!exists('PHASE-2-PUBLIC-API-PRIVACY.md')) fail('Missing public API privacy do
 if(exists('event.js')){
   const js=read('event.js');
   if(js.includes(".from('lottery_events').select('*')")) fail('Public event page still uses SELECT * on lottery_events.');
+  if(js.includes("postgres_changes',{event:'UPDATE',schema:'public',table:'lottery_events'")) fail('Public event page still subscribes to full-row lottery_events Realtime payloads.');
   if(js.includes('ticket_id:w.ticket_id')||js.includes('user_id:w.user_id')) fail('Public event winner normalizer still consumes raw internal IDs.');
   if(!js.includes('ticket_ref')||!js.includes('winner_key')) fail('Public event page does not consume privacy-safe winner references.');
 }

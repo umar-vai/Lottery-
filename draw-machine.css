@@ -685,3 +685,212 @@
 @media(prefers-reduced-motion:reduce){
   .gm-air-jets i{animation:none!important;opacity:.30}
 }
+
+
+/* --- Stronger blower + optical glass realism v5 ------------------------- */
+.gm-air-jets{
+  left:6%;
+  right:6%;
+  bottom:-1%;
+  height:55%;
+  opacity:.92;
+  filter:blur(.15px) saturate(1.08);
+}
+.gm-air-jets i{
+  width:18%;
+  height:104%;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(223,249,255,0) 0%,
+      rgba(210,244,255,.035) 24%,
+      rgba(211,245,255,.095) 52%,
+      rgba(226,251,255,.22) 78%,
+      rgba(238,253,255,.30) 100%
+    );
+  filter:blur(2.6px);
+  animation:gmJetPulseStrong 1.72s cubic-bezier(.42,0,.32,1) infinite alternate;
+}
+.gm-air-jets i:nth-child(1){left:2%;animation-delay:-.24s}
+.gm-air-jets i:nth-child(2){left:27%;animation-delay:-.78s}
+.gm-air-jets i:nth-child(3){right:27%;animation-delay:-1.16s}
+.gm-air-jets i:nth-child(4){right:2%;animation-delay:-.51s}
+.gm-machine.bonus .gm-air-jets i{
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,210,218,0) 0%,
+      rgba(255,172,186,.03) 24%,
+      rgba(255,126,146,.085) 52%,
+      rgba(255,103,127,.18) 78%,
+      rgba(255,145,163,.24) 100%
+    );
+}
+.gm-stage.is-drawing .gm-air-jets{
+  opacity:1;
+  filter:blur(.1px) saturate(1.15);
+}
+.gm-stage.is-drawing .gm-air-jets i{
+  animation-duration:1.08s;
+}
+
+/* Fresnel-like acrylic edge: brightest at oblique viewing angles. */
+.gm-glass-rim{
+  z-index:12;
+  background:
+    conic-gradient(
+      from 218deg,
+      rgba(255,255,255,.02) 0deg,
+      rgba(239,250,255,.68) 26deg,
+      rgba(255,255,255,.07) 63deg,
+      rgba(182,226,244,.22) 112deg,
+      rgba(255,255,255,.025) 176deg,
+      rgba(143,200,225,.30) 244deg,
+      rgba(255,255,255,.08) 292deg,
+      rgba(245,253,255,.52) 334deg,
+      rgba(255,255,255,.02) 360deg
+    )!important;
+  -webkit-mask:radial-gradient(circle,transparent 0 88.8%,#000 91.5% 100%)!important;
+  mask:radial-gradient(circle,transparent 0 88.8%,#000 91.5% 100%)!important;
+  opacity:.95!important;
+  filter:
+    drop-shadow(0 0 1.2px rgba(255,255,255,.34))
+    drop-shadow(0 0 4px rgba(178,226,245,.08));
+}
+
+/* High-gloss clear coat, fixed to the chamber rather than the balls. */
+.gm-glass-clearcoat{
+  position:absolute;
+  inset:0;
+  z-index:11;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 31% 17%,rgba(255,255,255,.58) 0 3%,rgba(255,255,255,.18) 8%,transparent 21%),
+    radial-gradient(ellipse at 77% 26%,rgba(255,255,255,.20) 0 2%,rgba(255,255,255,.055) 8%,transparent 18%),
+    linear-gradient(129deg,transparent 19%,rgba(255,255,255,.055) 34%,rgba(255,255,255,.15) 42%,rgba(255,255,255,.025) 51%,transparent 64%);
+  mix-blend-mode:screen;
+  opacity:.78;
+  filter:blur(.18px);
+}
+.gm-glass-clearcoat::after{
+  content:"";
+  position:absolute;
+  left:15%;
+  top:8%;
+  width:11%;
+  height:42%;
+  border-radius:50%;
+  border-left:1.8px solid rgba(255,255,255,.34);
+  transform:rotate(17deg);
+  filter:blur(.25px);
+  opacity:.75;
+}
+
+/* Subtle spectral edge separation mimics thick acrylic refraction. */
+.gm-glass-prism{
+  position:absolute;
+  inset:2.8%;
+  z-index:10;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 49% 48%,transparent 0 76%,rgba(107,196,255,.040) 80%,transparent 84%),
+    radial-gradient(circle at 52% 51%,transparent 0 79%,rgba(255,88,134,.026) 82%,transparent 86%);
+  mix-blend-mode:screen;
+  opacity:.90;
+}
+.gm-machine.bonus .gm-glass-prism{
+  background:
+    radial-gradient(circle at 49% 48%,transparent 0 76%,rgba(131,204,255,.032) 80%,transparent 84%),
+    radial-gradient(circle at 52% 51%,transparent 0 79%,rgba(255,96,130,.045) 82%,transparent 86%);
+}
+
+/* Deeper optical volume and thicker lower wall. */
+.gm-glass-inner-shadow{
+  inset:3.7%;
+  box-shadow:
+    inset 12px 13px 28px rgba(255,255,255,.075),
+    inset -19px -23px 38px rgba(0,0,0,.29),
+    inset 0 -7px 16px rgba(122,188,216,.07),
+    inset 0 5px 13px rgba(255,255,255,.035);
+}
+.gm-glass-refraction{
+  inset:6% 8% 10%;
+  background:
+    radial-gradient(circle at 32% 25%,rgba(255,255,255,.115),transparent 25%),
+    radial-gradient(circle at 69% 73%,rgba(163,219,242,.085),transparent 34%),
+    linear-gradient(112deg,transparent 16%,rgba(255,255,255,.045) 40%,rgba(205,239,252,.025) 48%,transparent 69%);
+  opacity:.80;
+  filter:blur(.45px) saturate(1.15);
+}
+.gm-glass-caustic{
+  bottom:0!important;
+  height:29%!important;
+  background:
+    radial-gradient(ellipse at center,rgba(230,250,255,.30),rgba(144,205,229,.10) 34%,rgba(80,145,174,.03) 54%,transparent 72%)!important;
+  filter:blur(5px)!important;
+  opacity:.93!important;
+}
+.gm-machine.bonus .gm-glass-caustic{
+  background:
+    radial-gradient(ellipse at center,rgba(255,220,226,.25),rgba(255,91,117,.09) 36%,rgba(132,8,29,.025) 56%,transparent 72%)!important;
+}
+
+/* Make the circular shell itself read as thicker, polished transparent acrylic. */
+.gm-chamber{
+  border:1px solid rgba(236,248,254,.48)!important;
+  background:
+    radial-gradient(circle at 24% 15%,rgba(255,255,255,.20),transparent 13%),
+    radial-gradient(circle at 74% 80%,rgba(181,227,245,.07),transparent 31%),
+    radial-gradient(circle at 50% 47%,rgba(16,31,39,.055) 0 52%,rgba(5,13,18,.24) 73%,rgba(0,3,5,.54) 100%)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.15),
+    inset 0 0 0 3px rgba(195,229,242,.052),
+    inset 12px 8px 33px rgba(255,255,255,.085),
+    inset -20px -25px 44px rgba(0,0,0,.42),
+    inset 0 -6px 13px rgba(120,187,215,.06),
+    0 0 0 1px rgba(255,255,255,.08),
+    0 1px 0 rgba(255,255,255,.24),
+    0 22px 48px rgba(0,0,0,.34)!important;
+  backdrop-filter:blur(1.6px) saturate(1.12) contrast(1.02);
+  -webkit-backdrop-filter:blur(1.6px) saturate(1.12) contrast(1.02);
+}
+.gm-machine.bonus .gm-chamber{
+  border-color:rgba(255,186,195,.42)!important;
+}
+.gm-glass-reflection{
+  border-left-color:rgba(255,255,255,.34);
+  opacity:.68;
+}
+.gm-glass-glint{
+  width:8%!important;
+  right:11%!important;
+  top:10%!important;
+  background:radial-gradient(circle,rgba(255,255,255,.98),rgba(255,255,255,.26) 26%,transparent 67%)!important;
+  opacity:.68!important;
+  filter:blur(.55px)!important;
+}
+.gm-glass-sheen{
+  width:31%!important;
+  opacity:.48!important;
+  animation-duration:5.4s!important;
+}
+
+@keyframes gmJetPulseStrong{
+  0%{opacity:.26;transform:scaleY(.58) scaleX(.82);filter:blur(3.1px)}
+  38%{opacity:.62}
+  72%{opacity:.90}
+  100%{opacity:1;transform:scaleY(1.18) scaleX(1.08);filter:blur(2.2px)}
+}
+
+@media(max-width:760px){
+  .gm-air-jets{height:52%;opacity:.82}
+  .gm-glass-clearcoat{opacity:.66}
+  .gm-glass-prism{opacity:.76}
+  .gm-glass-refraction{opacity:.68}
+}
+@media(prefers-reduced-motion:reduce){
+  .gm-air-jets i{animation:none!important;opacity:.55}
+  .gm-glass-sheen{animation:none!important}
+}

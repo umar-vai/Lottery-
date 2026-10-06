@@ -659,6 +659,7 @@ declare
   p public.profiles%rowtype;
   v_purchase_count integer:=0;
   v_prize_count integer:=0;
+  v_any_prize_count integer:=0;
   v_tier_prize numeric;
   v_numbers_ok boolean:=false;
   v_bonus_ok boolean:=false;
@@ -677,10 +678,13 @@ begin
   where bl.user_id=t.user_id and bl.event_id=t.event_id and bl.ticket_id=t.id
     and bl.entry_type='ticket_purchase' and bl.amount=-t.price_paid;
 
-  select count(*) into v_prize_count
+  select
+    count(*) filter(where bl.amount=t.prize_awarded),
+    count(*)
+  into v_prize_count,v_any_prize_count
   from public.balance_ledger bl
   where bl.user_id=t.user_id and bl.event_id=t.event_id and bl.ticket_id=t.id
-    and bl.entry_type='prize_credit' and bl.amount=t.prize_awarded;
+    and bl.entry_type='prize_credit';
 
   select prize_amount into v_tier_prize
   from public.event_prize_tiers
@@ -731,8 +735,8 @@ begin
     'ok',
       v_numbers_ok and v_bonus_ok and v_purchase_count=1
       and (
-        (t.is_winner and v_tier_prize=t.prize_awarded and v_prize_count=1 and v_summary_ok)
-        or (not t.is_winner and v_prize_count=0)
+        (t.is_winner and v_tier_prize=t.prize_awarded and v_prize_count=1 and v_any_prize_count=1 and v_summary_ok)
+        or (not t.is_winner and v_any_prize_count=0)
       ),
     'ticket',jsonb_build_object(
       'id',t.id,'ticket_ref',private.public_ticket_ref(t.id),'event_id',t.event_id,'user_id',t.user_id,
@@ -752,7 +756,7 @@ begin
       jsonb_build_object('key','bonus','label','Bonus-ball value matches this lottery''s rule','ok',v_bonus_ok),
       jsonb_build_object('key','purchase_ledger','label','Exactly one matching ticket-purchase debit exists','ok',v_purchase_count=1,'detail',v_purchase_count||' matching row(s)'),
       jsonb_build_object('key','winner_tier','label','Winner prize matches configured rank, when applicable','ok',not t.is_winner or v_tier_prize=t.prize_awarded),
-      jsonb_build_object('key','prize_ledger','label','Prize-credit ledger state matches winner state','ok',(t.is_winner and v_prize_count=1) or (not t.is_winner and v_prize_count=0),'detail',v_prize_count||' matching prize row(s)'),
+      jsonb_build_object('key','prize_ledger','label','Prize-credit ledger state matches winner state','ok',(t.is_winner and v_prize_count=1 and v_any_prize_count=1) or (not t.is_winner and v_any_prize_count=0),'detail',v_any_prize_count||' total prize row(s); '||v_prize_count||' exact match(es)'),
       jsonb_build_object('key','public_summary','label','Completed winner appears correctly in the privacy-safe public summary','ok',v_summary_ok)
     ),
     'ledger',v_ledger

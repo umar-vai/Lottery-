@@ -26,6 +26,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Phase 0 production smoke gate
+        run: node scripts/phase0-smoke.mjs
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

@@ -29,6 +29,7 @@ begin
   if jsonb_typeof(r->'summary')<>'object' then raise exception 'Control room summary missing'; end if;
   if jsonb_typeof(r->'operational_health')<>'object' then raise exception 'Operational health missing'; end if;
   if jsonb_typeof(r->'credit_integrity')<>'object' then raise exception 'Credit integrity missing'; end if;
+  if r->'credit_integrity'->>'mode'<>'hourly_monitor' then raise exception 'Control Room must use lightweight hourly integrity monitor'; end if;
   if (r->'summary'->>'total_events')::integer <> (select count(*) from public.lottery_events) then
     raise exception 'Control room event count mismatch';
   end if;

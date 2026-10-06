@@ -138,6 +138,93 @@ function gmCreateAtlas(maxNumber,isRed){
   return {canvas:c,cols,rows};
 }
 
+
+function gmDrawResultSprite(canvas,number,isRed){
+  const dpr=Math.min(2.5,Math.max(1,window.devicePixelRatio||1));
+  const size=96;
+  canvas.width=Math.round(size*dpr);
+  canvas.height=Math.round(size*dpr);
+  const x=canvas.getContext('2d');
+  x.setTransform(dpr,0,0,dpr,0,0);
+  x.clearRect(0,0,size,size);
+  const cx=48,cy=47,r=39;
+
+  x.save();
+  x.beginPath();x.arc(cx,cy,r,0,GM_TAU);x.clip();
+
+  const base=x.createRadialGradient(cx-r*.42,cy-r*.48,r*.04,cx,cy,r*1.12);
+  if(isRed){
+    base.addColorStop(0,'#ffe2e7');
+    base.addColorStop(.12,'#ff9cac');
+    base.addColorStop(.38,'#ff4862');
+    base.addColorStop(.68,'#e01d3b');
+    base.addColorStop(1,'#8b0017');
+  }else{
+    base.addColorStop(0,'#ffffff');
+    base.addColorStop(.18,'#fbfdff');
+    base.addColorStop(.46,'#eef3f6');
+    base.addColorStop(.74,'#c8d2d9');
+    base.addColorStop(1,'#8997a1');
+  }
+  x.fillStyle=base;x.fillRect(0,0,size,size);
+
+  x.globalCompositeOperation='screen';
+  const pearl=x.createLinearGradient(8,18,87,78);
+  pearl.addColorStop(0,'rgba(255,255,255,0)');
+  pearl.addColorStop(.31,isRed?'rgba(255,219,227,.13)':'rgba(255,255,255,.16)');
+  pearl.addColorStop(.48,'rgba(255,255,255,.025)');
+  pearl.addColorStop(.69,isRed?'rgba(255,159,178,.08)':'rgba(196,230,246,.09)');
+  pearl.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=pearl;x.fillRect(0,0,size,size);
+
+  const spec=x.createRadialGradient(31,25,1,31,25,23);
+  spec.addColorStop(0,'rgba(255,255,255,.98)');
+  spec.addColorStop(.18,'rgba(255,255,255,.70)');
+  spec.addColorStop(.48,'rgba(255,255,255,.13)');
+  spec.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=spec;x.fillRect(6,3,54,50);
+
+  const spec2=x.createRadialGradient(68,37,0,68,37,18);
+  spec2.addColorStop(0,isRed?'rgba(255,231,235,.28)':'rgba(225,242,252,.26)');
+  spec2.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=spec2;x.fillRect(48,17,40,40);
+  x.restore();
+
+  const rim=x.createRadialGradient(cx,cy,r*.72,cx,cy,r);
+  rim.addColorStop(0,'rgba(255,255,255,0)');
+  rim.addColorStop(.78,'rgba(255,255,255,0)');
+  rim.addColorStop(.92,isRed?'rgba(255,180,192,.10)':'rgba(230,247,255,.16)');
+  rim.addColorStop(1,isRed?'rgba(70,0,12,.34)':'rgba(28,43,54,.30)');
+  x.fillStyle=rim;x.beginPath();x.arc(cx,cy,r,0,GM_TAU);x.fill();
+
+  const dr=17;
+  const disc=x.createRadialGradient(cx-dr*.26,cy-dr*.30,1,cx,cy,dr);
+  disc.addColorStop(0,'#ffffff');
+  disc.addColorStop(.58,'#fbfcfd');
+  disc.addColorStop(1,'#e4eaee');
+  x.fillStyle=disc;x.beginPath();x.arc(cx,cy,dr,0,GM_TAU);x.fill();
+  x.lineWidth=1.4;
+  x.strokeStyle=isRed?'rgba(255,255,255,.92)':'rgba(96,113,126,.42)';
+  x.stroke();
+
+  x.fillStyle='#071019';
+  x.font='900 25px Inter, system-ui, -apple-system, Segoe UI, sans-serif';
+  x.textAlign='center';x.textBaseline='middle';
+  x.fillText(String(number),cx,cy+1);
+
+  x.beginPath();x.arc(cx,cy,r-.6,0,GM_TAU);
+  x.lineWidth=1.1;x.strokeStyle='rgba(255,255,255,.23)';x.stroke();
+
+  const hot=x.createRadialGradient(27,19,0,27,19,8);
+  hot.addColorStop(0,'rgba(255,255,255,.95)');
+  hot.addColorStop(.35,'rgba(255,255,255,.34)');
+  hot.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=hot;x.fillRect(16,8,24,24);
+
+  canvas.style.width='100%';
+  canvas.style.height='100%';
+}
+
 class ChamberBallRenderer{
   constructor(chamber,{bonus=false}={}){
     this.chamber=chamber;this.bonus=bonus;this.ready=false;this.maxNumber=0;
@@ -145,6 +232,23 @@ class ChamberBallRenderer{
     this.canvas.className='gm-ball-webgl';
     this.canvas.setAttribute('aria-hidden','true');
     chamber.appendChild(this.canvas);
+    this.lastBalls=[];this.lastRadius=0;
+    this.canvas.addEventListener('webglcontextlost',(event)=>{
+      event.preventDefault();
+      this.ready=false;
+      this.chamber.classList.remove('gm-webgl-ready');
+    },false);
+    this.canvas.addEventListener('webglcontextrestored',()=>{
+      try{
+        this.maxNumber=0;this.texture=null;this.program=null;
+        this.init();this.ready=true;
+        this.chamber.classList.add('gm-webgl-ready');
+        if(this.lastBalls.length)this.render(this.lastBalls,this.lastRadius);
+      }catch(err){
+        this.ready=false;
+        this.chamber.classList.remove('gm-webgl-ready');
+      }
+    },false);
     try{
       this.gl=this.canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:false})||
         this.canvas.getContext('experimental-webgl',{alpha:true,antialias:true});
@@ -251,6 +355,8 @@ class ChamberBallRenderer{
     return {w,h,dpr,cssW:rect.width,cssH:rect.height};
   }
   render(balls,radius){
+    this.lastBalls=Array.from(balls||[]);
+    this.lastRadius=radius||0;
     if(!this.ready||!balls.length)return;
     this.ensureAtlas(Math.max(...balls.map(b=>b.number||1)));
     const gl=this.gl,dim=this.resize();
@@ -884,38 +990,28 @@ export class EventDrawMachine {
   destroyUltraBall(node){
     if(!node)return;
     cancelAnimationFrame(node._gmSpinRaf||0);
-    node._gmRenderer?.destroy?.();
-    node._gmRenderer=null;
     node._gmSpinRaf=0;
   }
 
-  mountUltraBall(node,number,bonus,{spin=false,angle=.35}={}){
+  mountUltraBall(node,number,bonus,{spin=false}={}){
     if(!node)return null;
     const sphere=create('span','gm-ultra-sphere');
-    const fallback=create('span',`gm-ultra-fallback${bonus?' bonus':''}`);
-    fallback.dataset.number=pad2(number);
-    sphere.appendChild(fallback);
+    const canvas=document.createElement('canvas');
+    canvas.className='gm-ultra-canvas';
+    canvas.setAttribute('aria-hidden','true');
+    gmDrawResultSprite(canvas,number,bonus);
+    sphere.appendChild(canvas);
     node.appendChild(sphere);
-
-    const renderer=new ChamberBallRenderer(sphere,{bonus});
-    node._gmRenderer=renderer;
-    const draw=(a)=>{
-      const rect=sphere.getBoundingClientRect();
-      const radius=Math.max(1,Math.min(rect.width,rect.height)*.5);
-      renderer.render([{x:0,y:0,angle:a,number:Number(number)||1}],radius);
-      if(renderer.ready) fallback.hidden=true;
-    };
-
-    if(spin && renderer.ready && !this.reduced){
+    node.dataset.number=String(number);
+    if(spin&&!this.reduced){
       const started=performance.now();
       const loop=(now)=>{
         if(!node.isConnected)return;
-        draw(angle+(now-started)*.0062);
+        const t=(now-started)/1000;
+        sphere.style.setProperty('--flight-glint',String((Math.sin(t*8)+1)*.5));
         node._gmSpinRaf=requestAnimationFrame(loop);
       };
       node._gmSpinRaf=requestAnimationFrame(loop);
-    }else{
-      requestAnimationFrame(()=>draw(angle));
     }
     return sphere;
   }
@@ -927,7 +1023,8 @@ export class EventDrawMachine {
     slot.replaceChildren();
     slot.className = `gm-result-ball gm-ultra-ball${bonus?' bonus':''}`;
     slot.setAttribute('aria-label',`${bonus?'Special ball':'Main ball'} ${number}`);
-    this.mountUltraBall(slot,number,bonus,{spin:false,angle:(Number(number)||1)*.173});
+    slot.dataset.number=String(number);
+    this.mountUltraBall(slot,number,bonus,{spin:false});
   }
 
   flyBall(key, number, bonus, duration){
@@ -940,7 +1037,7 @@ export class EventDrawMachine {
     const ball = create('span',`gm-flight gm-ultra-ball${bonus?' bonus':''}`);
     ball.setAttribute('aria-hidden','true');
     this.stage.appendChild(ball);
-    this.mountUltraBall(ball,number,bonus,{spin:true,angle:(Number(number)||1)*.137});
+    this.mountUltraBall(ball,number,bonus,{spin:true});
     const ballRect=ball.getBoundingClientRect();
     const half=Math.max(1,ballRect.width/2);
     const sx = source.left + source.width/2 - stageRect.left - half;

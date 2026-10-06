@@ -15,7 +15,8 @@ function slugify(v){return String(v||'').toLowerCase().trim().replace(/[^a-z0-9]
 function normalize(v){return String(v||'').toLowerCase().trim()}
 function nullableInt(id){var raw=$(id).value.trim();if(!raw)return null;var n=Number(raw);if(!Number.isInteger(n)||n<1)throw new Error($(id).previousElementSibling?$(id).previousElementSibling.textContent+' must be a positive whole number':'Invalid limit');return n}
 function session(){try{var x=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'null');if(x&&x.access_token)return x;if(x&&x.currentSession&&x.currentSession.access_token)return x.currentSession;if(x&&x.session&&x.session.access_token)return x.session;return null}catch(e){return null}}
-function req(path,opt){opt=opt||{};var h=Object.assign({},opt.headers||{});h.apikey=KEY;if(S.session)h.Authorization='Bearer '+S.session.access_token;if(opt.body)h['Content-Type']='application/json';return fetch(BASE+path,Object.assign({},opt,{headers:h})).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=t}if(!r.ok)throw new Error((d&&d.message)||(d&&d.error_description)||(d&&d.error)||('HTTP '+r.status));return d})})}
+function ensureSession(force){if(window.Draw01Shell&&window.Draw01Shell.ensureSession)return window.Draw01Shell.ensureSession(!!force).then(function(s){S.session=s||null;return S.session});S.session=S.session||session();return Promise.resolve(S.session)}
+function req(path,opt,retried){opt=opt||{};return ensureSession(false).then(function(){var h=Object.assign({},opt.headers||{});h.apikey=KEY;if(S.session)h.Authorization='Bearer '+S.session.access_token;if(opt.body)h['Content-Type']='application/json';return fetch(BASE+path,Object.assign({},opt,{headers:h})).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=t}if(!r.ok){var er=new Error((d&&d.message)||(d&&d.error_description)||(d&&d.error)||('HTTP '+r.status));er.status=r.status;throw er}return d})})}).catch(function(e){if(!retried&&(e.status===401||e.status===403))return ensureSession(true).then(function(s){if(!s)throw e;return req(path,opt,true)});throw e})}
 function rest(path,opt){return req('/rest/v1/'+path,opt)}
 function rpc(name,args){return rest('rpc/'+name,{method:'POST',body:JSON.stringify(args||{})})}
 function safe(p,fallback){return p.catch(function(e){console.warn(e);return fallback})}
@@ -48,9 +49,10 @@ function numbersHtml(t){var h='<div class="number-chips">';(t.white_numbers||[])
 
 function boot(){
   S.session=session();
-  if(!S.session){$('gateMsg').textContent='No active Google session. Sign in on the public site, then return here.';return}
-  if(window.Draw01Shell)window.Draw01Shell.setSession(S.session);
-  req('/auth/v1/user').then(function(u){
+  ensureSession(false).then(function(active){
+    if(!active){$('gateMsg').textContent='No active Google session. Sign in on the public site, then return here.';return null}
+    if(window.Draw01Shell)window.Draw01Shell.setSession(active);
+    return req('/auth/v1/user').then(function(u){
     S.user=u;
     return rest('profiles?select=id,display_name,email,role,balance,avatar_url&id=eq.'+encodeURIComponent(u.id)+'&limit=1');
   }).then(function(rows){
@@ -62,7 +64,8 @@ function boot(){
     $('gate').style.display='none';
     $('app').hidden=false;
     return load();
-  }).catch(function(e){$('gateMsg').textContent='Admin check failed: '+e.message;note(e.message,true)})
+    }).catch(function(e){$('gateMsg').textContent='Admin check failed: '+e.message;note(e.message,true)})
+  }).catch(function(e){$('gateMsg').textContent='Session recovery failed: '+e.message;note(e.message,true)})
 }
 
 function load(){

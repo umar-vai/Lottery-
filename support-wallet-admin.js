@@ -20,7 +20,7 @@ function install(){
     $('supportWalletSearch').oninput=function(){clearTimeout(timer);timer=setTimeout(function(){load(true)},300)}
   }
   var players=$('players');if(players){var p=players.querySelector('.panel-head p');if(p)p.textContent="Manage each player's Draw Credits and Love Points (LP) here. Phone Bridge and support transactions remain in the Support tab."}
-  load(true)
+  var support=$('support');if(support&&support.classList.contains('active'))load(true)
 }
 function args(){var c=cursor||{};return{p_query:($('supportWalletSearch')&&$('supportWalletSearch').value||'').trim(),p_limit:50,p_cursor_created_at:c.created_at||null,p_cursor_user_id:c.user_id||null}}
 function render(){

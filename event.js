@@ -1,6 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, APP_URL, BACKEND_READY } from './config.js';
-import { EventDrawMachine } from './draw-machine.js?v=2';
+import { EventDrawMachine } from './draw-machine.js?v=3';
 
 const supabase = BACKEND_READY ? createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, detectSessionInUrl: true, autoRefreshToken: true } }) : null;
 const $ = id => document.getElementById(id);

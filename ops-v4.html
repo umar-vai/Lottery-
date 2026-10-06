@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="admin-canonical-v9.css?v=1">
   <link rel="stylesheet" href="phase3-control-room.css?v=1">
   <link rel="stylesheet" href="phase3-lifecycle.css?v=1">
+  <link rel="stylesheet" href="phase3-investigation.css?v=1">
   <script src="support-center.js?v=8" data-d01-support-center="1" defer></script>
 </head>
 <body>
@@ -47,6 +48,7 @@
         <button data-tab="tickets">Tickets</button>
         <button data-tab="winners">Winners</button>
         <button data-tab="players">Players</button>
+        <button data-tab="investigations">Investigations</button>
         <button data-tab="support">Support</button>
         <button data-tab="ledger">Ledger</button>
         <button data-tab="incidents">Incidents</button>
@@ -96,6 +98,24 @@
 
       <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>Manage each player's Draw Credits and Love Points (LP) here. Phone Bridge and support transactions remain in the Support tab.</p></div></div><div class="player-toolbar"><input id="playerSearch" type="search" autocomplete="off" placeholder="Search player by name or email"><span id="playerSummary" class="muted-pill">0 players</span></div><div id="playerList" class="records"></div></article></section>
 
+      <section id="investigations" class="tab">
+        <div class="investigation-shell">
+          <section class="investigation-head glass">
+            <div><span class="eyebrow">PLAYER / TICKET FORENSICS</span><h2>Investigation Workspace</h2><p>Trace a player or ticket through Draw Credits, lottery entries, game activity, admin changes and the separate Support Points domain. Review signals are evidence for human investigation, not automatic fraud decisions.</p></div>
+            <div class="inv-head-actions"><button id="investigationRefresh" class="btn ghost compact" type="button">Refresh investigation</button></div>
+          </section>
+          <section class="inv-searchbar glass">
+            <input id="investigationSearch" type="search" autocomplete="off" placeholder="Search name, email, user ID, ticket ID, referral code or lottery…">
+            <button id="investigationSearchBtn" class="btn primary compact" type="button">Search</button>
+            <span id="investigationResultCount" class="inv-result-count">0 results</span>
+          </section>
+          <div class="inv-layout">
+            <aside class="inv-subject-panel glass"><div id="investigationSubjects" class="inv-subjects"><div class="inv-loading">Open this tab to load recent players.</div></div></aside>
+            <section class="inv-detail-panel-shell glass"><div id="investigationDetail" class="inv-detail"><div class="inv-detail-empty"><strong>Select a player to investigate</strong><span>Search or choose a recent player from the left.</span></div></div></section>
+          </div>
+        </div>
+      </section>
+
       <section id="support" class="tab"><div class="support-tab-shell"><div class="support-tab-heading"><div><span class="eyebrow">SUPPORT OPERATIONS</span><h2>Support, Love Points & phone bridge</h2><p>Phone verification, Love Points (LP), support balances and support summaries stay here — separate from Players and lottery operations.</p></div><button id="supportTabRefresh" class="btn ghost compact" type="button">Refresh all</button></div><div class="support-admin-summary"><article><span>Support received</span><strong id="supportSummaryReceived">৳0</strong><small>Verified bridge transfers</small></article><article><span>Love Points</span><strong id="supportSummaryPoints">0 LP</strong><small>Across all players</small></article><article><span>Draw Credits</span><strong id="supportSummaryCredits">0 cr</strong><small>Across all players</small></article><article><span>Linked phones</span><strong id="supportSummaryPhones">0</strong><small>Enabled bridge devices</small></article></div><div id="supportAdminMount"></div></div></section>
 
       <section id="ledger" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CREDIT LEDGER</span><h2>Balance movements</h2><p>Admin adjustments, ticket purchases and prize credits are recorded here.</p></div></div><div class="filter-row"><select id="ledgerUserFilter"><option value="all">All players</option></select><span id="ledgerSummary" class="muted-pill">0 entries</span></div><div id="ledgerList" class="records"></div></article></section>
@@ -141,6 +161,24 @@
 
   <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin reason<input id="balanceNote" placeholder="Why is this balance being changed?" required></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
 
+  <dialog id="investigationTicketDialog" class="inv-ticket-modal">
+    <section class="inv-ticket-card glass">
+      <div class="inv-ticket-modal-head">
+        <div><span class="eyebrow">AUTHORITATIVE TICKET TRACE</span><h2 id="invTicketTitle">Ticket investigation</h2><p id="invTicketMeta">Loading…</p></div>
+        <div id="invTicketStatus"></div>
+      </div>
+      <div id="invTicketNumbers" class="inv-ticket-numbers"></div>
+      <div class="section-label">Integrity checks</div>
+      <div id="invTicketChecks" class="inv-ticket-checks"></div>
+      <div class="section-label">Ticket-linked Draw Credit ledger</div>
+      <div id="invTicketLedger" class="inv-ticket-ledger"></div>
+      <div class="inv-ticket-actions">
+        <button id="closeInvestigationTicket" class="btn ghost" type="button">Close</button>
+        <button id="invTicketOpenPlayer" class="btn primary" type="button">Open full player investigation</button>
+      </div>
+    </section>
+  </dialog>
+
   <dialog id="lifecycleDialog" class="lifecycle-modal">
     <section class="lifecycle-card glass">
       <div class="lifecycle-head">
@@ -171,6 +209,7 @@
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script src="phase3-control-room.js?v=1" defer></script>
   <script src="phase3-lifecycle.js?v=1" defer></script>
+  <script src="phase3-investigation.js?v=1" defer></script>
   <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>
   <script src="platform-controls-admin.js?v=4" defer></script>

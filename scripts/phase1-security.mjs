@@ -15,6 +15,7 @@ const defaultsMigration = 'supabase/migrations/202610061525_phase1_secure_public
 const dbInvariantTest = 'supabase/tests/phase1_security_invariants.sql';
 const rlsRuntimeTest = 'supabase/tests/phase1_rls_runtime_isolation.sql';
 const concurrencyTest = 'supabase/tests/phase1_concurrency_contracts.sql';
+const gameReplayRuntimeTest = 'supabase/tests/phase1_game_replay_runtime.sql';
 const concurrencyMigration = 'supabase/migrations/202610061620_phase1_game_nonce_concurrency.sql';
 
 if (!exists(profileMigration)) {
@@ -141,6 +142,15 @@ if (!exists(concurrencyTest)) {
   const sql = read(concurrencyTest);
   for (const marker of ['purchase_event_ticket','pg_advisory_xact_lock','slot_spins','plinko_drops','drop_plinko_batch']) {
     if (!sql.includes(marker)) fail('Concurrency test is missing marker: ' + marker);
+  }
+}
+
+if (!exists(gameReplayRuntimeTest)) {
+  fail('Missing duplicate game replay runtime test: ' + gameReplayRuntimeTest);
+} else {
+  const sql = read(gameReplayRuntimeTest);
+  for (const marker of ['spin_slot','drop_plinko',"'duplicate'",'balance changed on duplicate replay']) {
+    if (!sql.includes(marker)) fail('Game replay runtime test is missing marker: ' + marker);
   }
 }
 

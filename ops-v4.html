@@ -46,6 +46,7 @@
         <button data-tab="players">Players</button>
         <button data-tab="support">Support</button>
         <button data-tab="ledger">Ledger</button>
+        <button data-tab="incidents">Incidents</button>
         <button data-tab="audit">Audit</button>
       </nav>
 
@@ -67,6 +68,14 @@
       <section id="support" class="tab"><div class="support-tab-shell"><div class="support-tab-heading"><div><span class="eyebrow">SUPPORT OPERATIONS</span><h2>Support, Love Points & phone bridge</h2><p>Phone verification, Love Points (LP), support balances and support summaries stay here — separate from Players and lottery operations.</p></div><button id="supportTabRefresh" class="btn ghost compact" type="button">Refresh all</button></div><div class="support-admin-summary"><article><span>Support received</span><strong id="supportSummaryReceived">৳0</strong><small>Verified bridge transfers</small></article><article><span>Love Points</span><strong id="supportSummaryPoints">0 LP</strong><small>Across all players</small></article><article><span>Draw Credits</span><strong id="supportSummaryCredits">0 cr</strong><small>Across all players</small></article><article><span>Linked phones</span><strong id="supportSummaryPhones">0</strong><small>Enabled bridge devices</small></article></div><div id="supportAdminMount"></div></div></section>
 
       <section id="ledger" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CREDIT LEDGER</span><h2>Balance movements</h2><p>Admin adjustments, ticket purchases and prize credits are recorded here.</p></div></div><div class="filter-row"><select id="ledgerUserFilter"><option value="all">All players</option></select><span id="ledgerSummary" class="muted-pill">0 entries</span></div><div id="ledgerList" class="records"></div></article></section>
+
+      <section id="incidents" class="tab">
+        <div class="dashboard-grid">
+          <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">OPERATIONS INCIDENT CENTER</span><h2>Platform incidents</h2><p>Current draw, credit, cron, support and payment failures in one place.</p></div><span id="incidentStatus" class="status-pill">CHECKING</span></div><div id="incidentSummary" class="info-grid"></div><div class="action-grid"><button id="refreshIncidents" class="btn ghost compact" type="button">Refresh incidents</button></div></article>
+          <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT INCIDENTS</span><h2>Needs attention / history</h2><p>Application and database incidents from the previous 24 hours.</p></div></div><div id="incidentList" class="records"></div></article>
+        </div>
+        <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CANONICAL ADMIN CHANGES</span><h2>Who changed what</h2><p>Actor, reason and exact before/after snapshots for sensitive admin mutations.</p></div><button id="refreshAdminChanges" class="btn ghost compact" type="button">Refresh changes</button></div><div id="adminChangeSummary" class="muted-pill">0 changes</div><div id="adminChangeList" class="records"></div></article>
+      </section>
 
       <section id="audit" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">AUDIT TRAIL</span><h2>Admin activity</h2><p>Administrative changes and automatic draw actions.</p></div><button id="refreshAudit" class="btn ghost compact">Refresh</button></div><div id="auditList" class="timeline"></div></article></section>
     </section>
@@ -99,12 +108,12 @@
     <div class="event-modal-actions"><button type="button" id="cancelEventModal" class="btn ghost">Cancel</button><button type="submit" id="saveEventBtn" class="btn primary">Create lottery</button></div>
   </form></dialog>
 
-  <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin note<input id="balanceNote" placeholder="Test credit adjustment"></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
+  <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin reason<input id="balanceNote" placeholder="Why is this balance being changed?" required></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
 
   <div id="toast"></div>
   <script src="site-shell.js?v=29"></script>
   <script src="support-live.js?v=8" defer></script>
-  <script src="ops-v4.js?v=7" defer></script>
+  <script src="ops-v4.js?v=8" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>

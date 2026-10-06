@@ -71,7 +71,7 @@ function boot(){
 
 function load(){
   return Promise.all([
-    safe(rest('lottery_events?select=*&order=created_at.desc&limit=500'),[]),
+    safe(rest('lottery_events?select=id,slug,title,description,status,ticket_price,prize_amount,prize_mode,max_tickets_per_user,white_ball_count,white_ball_max,bonus_ball_enabled,bonus_ball_max,opens_at,cutoff_at,draw_at,winning_numbers,winning_bonus_ball,seed_commitment,seed_reveal,winning_ticket_count,prize_per_winning_ticket,created_at,updated_at,completed_at,schedule_mode,winner_count,winner_summary,max_players,max_total_tickets,cover_image_url&order=created_at.desc&limit=500'),[]),
     safe(rest('event_tickets?select=id,event_id,user_id,white_numbers,bonus_ball,price_paid,is_winner,winner_rank,prize_awarded,created_at&order=created_at.desc&limit=5000'),[]),
     safe(rest('event_prize_tiers?select=event_id,rank,prize_amount&order=event_id,rank&limit=5000'),[]),
     safe(rest('profiles?select=id,display_name,email,role,balance,created_at&order=created_at.desc&limit=1000'),[]),

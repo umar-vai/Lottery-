@@ -93,3 +93,10 @@ The logged-out winner API now returns only pseudonymous winner/ticket references
 Public winner UI code uses `winner_key` and `ticket_ref` rather than obsolete raw-ID field names, and the event page uses an explicit public event column list instead of wildcard reads. Realtime updates trigger a fresh least-privilege event fetch instead of trusting the entire realtime row payload.
 
 The internal `lottery_events.created_by` UUID remains excluded from browser column grants. Trigger-only ticket validation functions have also had browser EXECUTE privileges revoked.
+
+
+## 2.9 Disaster recovery and deprecated Edge retirement
+
+A rollback-only production recovery drill snapshots one completed event's critical accounting graph, simulates corruption across event metadata, winner ticket fields, prize tiers, Draw Credit balances and event ledger notes, restores the exact values, verifies full-row checksums and reruns Draw Credit reconciliation before rolling the entire drill back.
+
+The deprecated Edge Functions `phone-bridge`, `bridge-device-admin` and `claim-demo-credit` completed a second caller/log observation window with zero traffic. They remain inert 410 stubs because the connected Supabase toolset does not expose physical Edge Function deletion. They are marked retirement-ready rather than being counted as current application endpoints.

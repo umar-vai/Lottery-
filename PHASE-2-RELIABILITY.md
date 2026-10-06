@@ -51,3 +51,16 @@ The report verifies:
 Database guards now also prevent more than one ticket-purchase ledger row for the same event ticket.
 
 The admin Overview page shows the current reconciliation state and provides a manual “Check now” action. A private hourly cron job records an audit event only if an integrity issue is detected.
+
+
+## 2.5 Draw crash recovery and operational monitoring
+
+Scheduled draws now keep private per-event runtime state for consecutive failures, total failures, last SQLSTATE/error, alert timing and last successful attempt.
+
+The minute runner still retries every due draw on every cron pass. A failed draw remains transaction-safe: winner changes, profile credits, prize-ledger writes and event completion all roll back together. The failure is then recorded outside the failed subtransaction, and an identical recurring failure is audit-alerted at most once every 15 minutes. When the draw later succeeds, the incident is cleared and a recovery audit event is emitted.
+
+A separate `lottery-operational-health` job runs every five minutes. Its report detects a missing/stale draw cron, cron-run failures, scheduled draws overdue by more than two minutes, and open draw incidents.
+
+The admin Overview now shows Recovery & cron health, with manual health refresh and a guarded Retry due draws action.
+
+The rollback-only runtime test `supabase/tests/phase2_draw_failure_recovery.sql` injects an interruption before prize-ledger insertion, proves the entire draw rolled back, removes the failpoint, retries, and proves the draw completes with exactly one prize credit.

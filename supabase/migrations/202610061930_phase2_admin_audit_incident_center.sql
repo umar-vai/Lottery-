@@ -262,7 +262,7 @@ begin
       'cron_job',r.jobid::text,r.start_time
     from cron.job_run_details r
     where r.start_time>now()-interval '24 hours'
-      and r.status<>'succeeded'
+      and r.status='failed'
   )
   select coalesce(jsonb_agg(to_jsonb(x) order by x.created_at desc),'[]'::jsonb)
     into v_recent

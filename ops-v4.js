@@ -165,7 +165,7 @@ function renderTickets(){
   });
   $('ticketSummary').textContent=shown+' ticket'+(shown===1?'':'s');root.innerHTML='';
   if(!groups.length){root.innerHTML='<div class="empty-sub">No tickets matched this view.</div>';return}
-  groups.forEach(function(g){var e=g.event,section=document.createElement('section');section.className='ticket-event-group';section.innerHTML='<div class="ticket-event-head"><div><span class="eyebrow">'+esc(statusLabel(e))+'</span><h3>'+esc(e.title)+'</h3><p>'+g.tickets.length+' ticket'+(g.tickets.length===1?'':'s')+' shown · '+playerCount(e.id)+' total players</p></div><button class="btn ghost compact" type="button">Edit event</button></div><div class="participant-list">'+participantHtml(e,g.tickets)+'</div>';
+  groups.forEach(function(g){var e=g.event,section=document.createElement('section');section.className='ticket-event-group';section.innerHTML='<div class="ticket-event-head"><div><span class="eyebrow">'+esc(statusLabel(e))+'</span><h3>'+esc(e.title)+'</h3><p>'+g.tickets.length+' ticket'+(g.tickets.length===1?'':'s')+' shown · '+playerCount(e.id)+' total players</p></div><button class="btn ghost compact" type="button">Edit lottery</button></div><div class="participant-list">'+participantHtml(e,g.tickets)+'</div>';
     section.querySelector('button').onclick=function(){openEdit(e)};root.appendChild(section)
   })
 }
@@ -173,7 +173,7 @@ function renderTickets(){
 function renderWinners(){
   var root=$('winnerList'),pm=pmap();root.innerHTML='';
   var events=S.events.filter(function(e){return ticketsFor(e.id).some(function(t){return t.is_winner})});
-  if(!events.length){root.innerHTML='<div class="empty-sub">No completed-event winners yet.</div>';return}
+  if(!events.length){root.innerHTML='<div class="empty-sub">No completed-lottery winners yet.</div>';return}
   events.forEach(function(e){var wins=ticketsFor(e.id).filter(function(t){return t.is_winner}).sort(function(a,b){return Number(a.winner_rank||999)-Number(b.winner_rank||999)}),group=document.createElement('section');group.className='winner-admin-event';group.innerHTML='<div class="winner-admin-event-head"><div><span class="eyebrow">RESULT ARCHIVE</span><h3>'+esc(e.title)+'</h3><p>'+wins.length+' winning ticket'+(wins.length===1?'':'s')+' · '+esc(fmt(e.drawn_at||e.draw_at))+'</p></div><span class="status-pill completed">COMPLETED</span></div><div class="winner-admin-grid">'+wins.map(function(t){var p=pm[t.user_id]||{};return'<article class="winner-admin-card"><div class="winner-rank-badge">#'+esc(t.winner_rank||'—')+'</div><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+'</span></div>'+numbersHtml(t)+'<b>'+credits(t.prize_awarded)+' prize</b></article>'}).join('')+'</div>';root.appendChild(group)})
 }
 

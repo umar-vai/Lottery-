@@ -29,8 +29,8 @@ function editLovePoints(wallet,label,button){
   if(value===null)return;
   var next=Number(String(value).trim());
   if(!Number.isFinite(next)||next<0){alert('Enter a valid Love Points balance.');return}
-  var note=prompt('Admin note','Admin LP adjustment from Players');
-  if(note===null)return;
+  var note=prompt('Admin reason','Admin LP adjustment from Players');
+  if(note===null)return;note=String(note).trim();if(!note){alert('A reason is required.');return;}
   if(button){button.disabled=true;button.textContent='Saving…'}
   req({action:'adjust_support',userId:wallet.user_id,newBalance:next,note:note}).then(function(){
     if(button)button.textContent='Saved ✓';

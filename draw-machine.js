@@ -177,8 +177,11 @@ class ChamberPhysics {
       const phase=t*(1.65+(b.id%5)*.06)+b.id*1.731+this.seed;
       const pulse=.68+.32*Math.sin(t*.88+b.id*.53);
       const inward=Math.max(0,r/maxR-.48)*26;
-      const ax=tx*swirl*pulse + Math.sin(phase*1.37)*turbulence - nx*inward;
-      const ay=ty*swirl*pulse + Math.cos(phase*1.11)*turbulence - ny*inward - lift + Math.sin(t*2.2+b.id)*8*boost;
+      const lower=Math.max(0,(b.y/maxR)+.18);
+      const nozzle=Math.max(0,1-Math.abs(b.x)/(maxR*.72));
+      const jet=lower*nozzle*(this.bonus?58:68)*boost;
+      const ax=tx*swirl*pulse + Math.sin(phase*1.37)*turbulence - nx*inward + Math.sin(t*3.2+b.id*.7)*jet*.10;
+      const ay=ty*swirl*pulse + Math.cos(phase*1.11)*turbulence - ny*inward - lift - jet + Math.sin(t*2.2+b.id)*8*boost;
       b.vx+=ax*dt;
       b.vy+=ay*dt;
       const drag=Math.exp(-.34*dt);
@@ -225,12 +228,13 @@ class ChamberPhysics {
           a.angular-=tangent*.018;
           b.angular+=tangent*.018;
           const hit=Math.min(1,Math.abs(rel)/80);
-          if(hit>.26){
-            a.el.style.setProperty('--impact',hit.toFixed(2));
-            b.el.style.setProperty('--impact',hit.toFixed(2));
+          if(hit>.44){
+            a.el.classList.remove('gm-impact');b.el.classList.remove('gm-impact');
+            void a.el.offsetWidth;
+            a.el.classList.add('gm-impact');b.el.classList.add('gm-impact');
             clearTimeout(a.impactTimer);clearTimeout(b.impactTimer);
-            a.impactTimer=setTimeout(()=>a.el.style.setProperty('--impact','0'),90);
-            b.impactTimer=setTimeout(()=>b.el.style.setProperty('--impact','0'),90);
+            a.impactTimer=setTimeout(()=>a.el.classList.remove('gm-impact'),120);
+            b.impactTimer=setTimeout(()=>b.el.classList.remove('gm-impact'),120);
           }
         }
       }

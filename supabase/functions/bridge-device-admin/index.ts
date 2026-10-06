@@ -1,0 +1,1 @@
+Deno.serve(() => new Response(JSON.stringify({error:'Phone bridge disabled. Use the sandbox credit demo.'}),{status:410,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'}}));

@@ -10,6 +10,10 @@ function read(rel){ return fs.readFileSync(path.join(root, rel), 'utf8'); }
 
 const profileMigration = 'supabase/migrations/202610061440_phase1_lock_profile_writes.sql';
 const adminRpcMigration = 'supabase/migrations/202610061455_phase1_lock_admin_rpc_execute.sql';
+const grantsMigration = 'supabase/migrations/202610061520_phase1_least_privilege_table_grants.sql';
+const defaultsMigration = 'supabase/migrations/202610061525_phase1_secure_public_defaults.sql';
+const dbInvariantTest = 'supabase/tests/phase1_security_invariants.sql';
+const rlsRuntimeTest = 'supabase/tests/phase1_rls_runtime_isolation.sql';
 
 if (!exists(profileMigration)) {
   fail('Missing Phase 1 profile hardening migration: ' + profileMigration);
@@ -72,6 +76,63 @@ if (!exists(adminRpcMigration)) {
   }
 }
 
+const readOnlyTables = [
+  'audit_logs','binance_pay_orders','draw_events','draws','event_prize_tiers',
+  'game_settings','games','love_point_payment_providers','plinko_drops',
+  'referral_rewards','referrals','slot_spins','support_claim_requests','ticket_results'
+];
+
+if (!exists(grantsMigration)) {
+  fail('Missing Phase 1 least-privilege table grant migration: ' + grantsMigration);
+} else {
+  const sql = read(grantsMigration);
+  for (const table of readOnlyTables) {
+    if (!sql.includes('public.' + table)) {
+      fail('Least-privilege migration does not cover public.' + table);
+    }
+  }
+  if (!/revoke\s+insert\s*,\s*update\s*,\s*delete\s*,\s*truncate\s*,\s*references\s*,\s*trigger[\s\S]*from\s+anon\s*,\s*authenticated/i.test(sql)) {
+    fail('Least-privilege migration must revoke browser-role write grants.');
+  }
+}
+
+if (!exists(defaultsMigration)) {
+  fail('Missing Phase 1 secure default-privileges migration: ' + defaultsMigration);
+} else {
+  const sql = read(defaultsMigration);
+  if (!/alter\s+default\s+privileges[\s\S]*revoke\s+all\s+on\s+tables\s+from\s+anon\s*,\s*authenticated/i.test(sql)) {
+    fail('Future public tables must default to no anon/authenticated grants.');
+  }
+  if (!/revoke\s+execute\s+on\s+functions\s+from\s+public\s*,\s*anon\s*,\s*authenticated/i.test(sql)) {
+    fail('Future public functions must default to no PUBLIC/anon/authenticated EXECUTE.');
+  }
+}
+
+if (!exists(dbInvariantTest)) {
+  fail('Missing database invariant suite: ' + dbInvariantTest);
+} else {
+  const sql = read(dbInvariantTest);
+  for (const marker of [
+    'has_table_privilege',
+    'has_function_privilege',
+    'purchase_event_ticket',
+    'run_lottery_event_internal',
+    'pg_policies',
+    'search_path'
+  ]) {
+    if (!sql.includes(marker)) fail('Database invariant suite is missing check marker: ' + marker);
+  }
+}
+
+if (!exists(rlsRuntimeTest)) {
+  fail('Missing runtime RLS isolation test: ' + rlsRuntimeTest);
+} else {
+  const sql = read(rlsRuntimeTest);
+  for (const marker of ['set local role authenticated','auth.uid()','public.is_admin()','event_tickets','balance_ledger','support_wallets','support_claim_requests','audit_logs','admin_set_user_balance']) {
+    if (!sql.includes(marker)) fail('Runtime RLS test is missing check marker: ' + marker);
+  }
+}
+
 if (!exists('profile.js')) {
   fail('profile.js is missing.');
 } else {
@@ -89,10 +150,52 @@ for (const file of browserJs) {
   }
 }
 
+const migrationsDir = path.join(root, 'supabase', 'migrations');
+if (fs.existsSync(migrationsDir)) {
+  const laterMigrations = fs.readdirSync(migrationsDir)
+    .filter(name => name.endsWith('.sql') && name > path.basename(grantsMigration))
+    .sort();
+
+  for (const name of laterMigrations) {
+    const source = fs.readFileSync(path.join(migrationsDir, name), 'utf8');
+    for (const table of readOnlyTables) {
+      const broadWrite = new RegExp(
+        'grant\\s+[^;]*(?:\\binsert\\b|\\bupdate\\b|\\bdelete\\b|\\btruncate\\b|\\breferences\\b|\\btrigger\\b|\\ball\\b)[^;]*on\\s+(?:table\\s+)?(?:public\\.)?' +
+        table +
+        '\\b[^;]*to\\s+[^;]*(?:anon|authenticated)',
+        'i'
+      );
+      if (broadWrite.test(source)) {
+        fail(name + ' reintroduces browser write grants on read-only table public.' + table);
+      }
+    }
+  }
+}
+
+const liveEdgeFunctions = [
+  'support-phone-bridge',
+  'support-device-admin',
+  'claim-support-points',
+  'binance-pay-create-order',
+  'binance-pay-webhook',
+  'phone-bridge',
+  'bridge-device-admin',
+  'claim-demo-credit'
+];
+
+for (const slug of liveEdgeFunctions) {
+  const entry = 'supabase/functions/' + slug + '/index.ts';
+  if (!exists(entry)) fail('Missing source-controlled production Edge Function: ' + entry);
+}
+
+if (!exists('supabase/functions/PRODUCTION-SNAPSHOT.md')) {
+  fail('Missing production Edge Function version/JWT snapshot.');
+}
+
 if (failures.length) {
   console.error('\nPHASE 1 SECURITY CHECK FAILED');
   failures.forEach((message, i) => console.error((i + 1) + '. ' + message));
   process.exit(1);
 }
 
-console.log('PHASE 1 SECURITY CHECK PASSED — profile writes are RPC-only and sensitive admin RPCs are not exposed to anonymous callers.');
+console.log('PHASE 1 SECURITY CHECK PASSED — RPC authorization, least-privilege grants, secure defaults, DB invariants, and production Edge Function sources are present.');

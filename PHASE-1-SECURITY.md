@@ -1,41 +1,75 @@
 # Phase 1 — Security & Data Integrity
 
-Phase 1 starts by tightening the highest-risk writable user record and reducing unnecessary privileged RPC exposure.
-
-## Why this is first
-
-`profiles.balance` is the Draw Credit source of truth and `profiles.role` controls admin authorization. Row-level ownership alone is not enough protection if an authenticated client still has permission to update every column in its own row.
-
-Production was inspected before this change. The live database already had no table-level `UPDATE` grant for `authenticated`, and only legacy column-level updates for `display_name` / `avatar_url`. Sensitive columns such as `balance` and `role` were not directly writable. This phase makes the intended rule explicit and reproducible from Git.
+Phase 1 tightens privileged database access without changing the lottery product behavior.
 
 ## Phase 1.1 — profile write hardening
 
-- revoke direct authenticated `UPDATE` access to `public.profiles`;
-- explicitly revoke legacy column update grants;
-- remove the old own-row UPDATE policy;
-- preserve profile editing through `public.update_my_profile(...)`;
-- keep the RPC authenticated, validated, `SECURITY DEFINER`, and pinned to a safe `search_path`;
-- add a repository regression check that fails if browser JavaScript starts directly updating `profiles`.
+- direct authenticated `UPDATE` access to `public.profiles` is revoked;
+- legacy profile column update grants are removed;
+- the old own-row UPDATE policy is removed;
+- profile name/nickname editing remains available through validated `public.update_my_profile(...)`;
+- browser code is blocked by CI from directly updating `profiles`.
 
 ## Phase 1.2 — privileged RPC exposure
 
-The Supabase security advisor identified two admin `SECURITY DEFINER` functions that were unnecessarily executable by `anon`:
+Two admin `SECURITY DEFINER` functions that were unnecessarily executable by `anon` were restricted:
 
 - `admin_relaunch_lottery_event(uuid)`
 - `admin_update_completed_event_metadata(uuid,text,text,text)`
 
-Both functions already perform an internal `public.is_admin()` check, but anonymous callers had no reason to reach them at all. Phase 1 now revokes `PUBLIC` / `anon` EXECUTE and keeps `authenticated` EXECUTE so signed-in admins can continue to use the admin UI.
+They remain executable by authenticated sessions and enforce `public.is_admin()` inside the RPC.
 
-Public read RPCs such as `get_platform_features()` and `get_public_event_winners(...)` intentionally remain available to anonymous visitors.
+The two anonymous privileged endpoints that remain are intentional public reads:
 
-## Preserved behavior
+- `get_platform_features()`
+- `get_public_event_winners(uuid)`
 
-- users can still read their own profile;
-- admins keep their server-authorized admin flows;
-- profile name/nickname editing continues through `update_my_profile`;
-- server-side balance mutations, referral rewards, games, ticket purchases, prizes, and admin adjustments continue through their existing protected functions;
-- Google/Auth profile bootstrap remains server-side;
-- public feature flags and public winner display remain readable without login.
+## Phase 1.3 — SECURITY DEFINER + RLS audit
+
+Production privileged functions were enumerated and checked.
+
+Findings:
+
+- every current `SECURITY DEFINER` function under `public` / `private` has an explicit `search_path`;
+- every browser-callable `admin_*` RPC performs `public.is_admin()`;
+- player mutation RPCs scope to `auth.uid()`;
+- service settlement/bootstrap functions are not browser-callable;
+- owner-isolation RLS policies exist for profiles, event tickets, Draw Credit ledger, Support wallets, and Support claims;
+- audit logs are admin-readable through RLS.
+
+Full audit: `PHASE-1-RPC-RLS-AUDIT.md`.
+
+## Phase 1.4 — least-privilege Data API grants
+
+RLS-only write blocking is no longer the only layer for read-only datasets.
+
+Broad browser write grants are removed from read-only-by-design tables including draw/event catalog data, game history, referral history, support claims, payment-order history, ticket results, and audit logs.
+
+Intentional direct-write exceptions remain:
+
+- `credit_requests`: authenticated INSERT under restrictive RLS;
+- legacy `tickets`: authenticated INSERT/UPDATE under legacy ownership rules.
+
+Current `event_tickets` remains RPC-only for mutation.
+
+## Phase 1.5 — secure defaults
+
+Future `public` tables/functions/sequences created by `postgres` no longer automatically receive browser access. Each future migration must explicitly grant only the access it requires.
+
+## Phase 1.6 — database invariant suite
+
+`supabase/tests/phase1_security_invariants.sql` is a read-only regression suite that asserts:
+
+- read-only tables have no browser write grants;
+- intentional direct-write exceptions still work;
+- profile mutation stays RPC-only;
+- every privileged function has explicit `search_path`;
+- anonymous `SECURITY DEFINER` exposure stays on the two approved public-read RPCs;
+- authenticated admin RPCs enforce `is_admin()`;
+- service-only functions stay isolated;
+- critical owner RLS policies remain;
+- ticket purchasing retains row locking + balance/ticket/ledger atomicity;
+- winner selection remains event-local, based on existing tickets, and prize-ledgered.
 
 ## CI protection
 
@@ -46,11 +80,39 @@ GitHub Actions runs:
 
 before deployment.
 
-## Next Phase 1 slices
+The Phase 1 gate also rejects later migrations that reintroduce browser write grants on the audited read-only tables.
 
-1. enumerate every `SECURITY DEFINER` function and its EXECUTE grants;
-2. verify safe `search_path` and authorization checks on every privileged function;
-3. source-control the remaining live Edge Functions;
-4. add database-level regression tests for owner isolation, admin authorization, ticket atomicity, winner integrity, and ledger consistency.
+## Phase 1.7 — runtime RLS/authorization test
 
-Do not weaken these rules to fix a frontend bug. If a new user-editable profile field is needed, expose it through a validated RPC rather than restoring broad table UPDATE access.
+`supabase/tests/phase1_rls_runtime_isolation.sql` runs inside a rollback-only transaction and impersonates the PostgreSQL `authenticated` role with JWT claims.
+
+It verifies that a normal player:
+
+- can read their own profile but not another player's profile;
+- cannot see another user's event tickets, Draw Credit ledger, Support wallet, or Support claims;
+- cannot read admin audit logs;
+- cannot directly update `profiles`;
+- is rejected by `admin_set_user_balance(...)`.
+
+It also verifies that a real admin identity is recognized by `public.is_admin()`, can read player/admin data permitted by RLS, but still cannot bypass the RPC-only profile-write rule.
+
+The committed runtime test was executed successfully against production during this Phase 1 audit.
+
+## Phase 1.8 — production Edge Functions source-controlled
+
+All eight currently deployed Edge Functions are mirrored under `supabase/functions/`:
+
+- current support bridge/device/claim functions;
+- current Binance Pay create-order/webhook functions;
+- legacy phone-bridge/device-admin functions;
+- the decommissioned `claim-demo-credit` 410 stub.
+
+`supabase/functions/PRODUCTION-SNAPSHOT.md` records the production version, JWT-verification setting, and bundle SHA-256 observed during the audit.
+
+No live Edge Function was redeployed or behavior-changed during this snapshot. Phase 0 secret scanning now covers the mirrored sources, and the Phase 1 CI gate requires all production entrypoints to stay source-controlled.
+
+## Still remaining in Phase 1
+
+- verify callers and then remove deprecated Edge Functions when safe;
+- extend concurrency testing for ticket capacity and duplicate game requests;
+- periodically rerun Supabase security advisors after schema changes.

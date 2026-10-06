@@ -228,7 +228,8 @@ else {
   if(!js.includes('admin_get_lottery_operational_health')) fail('Admin dashboard does not load draw operational health.');
   if(!js.includes('admin_retry_due_lottery_events')) fail('Admin dashboard does not expose guarded due-draw retry.');
   if(!js.includes('admin_get_operations_incident_center')) fail('Admin dashboard does not load Operations Incident Center.');
-  if(!js.includes('admin_get_admin_change_audit')) fail('Admin dashboard does not load canonical admin changes.');
+  const pagedAdminChanges=exists('phase3-remaining-scalability.js')&&read('phase3-remaining-scalability.js').includes('admin_list_admin_changes_page');
+  if(!js.includes('admin_get_admin_change_audit')&&!pagedAdminChanges) fail('Admin dashboard does not load canonical admin changes.');
   if(!js.includes('x-admin-reason')) fail('Admin RPC helper does not send audit reasons.');
 }
 

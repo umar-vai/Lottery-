@@ -378,37 +378,37 @@ class ChamberPhysics {
 
   step(dt,t){
     const drawing=!!this.chamber.closest('.gm-stage')?.classList.contains('is-drawing');
-    const boost=drawing?1.18:1;
+    const boost=drawing?1.30:1;
     const maxR=Math.max(8,this.chamberRadius-this.ballRadius-5);
-    const gravity=(this.bonus?92:98)*boost;
-    const maxSpeed=(this.chamberRadius<80?92:132)*boost;
-    const drag=Math.exp(-.72*dt);
+    const gravity=(this.bonus?82:88)*boost;
+    const maxSpeed=(this.chamberRadius<80?116:164)*boost;
+    const drag=Math.exp(-.58*dt);
     const nozzles=this.bonus?[-.34,0,.34]:[-.52,-.18,.18,.52];
 
     for(const b of this.balls){
       let ax=-b.x*.10;
       let ay=gravity;
       const yNorm=b.y/maxR;
-      const bottomFactor=Math.max(0,Math.min(1,(yNorm-.12)/.72));
+      const bottomFactor=Math.max(0,Math.min(1,(yNorm+.02)/.82));
       let jetLift=0,jetSide=0;
 
       nozzles.forEach((pos,i)=>{
         const center=pos*maxR;
         const dx=b.x-center;
-        const width=maxR*(this.bonus?.30:.25);
+        const width=maxR*(this.bonus?.34:.29);
         const xInfluence=Math.max(0,1-Math.abs(dx)/width);
-        const slow=.5+.5*Math.sin(t*(1.42+i*.07)+i*1.91+this.seed);
-        const burst=Math.pow(Math.max(0,Math.sin(t*(2.15+i*.11)+i*2.43+b.id*.13)),2.0);
+        const slow=.5+.5*Math.sin(t*(1.28+i*.06)+i*1.91+this.seed);
+        const burst=Math.pow(Math.max(0,Math.sin(t*(1.92+i*.09)+i*2.43+b.id*.13)),1.65);
         const flutter=.74+.26*Math.sin(t*4.1+b.id*1.17+i);
-        const force=xInfluence*bottomFactor*(.18+.82*slow)*(.34+.66*burst)*flutter;
-        jetLift+=force*(this.bonus?300:330)*boost;
-        jetSide+=(-dx/Math.max(1,width))*force*24;
+        const force=xInfluence*bottomFactor*(.34+.66*slow)*(.50+.50*burst)*flutter;
+        jetLift+=force*(this.bonus?510:560)*boost;
+        jetSide+=(-dx/Math.max(1,width))*force*32;
       });
 
       ay-=jetLift;
       ax+=jetSide;
-      ax+=Math.sin(t*2.7+b.id*1.33)*5.2;
-      ay+=Math.cos(t*2.1+b.id*.91)*3.8;
+      ax+=Math.sin(t*2.7+b.id*1.33)*7.4;
+      ay+=Math.cos(t*2.1+b.id*.91)*5.2;
 
       b.vx+=ax*dt;
       b.vy+=ay*dt;
@@ -542,7 +542,7 @@ export class EventDrawMachine {
         <div class="gm-flash"></div>
         <div class="gm-live-pill">Machine online</div>
         <div class="gm-machine main">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-air-jets"><i></i><i></i><i></i><i></i></div><div class="gm-glass-caustic"></div><div class="gm-glass-refraction"></div><div class="gm-glass-inner-shadow"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-air-jets"><i></i><i></i><i></i><i></i></div><div class="gm-glass-caustic"></div><div class="gm-glass-refraction"></div><div class="gm-glass-inner-shadow"></div><div class="gm-glass-prism"></div><div class="gm-glass-clearcoat"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
           <div class="gm-machine-label">Main ball chamber</div>
         </div>
         <div class="gm-center">
@@ -560,7 +560,7 @@ export class EventDrawMachine {
           </div>
         </div>
         <div class="gm-machine bonus">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-air-jets"><i></i><i></i><i></i><i></i></div><div class="gm-glass-caustic"></div><div class="gm-glass-refraction"></div><div class="gm-glass-inner-shadow"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-air-jets"><i></i><i></i><i></i><i></i></div><div class="gm-glass-caustic"></div><div class="gm-glass-refraction"></div><div class="gm-glass-inner-shadow"></div><div class="gm-glass-prism"></div><div class="gm-glass-clearcoat"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
           <div class="gm-machine-label">Special ball chamber</div>
         </div>
       </div>`;

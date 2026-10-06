@@ -35,7 +35,7 @@ function card(e){
   const st=statusFor(e),a=document.createElement('a');
   a.className='event-card';a.href=`lottery.html?e=${encodeURIComponent(e.slug)}`;
   const drawLabel=st==='LIVE DRAW'?'Winner reveal live':e.schedule_mode==='manual'?'Admin draw / ম্যানুয়াল':fmt(e.draw_at);
-  const cover=e.cover_image_url?`<img src="${esc(e.cover_image_url)}" alt="${esc(e.title)} cover" loading="lazy">`:'<div class="event-cover-placeholder"><span>DRAW//01</span></div>';
+  const cover=e.cover_image_url?`<img src="${esc(e.cover_image_url)}" alt="${esc(e.title)} cover" loading="lazy">`:'<div class="event-cover-placeholder"><span>LOOTERA.WIN</span></div>';
   a.innerHTML=`
     <div class="event-cover">
       ${cover}

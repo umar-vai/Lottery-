@@ -68,7 +68,7 @@ function stateFor(event, now = Date.now()){
 
 
 const GM_TAU=Math.PI*2;
-const GM_RENDER_BATCH=12;
+const GM_RENDER_BATCH=10;
 
 function gmCompile(gl,type,src){
   const sh=gl.createShader(type);
@@ -162,19 +162,20 @@ class ChamberBallRenderer{
     const fs=[
       'precision highp float;',
       'uniform vec4 u_ball['+GM_RENDER_BATCH+'];',
-      'uniform float u_num['+GM_RENDER_BATCH+'];',
       'uniform float u_count;',
       'uniform sampler2D u_atlas;',
       'uniform vec2 u_grid;',
       'uniform float u_red;',
       'const float PI=3.141592653589793;',
-      'vec4 sphere(vec2 frag,vec4 ball,float num){',
+      'vec4 sphere(vec2 frag,vec4 ball){',
       '  vec2 p=(frag-ball.xy)/ball.z;',
+      '  float num=floor(ball.w/10.0);',
+      '  float angle=ball.w-num*10.0;',
       '  float r2=dot(p,p);',
       '  if(r2>=1.0)return vec4(0.0);',
       '  float z=sqrt(max(0.0,1.0-r2));',
       '  vec3 n=normalize(vec3(p.x,p.y,z));',
-      '  float c=cos(ball.w),ss=sin(ball.w);',
+      '  float c=cos(angle),ss=sin(angle);',
       '  vec3 local=vec3(c*n.x-ss*n.z,n.y,ss*n.x+c*n.z);',
       '  float u=0.5-atan(local.z,local.x)/(2.0*PI);',
       '  float v=asin(clamp(local.y,-1.0,1.0))/PI+0.5;',
@@ -205,7 +206,7 @@ class ChamberBallRenderer{
       '  vec2 frag=gl_FragCoord.xy;',
       '  for(int i=0;i<'+GM_RENDER_BATCH+';i++){',
       '    if(float(i)<u_count){',
-      '      vec4 s=sphere(frag,u_ball[i],u_num[i]);',
+      '      vec4 s=sphere(frag,u_ball[i]);',
       '      outc=s+outc*(1.0-s.a);',
       '    }',
       '  }',
@@ -217,7 +218,6 @@ class ChamberBallRenderer{
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
     const a=gl.getAttribLocation(this.program,'a_pos');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);
     this.uBall=gl.getUniformLocation(this.program,'u_ball[0]');
-    this.uNum=gl.getUniformLocation(this.program,'u_num[0]');
     this.uCount=gl.getUniformLocation(this.program,'u_count');
     this.uGrid=gl.getUniformLocation(this.program,'u_grid');
     this.uRed=gl.getUniformLocation(this.program,'u_red');
@@ -259,15 +259,15 @@ class ChamberBallRenderer{
     gl.uniform2f(this.uGrid,this.grid[0],this.grid[1]);gl.uniform1f(this.uRed,this.bonus?1:0);
     for(let start=0;start<balls.length;start+=GM_RENDER_BATCH){
       const chunk=balls.slice(start,start+GM_RENDER_BATCH);
-      const packed=new Float32Array(GM_RENDER_BATCH*4),nums=new Float32Array(GM_RENDER_BATCH);
+      const packed=new Float32Array(GM_RENDER_BATCH*4);
       chunk.forEach((b,i)=>{
         packed[i*4]=(dim.cssW*.5+b.x)*dim.dpr;
         packed[i*4+1]=(dim.cssH*.5-b.y)*dim.dpr;
         packed[i*4+2]=radius*dim.dpr;
-        packed[i*4+3]=b.angle;
-        nums[i]=b.number||1;
+        const angle=((b.angle%GM_TAU)+GM_TAU)%GM_TAU;
+        packed[i*4+3]=(b.number||1)*10+angle;
       });
-      gl.uniform4fv(this.uBall,packed);gl.uniform1fv(this.uNum,nums);gl.uniform1f(this.uCount,chunk.length);
+      gl.uniform4fv(this.uBall,packed);gl.uniform1f(this.uCount,chunk.length);
       gl.drawArrays(gl.TRIANGLES,0,6);
     }
   }

@@ -141,13 +141,13 @@ function gmCreateAtlas(maxNumber,isRed){
 
 function gmDrawResultSprite(canvas,number,isRed){
   const dpr=Math.min(2.5,Math.max(1,window.devicePixelRatio||1));
-  const size=96;
+  const size=128;
   canvas.width=Math.round(size*dpr);
   canvas.height=Math.round(size*dpr);
   const x=canvas.getContext('2d');
   x.setTransform(dpr,0,0,dpr,0,0);
   x.clearRect(0,0,size,size);
-  const cx=48,cy=47,r=39;
+  const cx=64,cy=62,r=52;
 
   x.save();
   x.beginPath();x.arc(cx,cy,r,0,GM_TAU);x.clip();
@@ -197,7 +197,7 @@ function gmDrawResultSprite(canvas,number,isRed){
   rim.addColorStop(1,isRed?'rgba(70,0,12,.34)':'rgba(28,43,54,.30)');
   x.fillStyle=rim;x.beginPath();x.arc(cx,cy,r,0,GM_TAU);x.fill();
 
-  const dr=17;
+  const dr=22;
   const disc=x.createRadialGradient(cx-dr*.26,cy-dr*.30,1,cx,cy,dr);
   disc.addColorStop(0,'#ffffff');
   disc.addColorStop(.58,'#fbfcfd');
@@ -208,18 +208,30 @@ function gmDrawResultSprite(canvas,number,isRed){
   x.stroke();
 
   x.fillStyle='#071019';
-  x.font='900 25px Inter, system-ui, -apple-system, Segoe UI, sans-serif';
+  x.font='900 32px Inter, system-ui, -apple-system, Segoe UI, sans-serif';
   x.textAlign='center';x.textBaseline='middle';
   x.fillText(String(number),cx,cy+1);
 
   x.beginPath();x.arc(cx,cy,r-.6,0,GM_TAU);
   x.lineWidth=1.1;x.strokeStyle='rgba(255,255,255,.23)';x.stroke();
 
-  const hot=x.createRadialGradient(27,19,0,27,19,8);
+  const hot=x.createRadialGradient(36,25,0,36,25,11);
   hot.addColorStop(0,'rgba(255,255,255,.95)');
   hot.addColorStop(.35,'rgba(255,255,255,.34)');
   hot.addColorStop(1,'rgba(255,255,255,0)');
-  x.fillStyle=hot;x.fillRect(16,8,24,24);
+  x.fillStyle=hot;x.fillRect(21,10,32,32);
+
+  const bounce=x.createRadialGradient(cx,cy+r*.58,2,cx,cy+r*.58,r*.72);
+  bounce.addColorStop(0,isRed?'rgba(255,151,168,.15)':'rgba(216,240,250,.16)');
+  bounce.addColorStop(.42,'rgba(255,255,255,.035)');
+  bounce.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=bounce;x.fillRect(12,58,104,58);
+
+  x.beginPath();
+  x.arc(cx,cy,r*.965,Math.PI*.08,Math.PI*.72);
+  x.lineWidth=1.25;
+  x.strokeStyle='rgba(255,255,255,.16)';
+  x.stroke();
 
   canvas.style.width='100%';
   canvas.style.height='100%';
@@ -993,25 +1005,24 @@ export class EventDrawMachine {
     node._gmSpinRaf=0;
   }
 
-  mountUltraBall(node,number,bonus,{spin=false}={}){
+  mountUltraBall(node,number,bonus,{spin=false,duration=1000}={}){
     if(!node)return null;
     const sphere=create('span','gm-ultra-sphere');
+    const rotor=create('span','gm-ultra-rotor');
     const canvas=document.createElement('canvas');
     canvas.className='gm-ultra-canvas';
     canvas.setAttribute('aria-hidden','true');
     gmDrawResultSprite(canvas,number,bonus);
-    sphere.appendChild(canvas);
+    rotor.appendChild(canvas);
+    sphere.appendChild(rotor);
     node.appendChild(sphere);
     node.dataset.number=String(number);
+
     if(spin&&!this.reduced){
-      const started=performance.now();
-      const loop=(now)=>{
-        if(!node.isConnected)return;
-        const t=(now-started)/1000;
-        sphere.style.setProperty('--flight-glint',String((Math.sin(t*8)+1)*.5));
-        node._gmSpinRaf=requestAnimationFrame(loop);
-      };
-      node._gmSpinRaf=requestAnimationFrame(loop);
+      sphere.classList.add('is-spinning');
+      const spinMs=Math.max(520,Math.min(1250,Number(duration)||1000));
+      rotor.style.setProperty('--spin-duration',spinMs+'ms');
+      sphere.style.setProperty('--spin-duration',spinMs+'ms');
     }
     return sphere;
   }
@@ -1037,7 +1048,7 @@ export class EventDrawMachine {
     const ball = create('span',`gm-flight gm-ultra-ball${bonus?' bonus':''}`);
     ball.setAttribute('aria-hidden','true');
     this.stage.appendChild(ball);
-    this.mountUltraBall(ball,number,bonus,{spin:true});
+    this.mountUltraBall(ball,number,bonus,{spin:true,duration});
     const ballRect=ball.getBoundingClientRect();
     const half=Math.max(1,ballRect.width/2);
     const sx = source.left + source.width/2 - stageRect.left - half;

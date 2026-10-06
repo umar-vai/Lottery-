@@ -1085,3 +1085,152 @@
     inset 0 0 0 1px rgba(255,255,255,.055),
     0 0 12px rgba(255,65,93,.07);
 }
+
+
+/* --- Safe spin + enhanced optical depth for flying/result balls v9 ------ */
+.gm-ultra-rotor{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  transform-origin:50% 50%;
+  will-change:transform;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.gm-ultra-rotor .gm-ultra-canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  display:block;
+  pointer-events:none;
+}
+
+/* The rendered surface rotates, while clear-coat highlights below remain
+   fixed to the scene light. This gives a rolling-ball feel without WebGL. */
+.gm-ultra-sphere.is-spinning .gm-ultra-rotor{
+  animation:gmSafeUltraSpin var(--spin-duration,900ms) cubic-bezier(.18,.36,.16,1) both;
+}
+
+/* Fixed clear-coat highlight */
+.gm-flight .gm-ultra-sphere::before,
+.gm-result-ball .gm-ultra-sphere::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 27% 18%,
+      rgba(255,255,255,.96) 0 3%,
+      rgba(255,255,255,.42) 8%,
+      rgba(255,255,255,.10) 15%,
+      transparent 27%),
+    radial-gradient(circle at 73% 34%,
+      rgba(224,243,252,.20) 0 5%,
+      transparent 20%),
+    linear-gradient(138deg,
+      transparent 18%,
+      rgba(255,255,255,.05) 34%,
+      rgba(255,255,255,.13) 42%,
+      rgba(255,255,255,.025) 52%,
+      transparent 68%);
+  mix-blend-mode:screen;
+  filter:blur(.18px);
+  opacity:.88;
+}
+.gm-flight.bonus .gm-ultra-sphere::before,
+.gm-result-ball.bonus .gm-ultra-sphere::before{
+  background:
+    radial-gradient(circle at 27% 18%,
+      rgba(255,255,255,.94) 0 3%,
+      rgba(255,238,242,.36) 8%,
+      rgba(255,210,220,.08) 16%,
+      transparent 28%),
+    radial-gradient(circle at 73% 34%,
+      rgba(255,188,199,.16) 0 5%,
+      transparent 20%),
+    linear-gradient(138deg,
+      transparent 18%,
+      rgba(255,255,255,.045) 34%,
+      rgba(255,232,236,.11) 42%,
+      rgba(255,255,255,.02) 52%,
+      transparent 68%);
+}
+
+/* Fresnel-style glassy rim around the picked/result ball. */
+.gm-flight .gm-ultra-sphere::after,
+.gm-result-ball .gm-ultra-sphere::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  z-index:5;
+  border-radius:50%;
+  pointer-events:none;
+  border:1px solid rgba(255,255,255,.20);
+  box-shadow:
+    inset 1px 1px 2px rgba(255,255,255,.22),
+    inset -3px -4px 6px rgba(8,18,25,.12),
+    0 0 5px rgba(229,247,255,.055);
+}
+.gm-flight.bonus .gm-ultra-sphere::after,
+.gm-result-ball.bonus .gm-ultra-sphere::after{
+  border-color:rgba(255,224,230,.22);
+  box-shadow:
+    inset 1px 1px 2px rgba(255,255,255,.20),
+    inset -3px -4px 6px rgba(70,0,12,.16),
+    0 0 7px rgba(255,68,96,.08);
+}
+
+/* Stronger depth while moving, softer after landing. */
+.gm-flight .gm-ultra-rotor{
+  filter:
+    saturate(1.04)
+    contrast(1.03)
+    drop-shadow(0 9px 10px rgba(0,0,0,.14));
+}
+.gm-result-ball .gm-ultra-rotor{
+  filter:
+    saturate(1.02)
+    contrast(1.025)
+    drop-shadow(0 4px 5px rgba(0,0,0,.10));
+}
+
+@keyframes gmSafeUltraSpin{
+  0%{
+    transform:rotate(0deg) scale(1);
+  }
+  22%{
+    transform:rotate(245deg) scaleX(.985) scaleY(1.015);
+  }
+  48%{
+    transform:rotate(565deg) scaleX(1.012) scaleY(.988);
+  }
+  74%{
+    transform:rotate(825deg) scaleX(.992) scaleY(1.008);
+  }
+  100%{
+    transform:rotate(1080deg) scale(1);
+  }
+}
+
+/* Tiny optical pulse during flight: pure compositor animation, no RAF. */
+.gm-flight .gm-ultra-sphere{
+  animation:gmFlightOpticalPulse var(--spin-duration,900ms) ease-in-out both;
+}
+@keyframes gmFlightOpticalPulse{
+  0%{filter:brightness(.94) contrast(1.01) drop-shadow(0 13px 18px rgba(0,0,0,.38))}
+  42%{filter:brightness(1.07) contrast(1.04) drop-shadow(0 16px 22px rgba(0,0,0,.44))}
+  100%{filter:brightness(1.01) contrast(1.03) drop-shadow(0 9px 13px rgba(0,0,0,.30))}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .gm-ultra-sphere.is-spinning .gm-ultra-rotor,
+  .gm-flight .gm-ultra-sphere{
+    animation:none!important;
+  }
+}

@@ -77,9 +77,8 @@ function eventCard(e){
   var t=targetFor(e),run=e.runtime||{},attention=Number(run.consecutive_failures||0)>0;
   var stateClass=attention?'attention':(e.state||'');
   var countdown=t.text||remaining(t.at);
-  var action='';
-  if(e.can_draw_now)action+='<button class="btn primary compact" data-cr-draw="'+esc(e.id)+'">Draw now</button>';
-  else if(e.state==='due'&&Number(e.ticket_count||0)===0)action+='<button class="btn ghost compact" disabled>No tickets to draw</button>';
+  var action='',lifecycleLabel=e.status==='draft'?'Review & publish':(e.status==='completed'?'Review result':(e.status==='published'?'Pre-draw review':'Review lifecycle'));
+  action+='<button class="btn '+(e.can_draw_now?'primary':'ghost')+' compact" data-cr-lifecycle="'+esc(e.id)+'">'+esc(lifecycleLabel)+'</button>';
   if(e.slug&&e.status!=='draft'&&e.status!=='cancelled')action+='<a class="btn ghost compact" target="_blank" rel="noopener" href="./lottery.html?e='+encodeURIComponent(e.slug)+'">Public page ↗</a>';
   action+='<button class="btn ghost compact" data-cr-manage="'+esc(e.id)+'">Manage lottery</button>';
   var runtime=attention?'<div class="cr-runtime"><strong>Draw incident:</strong> '+esc(run.last_error||'Unknown draw error')+(run.last_failed_at?' · '+esc(fmt(run.last_failed_at)):'')+'</div>':'';
@@ -103,7 +102,11 @@ function renderEvents(){
   var events=S.data&&Array.isArray(S.data.events)?S.data.events:[];
   if(!events.length){root.innerHTML='<div class="cr-empty">No lottery events yet.</div>';return}
   root.innerHTML=events.map(eventCard).join('');
-  root.querySelectorAll('[data-cr-draw]').forEach(function(b){b.onclick=function(){drawNow(b.getAttribute('data-cr-draw'))}});
+  root.querySelectorAll('[data-cr-lifecycle]').forEach(function(b){b.onclick=function(){
+    var id=b.getAttribute('data-cr-lifecycle'),e=(S.data&&S.data.events||[]).find(function(x){return x.id===id});
+    if(window.Draw01Lifecycle)window.Draw01Lifecycle.open(e||id,e&&e.status==='draft'?'publish':(e&&e.status==='completed'?'verify':'draw'));
+    else toast('Lifecycle review is still loading. Try again.',true);
+  }});
   root.querySelectorAll('[data-cr-manage]').forEach(function(b){b.onclick=function(){openManagement()}});
 }
 function render(){if(!S.data)return;renderHealth();renderSummary();renderEvents();tickCountdowns();var stamp=$('controlRoomStamp');if(stamp)stamp.textContent='Updated '+fmt(S.data.generated_at)}
@@ -136,6 +139,7 @@ function bind(){
   var retry=$('controlRoomRetryDue');if(retry)retry.onclick=retryDue;
   var tab=document.querySelector('.tabs button[data-tab="control-room"]');if(tab)tab.addEventListener('click',function(){setTimeout(function(){load(true)},0)});
   document.addEventListener('visibilitychange',function(){if(!document.hidden&&tabActive())load(true)});
+  document.addEventListener('draw01:lifecycle-changed',function(){load(true)});
 }
 function boot(){
   bind();

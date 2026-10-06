@@ -73,15 +73,15 @@ function renderEvents(){
 function aggregateWinners(rows){
   const map=new Map();
   rows.forEach(r=>{
-    const key=r.user_id||r.display_name||r.ticket_id;
-    const cur=map.get(key)||{user_id:r.user_id,display_name:r.display_name||'Winner',avatar_url:r.avatar_url||'',total:0,wins:0,bestRank:999,event_title:r.event_title||''};
+    const key=r.winner_key||r.display_name||r.ticket_ref;
+    const cur=map.get(key)||{winner_key:r.winner_key||'',display_name:r.display_name||'Winner',total:0,wins:0,bestRank:999,event_title:r.event_title||''};
     cur.total+=Number(r.prize_awarded||0);cur.wins+=1;cur.bestRank=Math.min(cur.bestRank,Number(r.winner_rank||999));if(!cur.event_title&&r.event_title)cur.event_title=r.event_title;map.set(key,cur)
   });
   return [...map.values()].sort((a,b)=>b.total-a.total||a.bestRank-b.bestRank)
 }
 
 function winnerMini(w){
-  const avatar=w.avatar_url?`<img src="${esc(w.avatar_url)}" alt="${esc(w.display_name)}" loading="lazy">`:`<span class="winner-avatar-fallback">${esc((w.display_name||'W')[0])}</span>`;
+  const avatar=`<span class="winner-avatar-fallback">${esc((w.display_name||'W')[0])}</span>`;
   return `<article class="winner-mini">${avatar}<div class="winner-mini-copy"><strong>${esc(w.display_name)}</strong><span><b>${Number(w.total).toLocaleString()} credits</b> · ${w.wins} win${w.wins===1?'':'s'}</span></div><span class="winner-rank-chip">#${w.bestRank}</span></article>`
 }
 

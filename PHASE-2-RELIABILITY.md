@@ -84,3 +84,12 @@ The current advisor-reported foreign-key and RLS performance issues are addresse
 - 4 duplicate permissive SELECT-policy groups are consolidated.
 - Draw visibility remains public for non-draft rows, while admins retain full read access.
 - Player-owned profile/ticket/ticket-result access and admin-wide access remain unchanged.
+
+
+## 2.8 Public API and privacy minimization
+
+The logged-out winner API now returns only pseudonymous winner/ticket references, the public nickname/display name, rank, prize and winning numbers. OAuth/profile avatar URLs are no longer part of the anonymous winner response.
+
+Public winner UI code uses `winner_key` and `ticket_ref` rather than obsolete raw-ID field names, and the event page uses an explicit public event column list instead of wildcard reads. Realtime updates trigger a fresh least-privilege event fetch instead of trusting the entire realtime row payload.
+
+The internal `lottery_events.created_by` UUID remains excluded from browser column grants. Trigger-only ticket validation functions have also had browser EXECUTE privileges revoked.

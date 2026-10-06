@@ -17,6 +17,8 @@ const adminAuditMigration='supabase/migrations/202610061930_phase2_admin_audit_i
 const adminAuditTest='supabase/tests/phase2_admin_audit_incidents.sql';
 const performanceRlsMigration='supabase/migrations/202610061945_phase2_performance_rls_cleanup.sql';
 const performanceRlsTest='supabase/tests/phase2_performance_rls_cleanup.sql';
+const publicPrivacyMigration='supabase/migrations/202610062050_phase2_public_api_privacy.sql';
+const publicPrivacyTest='supabase/tests/phase2_public_api_privacy.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -139,6 +141,47 @@ else {
 
 if(!exists('PHASE-2-PERFORMANCE-RLS.md')) fail('Missing Phase 2 performance/RLS documentation.');
 
+if(!exists(publicPrivacyMigration)) fail('Missing Phase 2 public API privacy migration.');
+else {
+  const sql=read(publicPrivacyMigration);
+  for(const marker of [
+    'get_public_event_winners',
+    'winner_key text',
+    'ticket_ref text',
+    'revoke execute on function public.prevent_locked_ticket_delete',
+    'revoke execute on function public.validate_ticket'
+  ]) if(!sql.includes(marker)) fail('Public API privacy migration missing marker: '+marker);
+  if(sql.includes('avatar_url text')) fail('Public winner RPC still returns avatar_url.');
+}
+
+if(!exists(publicPrivacyTest)) fail('Missing Phase 2 public API privacy runtime test.');
+else {
+  const sql=read(publicPrivacyTest);
+  for(const marker of [
+    'Public winner RPC exposes a sensitive/internal output field',
+    'Anon winner payload contains a raw UUID',
+    'Trigger-only functions remain executable through browser roles',
+    'lottery_events.created_by'
+  ]) if(!sql.includes(marker)) fail('Public API privacy test missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-PUBLIC-API-PRIVACY.md')) fail('Missing public API privacy documentation.');
+
+for(const file of ['home-v2.js','winner-display-v2.js','event.js']){
+  if(!exists(file)) { fail(file+' missing for public winner compatibility.'); continue; }
+  const js=read(file);
+  if((file==='home-v2.js'||file==='winner-display-v2.js') && !js.includes('winner_key')) fail(file+' does not use winner_key.');
+  if(file==='winner-display-v2.js' && !js.includes('ticket_ref')) fail('winner-display-v2.js does not use ticket_ref.');
+}
+if(exists('event.js')){
+  const js=read('event.js');
+  if(js.includes("from('lottery_events').select('*')")) fail('event.js still performs wildcard public lottery_events reads.');
+  if(!js.includes('PUBLIC_EVENT_SELECT')) fail('event.js is missing explicit public event field selection.');
+  if(!js.includes('ticket_ref')) fail('event.js does not use privacy-safe ticket_ref.');
+}
+
+
+
 
 
 
@@ -176,4 +219,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, and Supabase performance/RLS cleanup are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, performance/RLS cleanup, and public API privacy guards are present.');

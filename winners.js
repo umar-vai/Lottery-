@@ -12,7 +12,7 @@ function credits(v){return Number(v||0).toLocaleString(undefined,{maximumFractio
 function fmt(v){return v?new Date(v).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'—'}
 function revealEnd(e){if(!e?.completed_at)return 0;return new Date(e.completed_at).getTime()+DRAW_START_DELAY_MS+Math.max(1,Number(e.winner_count||1))*DRAW_SEGMENT_MS}
 function revealComplete(e){return e?.status==='completed'&&Date.now()>=revealEnd(e)}
-function avatar(w){const name=w.display_name||'Winner';return w.avatar_url?`<img class="wh-avatar" src="${esc(w.avatar_url)}" alt="${esc(name)}">`:`<span class="wh-avatar-fallback">${esc(name[0]||'W')}</span>`}
+function avatar(w){const name=w.display_name||'Winner';return `<span class="wh-avatar-fallback">${esc(name[0]||'W')}</span>`}
 function balls(w){return `<div class="wh-balls">${(w.white_numbers||[]).map(n=>`<span>${String(n).padStart(2,'0')}</span>`).join('')}${w.bonus_ball!=null?`<span class="bonus">${String(w.bonus_ball).padStart(2,'0')}</span>`:''}</div>`}
 function normalizeWinner(w){return{...w,winner_rank:Number(w.winner_rank||999),prize_awarded:Number(w.prize_awarded||0)}}
 

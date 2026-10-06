@@ -112,6 +112,16 @@ begin
   ) then
     raise exception 'Credit review private implementation lost admin authorization';
   end if;
+
+  if exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='private'
+      and p.proname='lottery_operational_health_report'
+      and p.prosrc ilike '%status<>%succeeded%'
+  ) then
+    raise exception 'Operational health still counts in-flight cron rows as failures';
+  end if;
+
 end
 $phase2_admin_audit$;
 

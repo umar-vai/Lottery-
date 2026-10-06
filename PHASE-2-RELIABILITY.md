@@ -73,3 +73,14 @@ Sensitive admin mutations now produce a private canonical row-change audit indep
 The Admin UI sends the human reason through the PostgREST `x-admin-reason` request header for high-impact operations including balance changes, role changes, lottery configuration/status/delete/draw/retry actions and platform availability switches. Love Point adjustments retain their existing actor and note and are mirrored into the same canonical trail.
 
 The Operations Incident Center combines current draw health, Draw Credit reconciliation, all cron failures, failed/error Support claims, failed/error Binance Pay orders, failed/error credit requests and recent database/application failure audit events. HTTP-level Supabase Auth, REST and Edge Function logs remain platform-log sources and are not duplicated into application tables.
+
+
+## 2.7 Supabase performance and RLS cleanup
+
+The current advisor-reported foreign-key and RLS performance issues are addressed without changing product authorization semantics.
+
+- 11 foreign-key columns receive covering indexes.
+- 5 SELECT policies use statement-cached `(select auth.uid())` / `(select public.is_admin())` helpers.
+- 4 duplicate permissive SELECT-policy groups are consolidated.
+- Draw visibility remains public for non-draft rows, while admins retain full read access.
+- Player-owned profile/ticket/ticket-result access and admin-wide access remain unchanged.

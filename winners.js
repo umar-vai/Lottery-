@@ -19,8 +19,13 @@ function normalizeWinner(w){return{...w,winner_rank:Number(w.winner_rank||999),p
 const SAMPLE_NAMES=['Rafi H.','Sadia M.','Tanvir A.','Nabila R.','Mahin S.','Farhan K.','Tanzim N.','Raisa A.','Nafis R.','Maliha T.','Siam H.','Anika F.','Shafin M.','Tasnim J.','Arian S.','Mim R.','Zubair H.','Fariha N.','Adnan K.','Lamisa A.','Sakib R.','Nusrat S.','Rahat M.','Mehnaz T.'];
 
 function sampleNumbers(seed,count=5,max=49){
-  const out=[];let x=(seed*17+11)%max;
-  while(out.length<count){x=(x*13+7)%max;const n=x+1;if(!out.includes(n))out.push(n)}
+  const out=[];
+  const start=((seed*17+11)%max)+1;
+  const step=11; // coprime with 49, so this sequence cannot get stuck in a short cycle
+  for(let i=0;i<max&&out.length<count;i++){
+    const n=((start-1+i*step)%max)+1;
+    out.push(n);
+  }
   return out.sort((a,b)=>a-b);
 }
 function buildSampleHistory(){

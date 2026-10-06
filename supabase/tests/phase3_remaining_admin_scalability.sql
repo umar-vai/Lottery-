@@ -27,11 +27,14 @@ $contract$;
 do $runtime$
 declare
   v_admin uuid; v_player uuid; blocked boolean:=false;
+  v_profile_count bigint; v_support_tx_count bigint;
   a jsonb;b jsonb;c jsonb;p1 jsonb;p2 jsonb;
 begin
   select id into v_admin from public.profiles where role='admin' order by created_at limit 1;
   select id into v_player from public.profiles where role<>'admin' order by created_at limit 1;
   if v_admin is null or v_player is null then raise exception 'Need admin and player'; end if;
+  select count(*) into v_profile_count from public.profiles;
+  select count(*) into v_support_tx_count from public.support_transactions;
 
   perform set_config('request.jwt.claims',jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
   execute 'set local role authenticated';
@@ -60,8 +63,8 @@ begin
   if jsonb_array_length(p1->'rows')>5 then raise exception 'Admin change page exceeded limit'; end if;
 
   a:=public.admin_get_support_operations_summary();
-  if (a->>'players_total')::bigint<>(select count(*) from public.profiles)
-     or (a->>'transfers_total')::bigint<>(select count(*) from public.support_transactions) then
+  if (a->>'players_total')::bigint<>v_profile_count
+     or (a->>'transfers_total')::bigint<>v_support_tx_count then
     raise exception 'Support summary totals mismatch';
   end if;
 

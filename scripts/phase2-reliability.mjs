@@ -13,6 +13,8 @@ const reconciliationMigration='supabase/migrations/202610061835_phase2_credit_re
 const reconciliationTest='supabase/tests/phase2_credit_reconciliation.sql';
 const recoveryMigration='supabase/migrations/202610061900_phase2_draw_recovery_ops.sql';
 const recoveryTest='supabase/tests/phase2_draw_failure_recovery.sql';
+const adminAuditMigration='supabase/migrations/202610061930_phase2_admin_audit_incident_center.sql';
+const adminAuditTest='supabase/tests/phase2_admin_audit_incidents.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -84,6 +86,33 @@ else {
 
 if(!exists('PHASE-2-DRAW-RECOVERY.md')) fail('Missing Phase 2 draw recovery documentation.');
 
+if(!exists(adminAuditMigration)) fail('Missing Phase 2 canonical admin audit migration.');
+else {
+  const sql=read(adminAuditMigration);
+  for(const marker of [
+    'private.admin_change_audit',
+    'capture_admin_change_audit',
+    'x-admin-reason',
+    'admin_get_operations_incident_center',
+    'admin_get_admin_change_audit'
+  ]) if(!sql.includes(marker)) fail('Admin audit/incident migration missing marker: '+marker);
+}
+
+if(!exists(adminAuditTest)) fail('Missing Phase 2 admin audit runtime test.');
+else {
+  const sql=read(adminAuditTest);
+  for(const marker of [
+    'Phase 2 audit runtime test',
+    'Canonical admin audit did not capture actor/before/after/reason',
+    'admin_get_operations_incident_center',
+    'admin_get_admin_change_audit'
+  ]) if(!sql.includes(marker)) fail('Admin audit runtime test missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-ADMIN-AUDIT-INCIDENTS.md')) fail('Missing admin audit / Incident Center documentation.');
+
+
+
 if(!exists('PHASE-2-STRESS-RESULTS.md')) fail('Missing production ticket concurrency probe evidence.');
 
 if(!exists('site-shell.js')) fail('site-shell.js missing.');
@@ -107,6 +136,9 @@ else {
   if(!js.includes('admin_get_draw_credit_integrity_report')) fail('Admin dashboard does not load Draw Credit integrity report.');
   if(!js.includes('admin_get_lottery_operational_health')) fail('Admin dashboard does not load draw operational health.');
   if(!js.includes('admin_retry_due_lottery_events')) fail('Admin dashboard does not expose guarded due-draw retry.');
+  if(!js.includes('admin_get_operations_incident_center')) fail('Admin dashboard does not load Operations Incident Center.');
+  if(!js.includes('admin_get_admin_change_audit')) fail('Admin dashboard does not load canonical admin changes.');
+  if(!js.includes('x-admin-reason')) fail('Admin RPC helper does not send audit reasons.');
 }
 
 if(failures.length){
@@ -114,4 +146,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw exactly-once, concurrency, credit reconciliation, and draw recovery monitoring are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, and Incident Center are present.');

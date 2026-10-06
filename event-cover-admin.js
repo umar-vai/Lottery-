@@ -88,8 +88,20 @@ if (BACKEND_READY) {
     await new Promise(r => setTimeout(r, 220));
     const { data:event, error:findError } = await supabase.from('lottery_events').select('id').eq('slug', slug).maybeSingle();
     if (findError || !event) { setStatus(findError?.message || 'Lottery saved, but cover could not be linked.', 'err'); return; }
-    const { error } = await supabase.rpc('admin_set_event_cover', {p_event_id:event.id,p_cover_image_url:pendingUrl});
-    if (error) { setStatus(error.message, 'err'); return; }
+    const { data:{session} } = await supabase.auth.getSession();
+    if (!session) { setStatus('Admin login is required before applying a cover.', 'err'); return; }
+    const reason = pendingUrl ? 'Updated lottery cover image' : 'Removed lottery cover image';
+    const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_event_cover', {
+      method:'POST',
+      headers:{
+        apikey:SUPABASE_PUBLISHABLE_KEY,
+        Authorization:'Bearer ' + session.access_token,
+        'Content-Type':'application/json',
+        'x-admin-reason':reason
+      },
+      body:JSON.stringify({p_event_id:event.id,p_cover_image_url:pendingUrl})
+    });
+    if (!response.ok) { const body=await response.json().catch(()=>({})); setStatus(body.message || body.error || ('HTTP '+response.status), 'err'); return; }
     existingUrl = pendingUrl || '';
     pendingUrl = null;
   }

@@ -175,7 +175,7 @@ function makeRenderer(canvas){
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   gl.clearColor(0,0,0,0);
 
-  var visible=true,hovered=false,raf=0,lastW=0,lastH=0,start=performance.now();
+  var visible=true,hovered=false,raf=0,lastW=0,lastH=0,start=performance.now(),dead=false;
   function resize(){
     var rect=host.getBoundingClientRect();
     var cssW=Math.max(1,Math.round(rect.width)),cssH=Math.max(1,Math.round(rect.height));
@@ -201,7 +201,18 @@ function makeRenderer(canvas){
     gl.drawArrays(gl.TRIANGLES,0,6);
     if(brand&&!brand.classList.contains('lootera-logo-ready'))brand.classList.add('lootera-logo-ready');
   }
-  function loop(now){if(visible&&!document.hidden)render(now);raf=requestAnimationFrame(loop);}
+  function loop(now){if(dead)return;if(visible&&!document.hidden)render(now);raf=requestAnimationFrame(loop);}
+  canvas.addEventListener('webglcontextlost',function(event){
+    event.preventDefault();
+    dead=true;
+    cancelAnimationFrame(raf);
+    if(brand)brand.classList.remove('lootera-logo-ready');
+  },false);
+  canvas.addEventListener('webglcontextrestored',function(){
+    if(brand)brand.classList.remove('lootera-logo-ready');
+    initialized.delete(canvas);
+    window.setTimeout(function(){makeRenderer(canvas)},0);
+  },false);
   if(brand){brand.addEventListener('pointerenter',function(){hovered=true});brand.addEventListener('pointerleave',function(){hovered=false});}
   if('IntersectionObserver' in window)new IntersectionObserver(function(e){visible=!!(e[0]&&e[0].isIntersecting)},{threshold:.01}).observe(canvas);
   if('ResizeObserver' in window)new ResizeObserver(function(){resize();if(reduced)render(performance.now())}).observe(host);

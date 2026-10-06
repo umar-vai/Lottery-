@@ -1,0 +1,6 @@
+/* Phase 3 — remaining admin pagination */
+.remaining-page-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 14px}
+.remaining-page-meta input,.remaining-page-meta select{min-height:42px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(3,8,10,.55);color:#fff;padding:8px 10px;outline:0}
+.remaining-page-meta input{flex:1;min-width:220px}
+.remaining-page-meta input:focus,.remaining-page-meta select:focus{border-color:rgba(168,255,62,.28)}
+@media(max-width:650px){.remaining-page-meta{align-items:stretch}.remaining-page-meta input,.remaining-page-meta select{width:100%;min-width:0}}

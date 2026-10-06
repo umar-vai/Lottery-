@@ -84,3 +84,16 @@ The current advisor-reported foreign-key and RLS performance issues are addresse
 - 4 duplicate permissive SELECT-policy groups are consolidated.
 - Draw visibility remains public for non-draft rows, while admins retain full read access.
 - Player-owned profile/ticket/ticket-result access and admin-wide access remain unchanged.
+
+
+## 2.8 Public API privacy minimization
+
+The public winner API no longer exposes raw Auth/profile UUIDs or event-ticket UUIDs. Public winner grouping uses stable pseudonymous `winner_key` values and opaque `ticket_ref` references instead.
+
+Stored `lottery_events.winner_summary` data is sanitized by a database trigger, including historical backfill, so browser-readable event rows no longer carry raw ticket/user identifiers.
+
+Browser SELECT access to `lottery_events` is column-whitelisted and excludes `created_by`. Public pages use explicit event columns rather than `SELECT *`.
+
+The public feature-state RPC now exposes only effective availability booleans. Internal configured sub-switch state and update timestamps are not public.
+
+Payment providers marked hidden or disabled are no longer visible through browser RLS.

@@ -66,6 +66,219 @@ function stateFor(event, now = Date.now()){
 }
 
 
+
+const GM_TAU=Math.PI*2;
+const GM_RENDER_BATCH=12;
+
+function gmCompile(gl,type,src){
+  const sh=gl.createShader(type);
+  gl.shaderSource(sh,src);
+  gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh)||'shader compile failed');
+  return sh;
+}
+function gmProgram(gl,vsSrc,fsSrc){
+  const p=gl.createProgram();
+  gl.attachShader(p,gmCompile(gl,gl.VERTEX_SHADER,vsSrc));
+  gl.attachShader(p,gmCompile(gl,gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)||'program link failed');
+  return p;
+}
+function gmCreateAtlas(maxNumber,isRed){
+  const cellW=256,cellH=128,cols=8,rows=Math.max(1,Math.ceil(maxNumber/cols));
+  const c=document.createElement('canvas');
+  c.width=cellW*cols;c.height=cellH*rows;
+  const x=c.getContext('2d');
+  for(let number=1;number<=maxNumber;number++){
+    const idx=number-1,col=idx%cols,row=Math.floor(idx/cols);
+    const ox=col*cellW,oy=row*cellH;
+    for(let px=0;px<cellW;px++){
+      const wave=Math.sin((px/cellW)*GM_TAU)*.55+Math.sin((px/cellW)*GM_TAU*3)*.22;
+      if(isRed){
+        const rr=Math.round(226+wave*8),gg=Math.round(25+wave*3),bb=Math.round(53+wave*5);
+        x.fillStyle='rgb('+rr+','+gg+','+bb+')';
+      }else{
+        const v=Math.round(238+wave*7);
+        x.fillStyle='rgb('+v+','+(v+2)+','+(v+4)+')';
+      }
+      x.fillRect(ox+px,oy,1,cellH);
+    }
+    x.save();
+    x.globalCompositeOperation='screen';
+    x.globalAlpha=isRed?.055:.085;
+    for(let b=0;b<4;b++){
+      const bx=ox+(b+.5)*cellW/4;
+      const gr=x.createLinearGradient(bx-21,0,bx+21,0);
+      gr.addColorStop(0,'rgba(255,255,255,0)');
+      gr.addColorStop(.5,'rgba(255,255,255,.8)');
+      gr.addColorStop(1,'rgba(255,255,255,0)');
+      x.fillStyle=gr;x.fillRect(bx-21,oy,42,cellH);
+    }
+    x.restore();
+    const drawDecal=(cx)=>{
+      const r=27,cy=oy+cellH*.5;
+      const dg=x.createRadialGradient(cx-r*.25,cy-r*.28,r*.04,cx,cy,r);
+      dg.addColorStop(0,'#ffffff');
+      dg.addColorStop(.56,'#fbfcfd');
+      dg.addColorStop(1,'#e6ebef');
+      x.fillStyle=dg;
+      x.beginPath();x.arc(cx,cy,r,0,GM_TAU);x.fill();
+      x.lineWidth=2.5;
+      x.strokeStyle=isRed?'rgba(255,255,255,.82)':'rgba(112,126,138,.42)';
+      x.stroke();
+      x.fillStyle='#071019';
+      x.font='900 47px Inter, system-ui, -apple-system, Segoe UI, sans-serif';
+      x.textAlign='center';x.textBaseline='middle';
+      x.fillText(String(number),cx,cy+1.5);
+    };
+    drawDecal(ox+cellW*.25);
+    drawDecal(ox+cellW*.75);
+  }
+  return {canvas:c,cols,rows};
+}
+
+class ChamberBallRenderer{
+  constructor(chamber,{bonus=false}={}){
+    this.chamber=chamber;this.bonus=bonus;this.ready=false;this.maxNumber=0;
+    this.canvas=document.createElement('canvas');
+    this.canvas.className='gm-ball-webgl';
+    this.canvas.setAttribute('aria-hidden','true');
+    chamber.appendChild(this.canvas);
+    try{
+      this.gl=this.canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:false})||
+        this.canvas.getContext('experimental-webgl',{alpha:true,antialias:true});
+      if(!this.gl)return;
+      this.init();
+      this.ready=true;
+      chamber.classList.add('gm-webgl-ready');
+    }catch(err){
+      console.warn('Draw chamber WebGL renderer unavailable; CSS fallback active.',err);
+    }
+  }
+  init(){
+    const gl=this.gl;
+    const vs='attribute vec2 a_pos;void main(){gl_Position=vec4(a_pos,0.0,1.0);}';
+    const fs=[
+      'precision highp float;',
+      'uniform vec4 u_ball['+GM_RENDER_BATCH+'];',
+      'uniform float u_num['+GM_RENDER_BATCH+'];',
+      'uniform float u_count;',
+      'uniform sampler2D u_atlas;',
+      'uniform vec2 u_grid;',
+      'uniform float u_red;',
+      'const float PI=3.141592653589793;',
+      'vec4 sphere(vec2 frag,vec4 ball,float num){',
+      '  vec2 p=(frag-ball.xy)/ball.z;',
+      '  float r2=dot(p,p);',
+      '  if(r2>=1.0)return vec4(0.0);',
+      '  float z=sqrt(max(0.0,1.0-r2));',
+      '  vec3 n=normalize(vec3(p.x,p.y,z));',
+      '  float c=cos(ball.w),ss=sin(ball.w);',
+      '  vec3 local=vec3(c*n.x-ss*n.z,n.y,ss*n.x+c*n.z);',
+      '  float u=0.5-atan(local.z,local.x)/(2.0*PI);',
+      '  float v=asin(clamp(local.y,-1.0,1.0))/PI+0.5;',
+      '  float idx=max(0.0,num-1.0);',
+      '  float col=mod(idx,u_grid.x);',
+      '  float row=floor(idx/u_grid.x);',
+      '  vec2 uv=(vec2(fract(u),v)+vec2(col,row))/u_grid;',
+      '  vec3 base=texture2D(u_atlas,uv).rgb;',
+      '  vec3 L=normalize(vec3(-0.46,0.67,0.86));',
+      '  vec3 V=vec3(0.0,0.0,1.0);',
+      '  vec3 H=normalize(L+V);',
+      '  float diff=max(dot(n,L),0.0);',
+      '  float spec=pow(max(dot(n,H),0.0),54.0);',
+      '  float spec2=pow(max(dot(n,normalize(vec3(0.58,0.18,0.80))),0.0),24.0);',
+      '  float fres=pow(1.0-max(n.z,0.0),2.5);',
+      '  vec3 colr=base*(0.49+0.56*diff);',
+      '  colr+=vec3(1.0)*spec*0.92;',
+      '  colr+=vec3(0.78,0.86,0.94)*spec2*0.22;',
+      '  colr+=mix(vec3(0.12,0.16,0.18),vec3(0.24,0.015,0.025),u_red)*fres;',
+      '  float hot=pow(max(dot(n,normalize(vec3(-0.35,0.48,0.80))),0.0),95.0);',
+      '  colr+=vec3(1.0)*hot*1.10;',
+      '  float edge=sqrt(r2);',
+      '  float alpha=1.0-smoothstep(0.965,1.0,edge);',
+      '  return vec4(colr,alpha);',
+      '}',
+      'void main(){',
+      '  vec4 outc=vec4(0.0);',
+      '  vec2 frag=gl_FragCoord.xy;',
+      '  for(int i=0;i<'+GM_RENDER_BATCH+';i++){',
+      '    if(float(i)<u_count){',
+      '      vec4 s=sphere(frag,u_ball[i],u_num[i]);',
+      '      outc=s+outc*(1.0-s.a);',
+      '    }',
+      '  }',
+      '  gl_FragColor=outc;',
+      '}'
+    ].join('\n');
+    this.program=gmProgram(gl,vs,fs);gl.useProgram(this.program);
+    const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+    const a=gl.getAttribLocation(this.program,'a_pos');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);
+    this.uBall=gl.getUniformLocation(this.program,'u_ball[0]');
+    this.uNum=gl.getUniformLocation(this.program,'u_num[0]');
+    this.uCount=gl.getUniformLocation(this.program,'u_count');
+    this.uGrid=gl.getUniformLocation(this.program,'u_grid');
+    this.uRed=gl.getUniformLocation(this.program,'u_red');
+    this.uAtlas=gl.getUniformLocation(this.program,'u_atlas');
+    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0);
+  }
+  ensureAtlas(maxNumber){
+    if(!this.ready||maxNumber<=this.maxNumber)return;
+    const gl=this.gl;
+    this.maxNumber=maxNumber;
+    const atlas=gmCreateAtlas(maxNumber,this.bonus);
+    this.grid=[atlas.cols,atlas.rows];
+    if(this.texture)gl.deleteTexture(this.texture);
+    this.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,atlas.canvas);
+  }
+  resize(){
+    const rect=this.chamber.getBoundingClientRect();
+    const dpr=Math.min(2,Math.max(1,window.devicePixelRatio||1));
+    const w=Math.max(1,Math.round(rect.width*dpr)),h=Math.max(1,Math.round(rect.height*dpr));
+    if(this.canvas.width!==w||this.canvas.height!==h){
+      this.canvas.width=w;this.canvas.height=h;
+      this.canvas.style.width=rect.width+'px';this.canvas.style.height=rect.height+'px';
+      this.gl.viewport(0,0,w,h);
+    }
+    return {w,h,dpr,cssW:rect.width,cssH:rect.height};
+  }
+  render(balls,radius){
+    if(!this.ready||!balls.length)return;
+    this.ensureAtlas(Math.max(...balls.map(b=>b.number||1)));
+    const gl=this.gl,dim=this.resize();
+    gl.useProgram(this.program);gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.uniform1i(this.uAtlas,0);
+    gl.uniform2f(this.uGrid,this.grid[0],this.grid[1]);gl.uniform1f(this.uRed,this.bonus?1:0);
+    for(let start=0;start<balls.length;start+=GM_RENDER_BATCH){
+      const chunk=balls.slice(start,start+GM_RENDER_BATCH);
+      const packed=new Float32Array(GM_RENDER_BATCH*4),nums=new Float32Array(GM_RENDER_BATCH);
+      chunk.forEach((b,i)=>{
+        packed[i*4]=(dim.cssW*.5+b.x)*dim.dpr;
+        packed[i*4+1]=(dim.cssH*.5-b.y)*dim.dpr;
+        packed[i*4+2]=radius*dim.dpr;
+        packed[i*4+3]=b.angle;
+        nums[i]=b.number||1;
+      });
+      gl.uniform4fv(this.uBall,packed);gl.uniform1fv(this.uNum,nums);gl.uniform1f(this.uCount,chunk.length);
+      gl.drawArrays(gl.TRIANGLES,0,6);
+    }
+  }
+  destroy(){
+    if(!this.gl)return;
+    if(this.texture)this.gl.deleteTexture(this.texture);
+    this.canvas.remove();
+    this.chamber.classList.remove('gm-webgl-ready');
+  }
+}
+
 class ChamberPhysics {
   constructor(chamber,{bonus=false,reduced=false}={}){
     this.chamber=chamber;
@@ -80,6 +293,7 @@ class ChamberPhysics {
     this.seed=bonus?7.31:3.17;
     this.resizeObserver=null;
     this.intersectionObserver=null;
+    this.renderer=new ChamberBallRenderer(chamber,{bonus});
     this.installObservers();
     if(!this.reduced) this.raf=requestAnimationFrame(t=>this.loop(t));
   }
@@ -103,7 +317,8 @@ class ChamberPhysics {
       x:0,y:0,
       vx:0,vy:0,
       angle:(i*.61)%6.283,
-      angular:(i%2?-1:1)*(1.3+(i%5)*.18),
+      angular:(i%2?-1:1)*(.35+(i%5)*.08),
+      number:Number(el.dataset.number||i+1),
       id:i
     }));
     this.updateGeometry(true);
@@ -133,21 +348,21 @@ class ChamberPhysics {
   seedPositions(){
     const n=this.balls.length;
     if(!n)return;
-    const usable=Math.max(8,this.chamberRadius-this.ballRadius-7);
-    const golden=2.399963229728653;
+    const limit=Math.max(8,this.chamberRadius-this.ballRadius-6);
+    const spacing=this.ballRadius*1.78;
+    const cols=Math.max(4,Math.ceil(Math.sqrt(n*1.9)));
     this.balls.forEach((b,i)=>{
-      const f=Math.sqrt((i+.72)/(n+.9));
-      const a=i*golden+this.seed;
-      b.x=Math.cos(a)*usable*f*.86;
-      b.y=Math.sin(a)*usable*f*.86;
-      const tangentX=-Math.sin(a),tangentY=Math.cos(a);
-      const launch=(24+(i%7)*3.2)*(this.bonus?.92:1);
-      b.vx=tangentX*launch+(Math.sin(i*4.31)*7);
-      b.vy=tangentY*launch+(Math.cos(i*3.17)*7)-5;
+      const row=Math.floor(i/cols),col=i%cols;
+      const centered=col-(Math.min(cols,n-row*cols)-1)/2;
+      b.x=centered*spacing + Math.sin((i+1)*2.17)*this.ballRadius*.18;
+      const floor=Math.sqrt(Math.max(0,limit*limit-b.x*b.x));
+      b.y=floor-this.ballRadius*.18-row*spacing*.82;
+      b.vx=Math.sin(i*1.93)*2.4;
+      b.vy=Math.cos(i*1.37)*1.8;
       b.angle=(i*.83)%6.283;
-      b.angular=(i%2?-1:1)*(1.4+(i%6)*.21);
+      b.angular=(i%2?-1:1)*(.28+(i%5)*.07);
     });
-    for(let k=0;k<5;k++)this.resolveCollisions(.016,true);
+    for(let k=0;k<8;k++)this.resolveCollisions(.016,true);
     this.constrainAll();
   }
 
@@ -163,45 +378,60 @@ class ChamberPhysics {
 
   step(dt,t){
     const drawing=!!this.chamber.closest('.gm-stage')?.classList.contains('is-drawing');
-    const boost=drawing?1.38:1;
+    const boost=drawing?1.18:1;
     const maxR=Math.max(8,this.chamberRadius-this.ballRadius-5);
-    const maxSpeed=(this.chamberRadius<80?82:118)*boost;
-    const swirl=(this.bonus?74:82)*boost;
-    const turbulence=(this.bonus?34:40)*boost;
-    const lift=(this.bonus?9:12)*boost;
+    const gravity=(this.bonus?92:98)*boost;
+    const maxSpeed=(this.chamberRadius<80?92:132)*boost;
+    const drag=Math.exp(-.72*dt);
+    const nozzles=this.bonus?[-.34,0,.34]:[-.52,-.18,.18,.52];
 
     for(const b of this.balls){
-      const r=Math.hypot(b.x,b.y)||1;
-      const nx=b.x/r,ny=b.y/r;
-      const tx=-ny,ty=nx;
-      const phase=t*(1.65+(b.id%5)*.06)+b.id*1.731+this.seed;
-      const pulse=.68+.32*Math.sin(t*.88+b.id*.53);
-      const inward=Math.max(0,r/maxR-.48)*26;
-      const lower=Math.max(0,(b.y/maxR)+.18);
-      const nozzle=Math.max(0,1-Math.abs(b.x)/(maxR*.72));
-      const jet=lower*nozzle*(this.bonus?58:68)*boost;
-      const ax=tx*swirl*pulse + Math.sin(phase*1.37)*turbulence - nx*inward + Math.sin(t*3.2+b.id*.7)*jet*.10;
-      const ay=ty*swirl*pulse + Math.cos(phase*1.11)*turbulence - ny*inward - lift - jet + Math.sin(t*2.2+b.id)*8*boost;
+      let ax=-b.x*.10;
+      let ay=gravity;
+      const yNorm=b.y/maxR;
+      const bottomFactor=Math.max(0,Math.min(1,(yNorm-.12)/.72));
+      let jetLift=0,jetSide=0;
+
+      nozzles.forEach((pos,i)=>{
+        const center=pos*maxR;
+        const dx=b.x-center;
+        const width=maxR*(this.bonus?.30:.25);
+        const xInfluence=Math.max(0,1-Math.abs(dx)/width);
+        const slow=.5+.5*Math.sin(t*(1.42+i*.07)+i*1.91+this.seed);
+        const burst=Math.pow(Math.max(0,Math.sin(t*(2.15+i*.11)+i*2.43+b.id*.13)),2.0);
+        const flutter=.74+.26*Math.sin(t*4.1+b.id*1.17+i);
+        const force=xInfluence*bottomFactor*(.18+.82*slow)*(.34+.66*burst)*flutter;
+        jetLift+=force*(this.bonus?300:330)*boost;
+        jetSide+=(-dx/Math.max(1,width))*force*24;
+      });
+
+      ay-=jetLift;
+      ax+=jetSide;
+      ax+=Math.sin(t*2.7+b.id*1.33)*5.2;
+      ay+=Math.cos(t*2.1+b.id*.91)*3.8;
+
       b.vx+=ax*dt;
       b.vy+=ay*dt;
-      const drag=Math.exp(-.34*dt);
       b.vx*=drag;b.vy*=drag;
+
       const speed=Math.hypot(b.vx,b.vy);
-      if(speed>maxSpeed){const s=maxSpeed/speed;b.vx*=s;b.vy*=s}
-      b.x+=b.vx*dt;b.y+=b.vy*dt;
+      if(speed>maxSpeed){const k=maxSpeed/speed;b.vx*=k;b.vy*=k}
+
+      b.x+=b.vx*dt;
+      b.y+=b.vy*dt;
+      b.angular+=b.vx*.0018;
       b.angle+=b.angular*dt;
-      b.angular*=Math.exp(-.18*dt);
+      b.angular*=Math.exp(-1.55*dt);
     }
 
     this.resolveCollisions(dt,false);
     this.constrainAll();
   }
-
   resolveCollisions(dt,quiet=false){
     const balls=this.balls;
     const minDist=this.ballRadius*2*.94;
     const minDist2=minDist*minDist;
-    const restitution=.91;
+    const restitution=.82;
     for(let i=0;i<balls.length;i++){
       const a=balls[i];
       for(let j=i+1;j<balls.length;j++){
@@ -243,7 +473,7 @@ class ChamberPhysics {
 
   constrainAll(){
     const limit=Math.max(6,this.chamberRadius-this.ballRadius-5);
-    const restitution=.88;
+    const restitution=.70;
     this.balls.forEach(b=>{
       const d=Math.hypot(b.x,b.y)||1;
       if(d<=limit)return;
@@ -254,7 +484,9 @@ class ChamberPhysics {
         b.vx-=(1+restitution)*outward*nx;
         b.vy-=(1+restitution)*outward*ny;
         const tangent=b.vx*(-ny)+b.vy*nx;
-        b.angular+=tangent*.026;
+        b.vx*=ny>.18?.91:.96;
+        b.vy*=ny>.18?.84:.94;
+        b.angular+=tangent*.010;
       }
     });
   }
@@ -264,6 +496,7 @@ class ChamberPhysics {
       b.el.style.transform=`translate3d(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px,0)`;
       b.el.style.setProperty('--spin',`${b.angle.toFixed(3)}rad`);
     });
+    this.renderer?.render(this.balls,this.ballRadius);
   }
 
   destroy(){
@@ -271,6 +504,7 @@ class ChamberPhysics {
     this.resizeObserver?.disconnect();
     this.intersectionObserver?.disconnect();
     this.balls.forEach(b=>clearTimeout(b.impactTimer));
+    this.renderer?.destroy();
     this.balls=[];
   }
 }
@@ -308,7 +542,7 @@ export class EventDrawMachine {
         <div class="gm-flash"></div>
         <div class="gm-live-pill">Machine online</div>
         <div class="gm-machine main">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-air-jets"><i></i><i></i><i></i><i></i></div><div class="gm-glass-caustic"></div><div class="gm-glass-refraction"></div><div class="gm-glass-inner-shadow"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
           <div class="gm-machine-label">Main ball chamber</div>
         </div>
         <div class="gm-center">
@@ -326,7 +560,7 @@ export class EventDrawMachine {
           </div>
         </div>
         <div class="gm-machine bonus">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-air-jets"><i></i><i></i><i></i><i></i></div><div class="gm-glass-caustic"></div><div class="gm-glass-refraction"></div><div class="gm-glass-inner-shadow"></div><div class="gm-glass-reflection"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div><div class="gm-glass-rim"></div></div></div>
           <div class="gm-machine-label">Special ball chamber</div>
         </div>
       </div>`;

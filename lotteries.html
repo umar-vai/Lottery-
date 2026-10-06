@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080b10">
+  <meta name="description" content="Browse all Lootera.win lotteries by status: open, upcoming or locked, and completed.">
+  <title>Lootera.win — All Lotteries</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="glass-tuning.css">
+  <link rel="stylesheet" href="events-home.css?v=3">
+  <link rel="stylesheet" href="site-shell.css?v=4">
+  <link rel="stylesheet" href="events-page.css?v=1">
+  <link rel="stylesheet" href="platform-gate.css?v=1">
+  <link rel="stylesheet" href="support-live.css?v=1">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <main class="shell events-page-shell">
+    <header class="topbar"><a class="brand" href="./"><span class="brand-mark"></span><span>LOOTERA.WIN</span></a></header>
+
+    <section class="events-page-hero">
+      <div>
+        <span class="events-kicker">ALL LOTTERIES</span>
+        <h1>সব লটারি এক জায়গায়</h1>
+        <p>Open, Upcoming / Locked এবং Completed—স্ট্যাটাস অনুযায়ী লটারি দেখুন। কোনো card-এ ক্লিক করলে ওই lottery-এর বিস্তারিত page খুলবে।</p>
+      </div>
+      <a class="events-back-link" href="./">← Home</a>
+    </section>
+
+    <section class="events-category-bar" aria-label="Lottery categories">
+      <button type="button" class="events-category active" data-event-category="open" aria-pressed="true">
+        <span>Open Lotteries</span><strong id="openEventCount">0</strong><small>এখন ticket নেওয়া যাচ্ছে</small>
+      </button>
+      <button type="button" class="events-category" data-event-category="upcoming" aria-pressed="false">
+        <span>Upcoming / Locked</span><strong id="upcomingEventCount">0</strong><small>Upcoming, locked বা live draw</small>
+      </button>
+      <button type="button" class="events-category" data-event-category="completed" aria-pressed="false">
+        <span>Completed Lotteries</span><strong id="completedEventCount">0</strong><small>শেষ হওয়া draw ও result</small>
+      </button>
+    </section>
+
+    <section class="events-page-content">
+      <div class="events-page-heading">
+        <div><span class="mini" id="eventsCategoryKicker">OPEN LOTTERIES</span><h2 id="eventsCategoryTitle">এখন যেগুলোতে অংশ নিতে পারেন</h2><p id="eventsCategoryCopy">Open lottery-তে এখনই virtual Draw Credit ব্যবহার করে ticket নেওয়া যায়।</p></div>
+        <span class="events-page-total" id="eventsVisibleCount">0 lotteries</span>
+      </div>
+      <div id="eventsPageGrid" class="events-grid events-page-grid"><div class="events-empty">Loading lotteries…</div></div>
+    </section>
+  </main>
+
+  <script src="site-shell.js?v=25"></script>
+  <script src="platform-gate.js?v=2"></script>
+  <script src="support-live.js?v=8" defer></script>
+  <script type="module" src="events-page.js?v=3"></script>
+</body>
+</html>

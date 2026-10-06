@@ -24,15 +24,15 @@
   <main class="shell">
     <header class="topbar glass"><a class="brand" href="./"><i></i><span>DRAW//01</span></a></header>
 
-    <section id="gate" class="gate glass"><span class="eyebrow">SECURE OPERATIONS</span><h1>Event control center</h1><p id="gateMsg">Checking your admin session…</p><div class="gate-actions"><button id="retryBtn" class="btn primary">Check session</button><a class="btn ghost" href="./">Public site</a></div></section>
+    <section id="gate" class="gate glass"><span class="eyebrow">SECURE OPERATIONS</span><h1>Lottery control center</h1><p id="gateMsg">Checking your admin session…</p><div class="gate-actions"><button id="retryBtn" class="btn primary">Check session</button><a class="btn ghost" href="./">Public site</a></div></section>
 
     <section id="app" class="app" hidden>
-      <section class="hero-row"><div><span class="eyebrow">MULTI-EVENT PLATFORM</span><h1>Control center</h1><p>Manage events, tickets, winners, players, Love Points and audit history from one stable admin workspace.</p></div><div class="hero-actions"><button id="heroCreate" class="btn primary">+ Create event</button><a class="btn ghost" href="./">Open public site ↗</a></div></section>
+      <section class="hero-row"><div><span class="eyebrow">LOTTERY PLATFORM</span><h1>Control center</h1><p>Manage lotteries, tickets, winners, players, Love Points and audit history from one stable admin workspace.</p></div><div class="hero-actions"><button id="heroCreate" class="btn primary">+ Create lottery</button><a class="btn ghost" href="./">Open public site ↗</a></div></section>
 
       <section class="stats-grid">
-        <article class="stat-card glass"><div class="stat-icon">E</div><div><span>Events</span><strong id="statEvents">0</strong><small>Total events</small></div></article>
+        <article class="stat-card glass"><div class="stat-icon">E</div><div><span>Lotteries</span><strong id="statEvents">0</strong><small>Total lotteries</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">●</div><div><span>Open now</span><strong id="statOpen">0</strong><small>Accepting tickets</small></div></article>
-        <article class="stat-card glass"><div class="stat-icon">T</div><div><span>Tickets</span><strong id="statTickets">0</strong><small>Across all events</small></div></article>
+        <article class="stat-card glass"><div class="stat-icon">T</div><div><span>Tickets</span><strong id="statTickets">0</strong><small>Across all lotteries</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">P</div><div><span>Players</span><strong id="statPlayers">0</strong><small>Registered users</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">C</div><div><span>Credits</span><strong id="statCredits">0</strong><small>Player balances</small></div></article>
         <article class="stat-card glass"><div class="stat-icon">⏱</div><div><span>Next draw</span><strong id="statNext">—</strong><small id="statNextMeta">Not scheduled</small></div></article>
@@ -40,7 +40,7 @@
 
       <nav class="tabs glass canonical-admin-tabs" aria-label="Admin sections">
         <button data-tab="overview" class="active">Overview</button>
-        <button data-tab="events">Events</button>
+        <button data-tab="events">Lotteries</button>
         <button data-tab="tickets">Tickets</button>
         <button data-tab="winners">Winners</button>
         <button data-tab="players">Players</button>
@@ -50,15 +50,15 @@
       </nav>
 
       <section id="overview" class="tab active"><div class="dashboard-grid">
-        <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">NEXT / ACTIVE EVENT</span><h2 id="focusTitle">No published event</h2></div><span id="focusStatus" class="status-pill">—</span></div><div id="focusInfo" class="info-grid"></div><div class="section-label">Quick actions</div><div id="focusActions" class="action-grid"></div></article>
+        <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">NEXT / ACTIVE LOTTERY</span><h2 id="focusTitle">No published lottery</h2></div><span id="focusStatus" class="status-pill">—</span></div><div id="focusInfo" class="info-grid"></div><div class="section-label">Quick actions</div><div id="focusActions" class="action-grid"></div></article>
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT ACTIVITY</span><h2>Operations feed</h2></div><button id="refreshOverview" class="icon-btn">↻</button></div><div id="overviewAudit" class="timeline compact-timeline"></div></article>
       </div></section>
 
-      <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">EVENT MANAGEMENT</span><h2>Events</h2><p>Each event stays as a visual record card. Click a card to edit the event; ticket records are kept separately in Tickets.</p></div><button id="createEventBtn" class="btn primary">+ Create event</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 events</span></div><div id="eventList" class="admin-event-record-grid"></div></article></section>
+      <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">LOTTERY MANAGEMENT</span><h2>Lotteries</h2><p>Each lottery stays as a visual record card. Click a card to edit the lottery; ticket records are kept separately in Tickets.</p></div><button id="createEventBtn" class="btn primary">+ Create lottery</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 lotteries</span></div><div id="eventList" class="admin-event-record-grid"></div></article></section>
 
-      <section id="tickets" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">TICKET MANAGEMENT</span><h2>Tickets by event</h2><p>Only event cards are shown first. Click an event card to expand its accordion and see the users and tickets for that event.</p></div><button id="refreshTickets" class="btn ghost compact">Refresh</button></div><div class="ticket-toolbar"><select id="ticketEventFilter"><option value="all">All events</option></select><input id="ticketSearch" type="search" autocomplete="off" placeholder="Search player, email or ticket ID"><span id="ticketSummary" class="muted-pill">0 tickets</span></div><div id="ticketEventList" class="ticket-event-list"></div></article></section>
+      <section id="tickets" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">TICKET MANAGEMENT</span><h2>Tickets by lottery</h2><p>Only lottery cards are shown first. Click a lottery card to expand its accordion and see the users and tickets for that lottery.</p></div><button id="refreshTickets" class="btn ghost compact">Refresh</button></div><div class="ticket-toolbar"><select id="ticketEventFilter"><option value="all">All lotteries</option></select><input id="ticketSearch" type="search" autocomplete="off" placeholder="Search player, email or ticket ID"><span id="ticketSummary" class="muted-pill">0 tickets</span></div><div id="ticketEventList" class="ticket-event-list"></div></article></section>
 
-      <section id="winners" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">WINNER MANAGEMENT</span><h2>Winners by event</h2><p>Completed draw winners are grouped by event and ranked position. Historical ticket results stay read-only.</p></div><button id="refreshWinners" class="btn ghost compact">Refresh</button></div><div id="winnerList" class="winner-admin-list"></div></article></section>
+      <section id="winners" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">WINNER MANAGEMENT</span><h2>Winners by lottery</h2><p>Completed draw winners are grouped by lottery and ranked position. Historical ticket results stay read-only.</p></div><button id="refreshWinners" class="btn ghost compact">Refresh</button></div><div id="winnerList" class="winner-admin-list"></div></article></section>
 
       <section id="players" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">PLAYER CONTROL</span><h2>Players & balances</h2><p>Manage each player's Draw Credits and Love Points (LP) here. Phone Bridge and support transactions remain in the Support tab.</p></div></div><div class="player-toolbar"><input id="playerSearch" type="search" autocomplete="off" placeholder="Search player by name or email"><span id="playerSummary" class="muted-pill">0 players</span></div><div id="playerList" class="records"></div></article></section>
 
@@ -71,11 +71,11 @@
   </main>
 
   <dialog id="eventDialog" class="event-form-modal"><form id="eventForm" class="event-form-card glass">
-    <div class="panel-head"><div><span class="eyebrow" id="eventModalKicker">CREATE EVENT</span><h2 id="eventModalTitle">New public event</h2></div><button type="button" id="closeEventModal" class="icon-btn">×</button></div>
+    <div class="panel-head"><div><span class="eyebrow" id="eventModalKicker">CREATE LOTTERY</span><h2 id="eventModalTitle">New public lottery</h2></div><button type="button" id="closeEventModal" class="icon-btn">×</button></div>
     <div class="event-form-grid">
-      <label><span>Event title</span><input id="fTitle" required placeholder="Friday Mega Draw"></label>
+      <label><span>Lottery title</span><input id="fTitle" required placeholder="Friday Mega Draw"></label>
       <label><span>Public slug</span><input id="fSlug" placeholder="friday-mega-draw"></label>
-      <label class="full"><span>Description</span><textarea id="fDescription" placeholder="Describe this event for players."></textarea></label>
+      <label class="full"><span>Description</span><textarea id="fDescription" placeholder="Describe this lottery for players."></textarea></label>
       <label><span>Ticket price (credits)</span><input id="fPrice" type="number" min="0" step="1" value="10" required></label>
       <label><span>Max tickets per player</span><input id="fLimit" type="number" min="1" max="1000" value="5" required></label>
       <label><span>Maximum players</span><input id="fMaxPlayers" type="number" min="1" max="1000000" placeholder="Unlimited"></label>
@@ -94,18 +94,18 @@
       <div class="full prize-builder"><div class="prize-builder-head"><div><span class="eyebrow">RANKED PRIZES</span><h3>Prize per winner</h3></div><strong id="prizeTotal">Total: 0 cr</strong></div><div id="winnerPrizeFields" class="winner-prize-grid"></div></div>
     </div>
     <div id="eventFormHint" class="form-hint"></div>
-    <div class="event-modal-actions"><button type="button" id="cancelEventModal" class="btn ghost">Cancel</button><button type="submit" id="saveEventBtn" class="btn primary">Create event</button></div>
+    <div class="event-modal-actions"><button type="button" id="cancelEventModal" class="btn ghost">Cancel</button><button type="submit" id="saveEventBtn" class="btn primary">Create lottery</button></div>
   </form></dialog>
 
   <dialog id="balanceDialog" class="balance-modal"><form id="balanceForm" class="balance-card glass"><span class="eyebrow">VIRTUAL CREDIT BALANCE</span><h2 id="balanceTitle">Set balance</h2><p id="balanceEmail"></p><label>New balance<input id="balanceInput" type="number" min="0" step="1" required></label><label>Admin note<input id="balanceNote" placeholder="Test credit adjustment"></label><div class="event-modal-actions"><button type="button" id="cancelBalance" class="btn ghost">Cancel</button><button type="submit" class="btn primary">Update balance</button></div></form></dialog>
 
   <div id="toast"></div>
-  <script src="site-shell.js?v=24"></script>
+  <script src="site-shell.js?v=25"></script>
   <script src="support-live.js?v=8" defer></script>
-  <script src="ops-v4.js?v=4" defer></script>
+  <script src="ops-v4.js?v=5" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
-  <script type="module" src="event-cover-admin.js?v=1"></script>
+  <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>
-  <script src="platform-controls-admin.js?v=3" defer></script>
+  <script src="platform-controls-admin.js?v=4" defer></script>
 </body>
 </html>

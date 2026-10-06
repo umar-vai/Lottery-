@@ -107,7 +107,7 @@ function startCountdown(){
 }
 function renderOverview(){
   var e=nextEvent(),root=$('focusInfo'),actions=$('focusActions'),st=$('focusStatus');actions.innerHTML='';
-  if(!e){$('focusTitle').textContent='No published event';st.textContent='—';st.className='status-pill';root.innerHTML='<div class="overview-empty">Create or publish an event to make it available to players.</div>';actions.appendChild(button('+ Create event','primary',openCreate));renderTimeline($('overviewAudit'),S.audit.slice(0,8));return}
+  if(!e){$('focusTitle').textContent='No published lottery';st.textContent='—';st.className='status-pill';root.innerHTML='<div class="overview-empty">Create or publish a lottery to make it available to players.</div>';actions.appendChild(button('+ Create lottery','primary',openCreate));renderTimeline($('overviewAudit'),S.audit.slice(0,8));return}
   $('focusTitle').textContent=e.title;st.textContent=statusLabel(e);st.className='status-pill '+statusView(e);
   root.innerHTML=[
     info('Ticket price',credits(e.ticket_price)),
@@ -123,7 +123,7 @@ function renderOverview(){
 
 function canRun(e){if(e.status!=='published')return false;if(ticketCount(e.id)<Number(e.winner_count||1))return false;if(e.schedule_mode==='manual')return true;return !e.cutoff_at||Date.now()>=new Date(e.cutoff_at).getTime()}
 function appendEventActions(root,e){
-  root.appendChild(button('View public page','ghost',function(){window.open('event.html?e='+encodeURIComponent(e.slug),'_blank')}));
+  root.appendChild(button('View public page','ghost',function(){window.open('lottery.html?e='+encodeURIComponent(e.slug),'_blank')}));
   root.appendChild(button('Edit','ghost',function(){openEdit(e)}));
   if(e.status==='draft')root.appendChild(button('Publish','primary',function(){changeStatus(e,'published')}));
   if(canRun(e))root.appendChild(button('Run draw','primary',function(){runEvent(e)}));
@@ -132,18 +132,18 @@ function appendEventActions(root,e){
 }
 function prizeTierHtml(e){var ts=tiersFor(e.id);if(!ts.length)return'<div class="empty-sub">No prize tiers configured.</div>';return'<div class="tier-strip">'+ts.map(function(t){return'<div><span>#'+t.rank+'</span><strong>'+credits(t.prize_amount)+'</strong></div>'}).join('')+'</div>'}
 function participantHtml(e,tickets){
-  var ts=tickets||ticketsFor(e.id),pm=pmap();if(!ts.length)return'<div class="empty-sub">No tickets in this event yet.</div>';
+  var ts=tickets||ticketsFor(e.id),pm=pmap();if(!ts.length)return'<div class="empty-sub">No tickets in this lottery yet.</div>';
   var groups={};ts.forEach(function(t){(groups[t.user_id]||(groups[t.user_id]=[])).push(t)});
   return Object.keys(groups).map(function(uid){var p=pm[uid]||{},arr=groups[uid];return'<div class="participant-card"><div class="participant-head"><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+' · '+arr.length+' ticket'+(arr.length===1?'':'s')+'</span></div><span class="credit-balance">'+credits(p.balance||0)+'</span></div><div class="participant-tickets">'+arr.map(function(t){return'<div class="ticket-line"><div><b>Ticket '+esc(String(t.id).slice(0,8))+'</b>'+(t.is_winner?'<span class="winner-rank">#'+t.winner_rank+' WINNER</span>':'')+'</div>'+numbersHtml(t)+'<div class="ticket-meta"><span>'+credits(t.price_paid)+'</span><span>'+esc(fmt(t.created_at))+'</span>'+(t.is_winner?'<strong>'+credits(t.prize_awarded)+' prize</strong>':'')+'</div></div>'}).join('')+'</div></div>'}).join('')
 }
 function renderEvents(){
   var f=$('eventStatusFilter').value||'all',rows=S.events.filter(function(e){return f==='all'||e.status===f}),root=$('eventList');
-  $('eventSummary').textContent=rows.length+' events';root.innerHTML='';
-  if(!rows.length){root.innerHTML='<div class="empty-sub">No events found.</div>';return}
+  $('eventSummary').textContent=rows.length+' lotteries';root.innerHTML='';
+  if(!rows.length){root.innerHTML='<div class="empty-sub">No lotteries found.</div>';return}
   rows.forEach(function(e){
     var tc=ticketCount(e.id),pc=playerCount(e.id),card=document.createElement('article');
-    card.className='admin-event-record-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','Edit '+(e.title||'event'));
-    card.innerHTML='<div class="admin-event-cover"><span>EVENT</span></div><div class="admin-event-card-body"><div class="admin-event-card-top"><span class="status-pill '+statusView(e)+'">'+esc(statusLabel(e))+'</span><small>'+esc(scheduleLabel(e))+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||'No event description yet.')+'</p><div class="admin-event-card-metrics"><span><b>'+tc+'</b> tickets</span><span><b>'+pc+'</b> players</span><span><b>'+Number(e.winner_count||1)+'</b> winners</span><span><b>'+credits(e.ticket_price)+'</b> entry</span></div><div class="admin-event-card-actions"></div></div>';
+    card.className='admin-event-record-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','Edit '+(e.title||'lottery'));
+    card.innerHTML='<div class="admin-event-cover"><span>LOTTERY</span></div><div class="admin-event-card-body"><div class="admin-event-card-top"><span class="status-pill '+statusView(e)+'">'+esc(statusLabel(e))+'</span><small>'+esc(scheduleLabel(e))+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.description||'No lottery description yet.')+'</p><div class="admin-event-card-metrics"><span><b>'+tc+'</b> tickets</span><span><b>'+pc+'</b> players</span><span><b>'+Number(e.winner_count||1)+'</b> winners</span><span><b>'+credits(e.ticket_price)+'</b> entry</span></div><div class="admin-event-card-actions"></div></div>';
     var cover=card.querySelector('.admin-event-cover');
     if(e.cover_image_url){cover.classList.add('has-image');cover.style.backgroundImage='linear-gradient(180deg,rgba(3,8,10,.03),rgba(3,8,10,.62)),url("'+String(e.cover_image_url).replace(/"/g,'%22')+'")';cover.innerHTML=''}
     var actions=card.querySelector('.admin-event-card-actions');actions.addEventListener('click',function(ev){ev.stopPropagation()});appendEventActions(actions,e);
@@ -155,7 +155,7 @@ function renderEvents(){
 function ticketMatches(t,e,pm,q){if(!q)return true;var p=pm[t.user_id]||{};return normalize([t.id,e&&e.title,p.display_name,p.email,t.winner_rank].join(' ')).indexOf(q)>=0}
 function renderTickets(){
   var filter=$('ticketEventFilter'),root=$('ticketEventList'),pm=pmap(),prev=filter.value||'all';
-  filter.innerHTML='<option value="all">All events</option>'+S.events.map(function(e){return'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>'}).join('');
+  filter.innerHTML='<option value="all">All lotteries</option>'+S.events.map(function(e){return'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>'}).join('');
   if(Array.prototype.some.call(filter.options,function(o){return o.value===prev}))filter.value=prev;
   var selected=filter.value||'all',q=S.ticketQuery,shown=0,groups=[];
   S.events.forEach(function(e){
@@ -165,7 +165,7 @@ function renderTickets(){
   });
   $('ticketSummary').textContent=shown+' ticket'+(shown===1?'':'s');root.innerHTML='';
   if(!groups.length){root.innerHTML='<div class="empty-sub">No tickets matched this view.</div>';return}
-  groups.forEach(function(g){var e=g.event,section=document.createElement('section');section.className='ticket-event-group';section.innerHTML='<div class="ticket-event-head"><div><span class="eyebrow">'+esc(statusLabel(e))+'</span><h3>'+esc(e.title)+'</h3><p>'+g.tickets.length+' ticket'+(g.tickets.length===1?'':'s')+' shown · '+playerCount(e.id)+' total players</p></div><button class="btn ghost compact" type="button">Edit event</button></div><div class="participant-list">'+participantHtml(e,g.tickets)+'</div>';
+  groups.forEach(function(g){var e=g.event,section=document.createElement('section');section.className='ticket-event-group';section.innerHTML='<div class="ticket-event-head"><div><span class="eyebrow">'+esc(statusLabel(e))+'</span><h3>'+esc(e.title)+'</h3><p>'+g.tickets.length+' ticket'+(g.tickets.length===1?'':'s')+' shown · '+playerCount(e.id)+' total players</p></div><button class="btn ghost compact" type="button">Edit lottery</button></div><div class="participant-list">'+participantHtml(e,g.tickets)+'</div>';
     section.querySelector('button').onclick=function(){openEdit(e)};root.appendChild(section)
   })
 }
@@ -173,7 +173,7 @@ function renderTickets(){
 function renderWinners(){
   var root=$('winnerList'),pm=pmap();root.innerHTML='';
   var events=S.events.filter(function(e){return ticketsFor(e.id).some(function(t){return t.is_winner})});
-  if(!events.length){root.innerHTML='<div class="empty-sub">No completed-event winners yet.</div>';return}
+  if(!events.length){root.innerHTML='<div class="empty-sub">No completed-lottery winners yet.</div>';return}
   events.forEach(function(e){var wins=ticketsFor(e.id).filter(function(t){return t.is_winner}).sort(function(a,b){return Number(a.winner_rank||999)-Number(b.winner_rank||999)}),group=document.createElement('section');group.className='winner-admin-event';group.innerHTML='<div class="winner-admin-event-head"><div><span class="eyebrow">RESULT ARCHIVE</span><h3>'+esc(e.title)+'</h3><p>'+wins.length+' winning ticket'+(wins.length===1?'':'s')+' · '+esc(fmt(e.drawn_at||e.draw_at))+'</p></div><span class="status-pill completed">COMPLETED</span></div><div class="winner-admin-grid">'+wins.map(function(t){var p=pm[t.user_id]||{};return'<article class="winner-admin-card"><div class="winner-rank-badge">#'+esc(t.winner_rank||'—')+'</div><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+'</span></div>'+numbersHtml(t)+'<b>'+credits(t.prize_awarded)+' prize</b></article>'}).join('')+'</div>';root.appendChild(group)})
 }
 
@@ -202,7 +202,7 @@ function renderAudit(){renderTimeline($('auditList'),S.audit)}
 
 function defaults(){var n=Date.now();return{open:new Date(n+5*60000),cut:new Date(n+65*60000),draw:new Date(n+70*60000)}}
 function setFieldDisabled(ids,disabled){ids.forEach(function(id){if($(id))$(id).disabled=!!disabled})}
-function setLockedFields(locked){setFieldDisabled(['fPrice','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax'],locked);$('eventFormHint').textContent=locked?'Ticket price and number rules are locked because this event already has tickets. Capacity limits, prizes and schedule can still be adjusted within backend safety rules.':'';$('eventFormHint').className='form-hint'+(locked?' warn':'')}
+function setLockedFields(locked){setFieldDisabled(['fPrice','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax'],locked);$('eventFormHint').textContent=locked?'Ticket price and number rules are locked because this lottery already has tickets. Capacity limits, prizes and schedule can still be adjusted within backend safety rules.':'';$('eventFormHint').className='form-hint'+(locked?' warn':'')}
 function setCompletedFields(completed){setFieldDisabled(['fPrice','fLimit','fMaxPlayers','fMaxTotalTickets','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax','fScheduleMode','fOpen','fCutoff','fDraw','fStatus','fWinnerCount'],completed);$('winnerPrizeFields').querySelectorAll('input').forEach(function(x){x.disabled=completed});if(completed){$('eventFormHint').textContent='This draw is completed. Historical ticket rules, schedule, winners and prizes are locked. You can safely edit the title, slug, description and cover photo.';$('eventFormHint').className='form-hint warn'}}
 function resetEventDisabled(){setFieldDisabled(['fPrice','fLimit','fMaxPlayers','fMaxTotalTickets','fWhiteCount','fWhiteMax','fBonusEnabled','fBonusMax','fScheduleMode','fOpen','fCutoff','fDraw','fStatus','fWinnerCount'],false);$('winnerPrizeFields').querySelectorAll('input').forEach(function(x){x.disabled=false})}
 function syncBonusField(){if(!$('fBonusEnabled').disabled)$('fBonusMax').disabled=!$('fBonusEnabled').checked}
@@ -214,12 +214,12 @@ function renderPrizeFields(values){
 }
 function syncPrizeTotal(){var total=Array.from($('winnerPrizeFields').querySelectorAll('input')).reduce(function(a,x){return a+Number(x.value||0)},0);$('prizeTotal').textContent='Total: '+credits(total)}
 function openCreate(){
-  S.editing=null;S.editingCompleted=false;resetEventDisabled();var d=defaults();$('eventModalKicker').textContent='CREATE EVENT';$('eventModalTitle').textContent='New public event';$('saveEventBtn').textContent='Create event';
+  S.editing=null;S.editingCompleted=false;resetEventDisabled();var d=defaults();$('eventModalKicker').textContent='CREATE LOTTERY';$('eventModalTitle').textContent='New public lottery';$('saveEventBtn').textContent='Create lottery';
   $('fTitle').value='';$('fSlug').value='';delete $('fSlug').dataset.touched;$('fDescription').value='';$('fPrice').value=10;$('fLimit').value=5;$('fMaxPlayers').value='';$('fMaxTotalTickets').value='';$('fWhiteCount').value=5;$('fWhiteMax').value=69;$('fBonusEnabled').checked=true;$('fBonusMax').value=26;$('fScheduleMode').value='scheduled';$('fOpen').value=localInput(d.open);$('fCutoff').value=localInput(d.cut);$('fDraw').value=localInput(d.draw);$('fStatus').value='draft';$('fWinnerCount').value=1;
   setLockedFields(false);syncBonusField();syncSchedule();renderPrizeFields([1000]);$('eventDialog').showModal()
 }
 function openEdit(e){
-  S.editing=e;S.editingCompleted=e.status==='completed';resetEventDisabled();$('eventModalKicker').textContent=e.status==='completed'?'EDIT COMPLETED EVENT':'EDIT EVENT';$('eventModalTitle').textContent=e.title;$('saveEventBtn').textContent='Save changes';
+  S.editing=e;S.editingCompleted=e.status==='completed';resetEventDisabled();$('eventModalKicker').textContent=e.status==='completed'?'EDIT COMPLETED LOTTERY':'EDIT LOTTERY';$('eventModalTitle').textContent=e.title;$('saveEventBtn').textContent='Save changes';
   $('fTitle').value=e.title||'';$('fSlug').value=e.slug||'';$('fSlug').dataset.touched='1';$('fDescription').value=e.description||'';$('fPrice').value=Number(e.ticket_price);$('fLimit').value=e.max_tickets_per_user;$('fMaxPlayers').value=e.max_players==null?'':e.max_players;$('fMaxTotalTickets').value=e.max_total_tickets==null?'':e.max_total_tickets;$('fWhiteCount').value=e.white_ball_count;$('fWhiteMax').value=e.white_ball_max;$('fBonusEnabled').checked=!!e.bonus_ball_enabled;$('fBonusMax').value=e.bonus_ball_max;$('fScheduleMode').value=e.schedule_mode||'scheduled';$('fOpen').value=localInput(e.opens_at);$('fCutoff').value=localInput(e.cutoff_at);$('fDraw').value=localInput(e.draw_at);$('fStatus').value=e.status;$('fWinnerCount').value=e.winner_count||prizesFor(e.id).length||1;
   renderPrizeFields(prizesFor(e.id));setLockedFields(ticketCount(e.id)>0);syncBonusField();syncSchedule();if(S.editingCompleted)setCompletedFields(true);$('eventDialog').showModal()
 }
@@ -239,7 +239,7 @@ function formArgs(){
   }
 }
 function saveEvent(ev){
-  ev.preventDefault();var p,label=S.editing?'Event updated':'Event created';
+  ev.preventDefault();var p,label=S.editing?'Lottery updated':'Lottery created';
   if(S.editingCompleted){p=rpc('admin_update_completed_event_metadata',{p_event_id:S.editing.id,p_title:$('fTitle').value.trim(),p_slug:$('fSlug').value.trim()||slugify($('fTitle').value),p_description:$('fDescription').value.trim()})}
   else{var a;try{a=formArgs()}catch(e){note(e.message,true);return}if(S.editing){a.p_event_id=S.editing.id;a.p_status=$('fStatus').value;p=rpc('admin_update_lottery_event_v3',a)}else{a.p_publish=$('fStatus').value==='published';p=rpc('admin_create_lottery_event_v3',a)}}
   $('saveEventBtn').disabled=true;
@@ -251,12 +251,12 @@ function statusArgs(e,status){return{
   p_white_ball_count:e.white_ball_count,p_white_ball_max:e.white_ball_max,p_bonus_ball_enabled:e.bonus_ball_enabled,p_bonus_ball_max:e.bonus_ball_max,
   p_schedule_mode:e.schedule_mode||'scheduled',p_opens_at:e.opens_at,p_cutoff_at:e.cutoff_at,p_draw_at:e.draw_at,p_winner_prizes:prizesFor(e.id),p_status:status
 }}
-function changeStatus(e,status){var msg=status==='cancelled'?'Cancel this event? Existing tickets remain recorded.':'Publish this event to the public site?';if(!confirm(msg))return;rpc('admin_update_lottery_event_v3',statusArgs(e,status)).then(function(){note('Event '+status);return load()}).catch(function(x){note(x.message,true)})}
-function deleteEvent(e){if(!confirm('Permanently delete this event? This is only allowed when it has no tickets.'))return;rpc('admin_delete_lottery_event',{p_event_id:e.id}).then(function(){note('Event deleted');return load()}).catch(function(x){note(x.message,true)})}
+function changeStatus(e,status){var msg=status==='cancelled'?'Cancel this lottery? Existing tickets remain recorded.':'Publish this lottery to the public site?';if(!confirm(msg))return;rpc('admin_update_lottery_event_v3',statusArgs(e,status)).then(function(){note('Lottery '+status);return load()}).catch(function(x){note(x.message,true)})}
+function deleteEvent(e){if(!confirm('Permanently delete this lottery? This is only allowed when it has no tickets.'))return;rpc('admin_delete_lottery_event',{p_event_id:e.id}).then(function(){note('Lottery deleted');return load()}).catch(function(x){note(x.message,true)})}
 function runEvent(e){
-  var tc=ticketCount(e.id),wc=Number(e.winner_count||1);if(tc<wc){note('This event needs at least '+wc+' tickets before drawing '+wc+' winners.',true);return}
-  if(!confirm('Run the secure ticket-pool draw now? Winners will be selected only from this event’s '+tc+' existing tickets.'))return;
-  rpc('admin_run_lottery_event',{p_event_id:e.id}).then(function(){note('Event draw completed');return load()}).catch(function(x){note(x.message,true)})
+  var tc=ticketCount(e.id),wc=Number(e.winner_count||1);if(tc<wc){note('This lottery needs at least '+wc+' tickets before drawing '+wc+' winners.',true);return}
+  if(!confirm('Run the secure ticket-pool draw now? Winners will be selected only from this lottery’s '+tc+' existing tickets.'))return;
+  rpc('admin_run_lottery_event',{p_event_id:e.id}).then(function(){note('Lottery draw completed');return load()}).catch(function(x){note(x.message,true)})
 }
 
 function openBalance(p){S.balanceUser=p;$('balanceTitle').textContent=p.display_name||'Player';$('balanceEmail').textContent=(p.email||'')+' · Current '+credits(p.balance);$('balanceInput').value=Number(p.balance||0);$('balanceNote').value='';$('balanceDialog').showModal()}

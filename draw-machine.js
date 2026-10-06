@@ -107,7 +107,7 @@ export class EventDrawMachine {
             </div>
             <div class="gm-display"><div class="gm-display-label">Result rail</div><div class="gm-result-rail" aria-live="polite"></div></div>
             <div class="gm-declare" hidden><span>WINNER CONFIRMED</span><strong></strong></div>
-            <div class="gm-board-message">The chambers stay active while this event is available.</div>
+            <div class="gm-board-message">The chambers stay active while this lottery is available.</div>
             <div class="gm-actions"><button type="button" class="gm-replay" hidden>Replay full ranked draw</button></div>
           </div>
         </div>
@@ -165,7 +165,7 @@ export class EventDrawMachine {
           else this.showFinal(winners);
         }else{
           this.setStatus('complete','Completed');
-          this.message.textContent = 'The event is completed. No displayable ranked winner result was stored.';
+          this.message.textContent = 'The lottery is completed. No displayable ranked winner result was stored.';
           this.emit('complete',{winners:[]});
         }
       }
@@ -265,7 +265,7 @@ export class EventDrawMachine {
       this.setStatus('complete','Cancelled');
       this.countdown.textContent = 'CANCELLED';
       this.livePill.textContent = 'Machine idle';
-      this.message.textContent = 'This event was cancelled.';
+      this.message.textContent = 'This lottery was cancelled.';
       return;
     }
     if(this.event.schedule_mode === 'manual'){
@@ -294,7 +294,7 @@ export class EventDrawMachine {
       this.setStatus('open','Draw scheduled');
       this.countdown.textContent = drawAt ? moneyTime(drawAt-now) : '—';
       if(cutoffAt) this.message.textContent = `Continuous chamber mixing is active. Ticket cutoff is ${new Date(cutoffAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}.`;
-      else this.message.textContent = 'Continuous chamber mixing is active while the event remains open.';
+      else this.message.textContent = 'Continuous chamber mixing is active while the lottery remains open.';
     }
   }
 

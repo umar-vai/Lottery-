@@ -26,16 +26,16 @@ function statusFor(e){
 function bucket(e){const s=statusFor(e);if(s==='OPEN')return'open';if(s==='COMPLETED')return'completed';return'upcoming'}
 function card(e){
   const st=statusFor(e),a=document.createElement('a');
-  a.className='event-card';a.href=`event.html?e=${encodeURIComponent(e.slug)}`;
+  a.className='event-card';a.href=`lottery.html?e=${encodeURIComponent(e.slug)}`;
   const drawLabel=st==='LIVE DRAW'?'Winner reveal live':e.schedule_mode==='manual'?'Admin draw / ম্যানুয়াল':fmt(e.draw_at);
-  const cover=e.cover_image_url?`<img src="${esc(e.cover_image_url)}" alt="${esc(e.title)} cover" loading="lazy">`:'<div class="event-cover-placeholder"><span>GAME ZONE</span></div>';
-  a.innerHTML=`<div class="event-cover">${cover}<div class="event-cover-shade"></div><div class="event-card-top"><span class="event-status ${st.toLowerCase().replace(/\s/g,'-')}">${st}</span><span class="event-arrow">↗</span></div></div><div class="event-card-body"><h3>${esc(e.title)}</h3><p>${esc(e.description||'ইভেন্টের নিয়ম, ticket এবং result বিস্তারিত দেখুন।')}</p><div class="event-metrics"><div><span>মোট পুরস্কার</span><strong>${credits(e.prize_amount)}</strong></div><div><span>Winner</span><strong>${Number(e.winner_count||1)}</strong></div><div><span>Ticket</span><strong>${credits(e.ticket_price)}</strong></div><div><span>Draw</span><strong>${esc(drawLabel)}</strong></div></div></div>`;
+  const cover=e.cover_image_url?`<img src="${esc(e.cover_image_url)}" alt="${esc(e.title)} cover" loading="lazy">`:'<div class="event-cover-placeholder"><span>LOOTERA.WIN</span></div>';
+  a.innerHTML=`<div class="event-cover">${cover}<div class="event-cover-shade"></div><div class="event-card-top"><span class="event-status ${st.toLowerCase().replace(/\s/g,'-')}">${st}</span><span class="event-arrow">↗</span></div></div><div class="event-card-body"><h3>${esc(e.title)}</h3><p>${esc(e.description||'লটারির নিয়ম, ticket এবং result বিস্তারিত দেখুন।')}</p><div class="event-metrics"><div><span>মোট পুরস্কার</span><strong>${credits(e.prize_amount)}</strong></div><div><span>Winner</span><strong>${Number(e.winner_count||1)}</strong></div><div><span>Ticket</span><strong>${credits(e.ticket_price)}</strong></div><div><span>Draw</span><strong>${esc(drawLabel)}</strong></div></div></div>`;
   return a
 }
 function copyFor(type){
-  if(type==='completed')return['COMPLETED EVENTS','শেষ হওয়া ড্র ও রেজাল্ট','Completed event খুলে winner, rank এবং winning ticket result দেখতে পারবেন।'];
-  if(type==='upcoming')return['UPCOMING / LOCKED','পরবর্তী ও লক হওয়া ইভেন্ট','Upcoming event আগে থেকে দেখুন। Locked, awaiting draw এবং live reveal event-ও এই category-তে থাকবে।'];
-  return['OPEN EVENTS','এখন যেগুলোতে অংশ নিতে পারেন','Open event-এ এখনই virtual Draw Credit ব্যবহার করে ticket নেওয়া যায়।']
+  if(type==='completed')return['COMPLETED LOTTERIES','শেষ হওয়া ড্র ও রেজাল্ট','Completed lottery খুলে winner, rank এবং winning ticket result দেখতে পারবেন।'];
+  if(type==='upcoming')return['UPCOMING / LOCKED','পরবর্তী ও লক হওয়া লটারি','Upcoming lottery আগে থেকে দেখুন। Locked, awaiting draw এবং live reveal lottery-ও এই category-তে থাকবে।'];
+  return['OPEN LOTTERIES','এখন যেগুলোতে অংশ নিতে পারেন','Open lottery-তে এখনই virtual Draw Credit ব্যবহার করে ticket নেওয়া যায়।']
 }
 function render(){
   const visible=events.filter(e=>e.status!=='draft'&&e.status!=='cancelled');
@@ -43,15 +43,15 @@ function render(){
   $('openEventCount').textContent=counts.open;$('upcomingEventCount').textContent=counts.upcoming;$('completedEventCount').textContent=counts.completed;
   document.querySelectorAll('[data-event-category]').forEach(b=>{const on=b.dataset.eventCategory===category;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false')});
   const [k,t,c]=copyFor(category);$('eventsCategoryKicker').textContent=k;$('eventsCategoryTitle').textContent=t;$('eventsCategoryCopy').textContent=c;
-  const rows=visible.filter(e=>bucket(e)===category),grid=$('eventsPageGrid');$('eventsVisibleCount').textContent=`${rows.length} event${rows.length===1?'':'s'}`;grid.replaceChildren();
-  if(!rows.length){const empty=document.createElement('div');empty.className='events-empty';empty.textContent=category==='open'?'এই মুহূর্তে কোনো Open event নেই।':category==='completed'?'এখনও কোনো completed event নেই।':'এই মুহূর্তে কোনো Upcoming / Locked event নেই।';grid.appendChild(empty);return}
+  const rows=visible.filter(e=>bucket(e)===category),grid=$('eventsPageGrid');$('eventsVisibleCount').textContent=`${rows.length} lotter${rows.length===1?'y':'ies'}`;grid.replaceChildren();
+  if(!rows.length){const empty=document.createElement('div');empty.className='events-empty';empty.textContent=category==='open'?'এই মুহূর্তে কোনো Open lottery নেই।':category==='completed'?'এখনও কোনো completed lottery নেই।':'এই মুহূর্তে কোনো Upcoming / Locked lottery নেই।';grid.appendChild(empty);return}
   rows.forEach(e=>grid.appendChild(card(e)))
 }
-function selectCategory(next){if(next===category)return;category=next;history.replaceState(null,'',`events.html?view=${encodeURIComponent(category)}`);const grid=$('eventsPageGrid');grid.classList.add('is-switching');setTimeout(()=>{render();grid.classList.remove('is-switching')},90)}
+function selectCategory(next){if(next===category)return;category=next;history.replaceState(null,'',`lotteries.html?view=${encodeURIComponent(category)}`);const grid=$('eventsPageGrid');grid.classList.add('is-switching');setTimeout(()=>{render();grid.classList.remove('is-switching')},90)}
 async function load(){
-  if(!supabase){$('eventsPageGrid').innerHTML='<div class="events-empty">Events backend is not configured.</div>';return}
+  if(!supabase){$('eventsPageGrid').innerHTML='<div class="events-empty">Lottery backend is not configured.</div>';return}
   const {data,error}=await supabase.from('lottery_events').select('id,slug,title,description,status,ticket_price,prize_amount,max_tickets_per_user,opens_at,cutoff_at,draw_at,schedule_mode,winner_count,cover_image_url,created_at,completed_at').order('created_at',{ascending:false}).limit(250);
-  if(error){$('eventsPageGrid').innerHTML='<div class="events-empty">ইভেন্টগুলো এখন লোড করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।</div>';return}
+  if(error){$('eventsPageGrid').innerHTML='<div class="events-empty">লটারিগুলো এখন লোড করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।</div>';return}
   events=data||[];render()
 }
 document.querySelectorAll('[data-event-category]').forEach(b=>b.addEventListener('click',()=>selectCategory(b.dataset.eventCategory)));

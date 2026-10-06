@@ -38,7 +38,7 @@ function statusLabel(e){var s=statusView(e);return s==='awaiting'?'AWAITING DRAW
 function pmap(){var m={};S.profiles.forEach(function(p){m[p.id]=p});return m}
 function emap(){var m={};S.events.forEach(function(e){m[e.id]=e});return m}
 function ticketsFor(id){return S.tickets.filter(function(t){return t.event_id===id})}
-function eventStat(id){return S.eventStats&&S.eventStats[id]||{}}
+function eventStat(id){var e=eventById(id);if(e&&(e.ticket_count!=null||e.player_count!=null))return{ticket_count:Number(e.ticket_count||0),player_count:Number(e.player_count||0),winner_count:Number(e.winner_count||0)};return S.eventStats&&S.eventStats[id]||{}}
 function ticketCount(id){return Number(eventStat(id).ticket_count||0)}
 function playerCount(id){return Number(eventStat(id).player_count||0)}
 function eventById(id){if(S.focusEvent&&S.focusEvent.id===id)return S.focusEvent;return S.events.find(function(e){return e.id===id})||null}
@@ -315,7 +315,7 @@ function renderLedger(){
   if(!rows.length){root.innerHTML='<div class="record-card"><strong>No balance movements yet</strong></div>';return}
   rows.forEach(function(x){var p=pm[x.user_id]||{},e=em[x.event_id]||{},r=document.createElement('div');r.className='record-card';var amount=Number(x.amount||0);r.innerHTML='<div class="record-main"><div class="record-title"><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span class="status-pill">'+esc(String(x.entry_type||'entry').replace(/_/g,' ').toUpperCase())+'</span></div><div class="record-meta"><span class="ledger-amount '+(amount>=0?'plus':'minus')+'">'+(amount>=0?'+':'')+credits(amount)+'</span><span>Balance '+credits(x.balance_after)+'</span>'+(e.title?'<span>'+esc(e.title)+'</span>':'')+(x.note?'<span>'+esc(x.note)+'</span>':'')+'<span>'+esc(fmt(x.created_at))+'</span></div></div>';root.appendChild(r)})
 }
-function renderTimeline(root,rows){root.innerHTML='';var pm=pmap();if(!rows.length){root.innerHTML='<div class="overview-empty">No activity yet.</div>';return}rows.forEach(function(a){var el=document.createElement('div');el.className='timeline-item';el.innerHTML='<i class="timeline-dot"></i><div><strong>'+esc(String(a.action||'activity').replace(/_/g,' '))+'</strong><small>'+esc((pm[a.actor_user_id]||{}).display_name||'System')+(a.entity_type?' · '+a.entity_type:'')+'</small></div><time>'+esc(fmt(a.created_at))+'</time>';root.appendChild(el)})}
+function renderTimeline(root,rows){root.innerHTML='';var pm=pmap();if(!rows.length){root.innerHTML='<div class="overview-empty">No activity yet.</div>';return}rows.forEach(function(a){var el=document.createElement('div');el.className='timeline-item';el.innerHTML='<i class="timeline-dot"></i><div><strong>'+esc(String(a.action||'activity').replace(/_/g,' '))+'</strong><small>'+esc(a.actor_name||(pm[a.actor_user_id]||{}).display_name||'System')+(a.entity_type?' · '+a.entity_type:'')+'</small></div><time>'+esc(fmt(a.created_at))+'</time>';root.appendChild(el)})}
 function renderAudit(){renderTimeline($('auditList'),S.audit)}
 
 function defaults(){var n=Date.now();return{open:new Date(n+5*60000),cut:new Date(n+65*60000),draw:new Date(n+70*60000)}}

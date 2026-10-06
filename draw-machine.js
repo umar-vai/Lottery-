@@ -65,6 +65,212 @@ function stateFor(event, now = Date.now()){
   return 'open';
 }
 
+
+class ChamberPhysics {
+  constructor(chamber,{bonus=false,reduced=false}={}){
+    this.chamber=chamber;
+    this.bonus=bonus;
+    this.reduced=reduced;
+    this.balls=[];
+    this.raf=0;
+    this.last=0;
+    this.visible=true;
+    this.chamberRadius=0;
+    this.ballRadius=14;
+    this.seed=bonus?7.31:3.17;
+    this.resizeObserver=null;
+    this.intersectionObserver=null;
+    this.installObservers();
+    if(!this.reduced) this.raf=requestAnimationFrame(t=>this.loop(t));
+  }
+
+  installObservers(){
+    if('ResizeObserver' in window){
+      this.resizeObserver=new ResizeObserver(()=>this.updateGeometry(false));
+      this.resizeObserver.observe(this.chamber);
+    }
+    if('IntersectionObserver' in window){
+      this.intersectionObserver=new IntersectionObserver(entries=>{
+        this.visible=!!(entries[0]&&entries[0].isIntersecting);
+      },{threshold:.01});
+      this.intersectionObserver.observe(this.chamber);
+    }
+  }
+
+  setBalls(elements){
+    this.balls=Array.from(elements||[]).map((el,i)=>({
+      el,
+      x:0,y:0,
+      vx:0,vy:0,
+      angle:(i*.61)%6.283,
+      angular:(i%2?-1:1)*(1.3+(i%5)*.18),
+      id:i
+    }));
+    this.updateGeometry(true);
+    if(this.reduced) this.render();
+  }
+
+  updateGeometry(reset=false){
+    const size=Math.max(1,Math.min(this.chamber.clientWidth||0,this.chamber.clientHeight||0));
+    if(size<2)return;
+    const sample=this.balls[0]?.el;
+    const ballSize=sample?Math.max(18,sample.getBoundingClientRect().width||28):28;
+    const nextBallR=ballSize/2;
+    const nextChamberR=size/2;
+    const previous=this.chamberRadius;
+    this.ballRadius=nextBallR;
+    this.chamberRadius=nextChamberR;
+    if(reset||!previous){
+      this.seedPositions();
+    }else{
+      const scale=nextChamberR/previous;
+      this.balls.forEach(b=>{b.x*=scale;b.y*=scale;b.vx*=Math.sqrt(scale);b.vy*=Math.sqrt(scale)});
+      this.constrainAll();
+    }
+    this.render();
+  }
+
+  seedPositions(){
+    const n=this.balls.length;
+    if(!n)return;
+    const usable=Math.max(8,this.chamberRadius-this.ballRadius-7);
+    const golden=2.399963229728653;
+    this.balls.forEach((b,i)=>{
+      const f=Math.sqrt((i+.72)/(n+.9));
+      const a=i*golden+this.seed;
+      b.x=Math.cos(a)*usable*f*.86;
+      b.y=Math.sin(a)*usable*f*.86;
+      const tangentX=-Math.sin(a),tangentY=Math.cos(a);
+      const launch=(24+(i%7)*3.2)*(this.bonus?.92:1);
+      b.vx=tangentX*launch+(Math.sin(i*4.31)*7);
+      b.vy=tangentY*launch+(Math.cos(i*3.17)*7)-5;
+      b.angle=(i*.83)%6.283;
+      b.angular=(i%2?-1:1)*(1.4+(i%6)*.21);
+    });
+    for(let k=0;k<5;k++)this.resolveCollisions(.016,true);
+    this.constrainAll();
+  }
+
+  loop(now){
+    if(!this.reduced&&!document.hidden&&this.visible&&this.balls.length){
+      const dt=Math.min(.032,Math.max(.008,(now-(this.last||now-16.7))/1000));
+      this.step(dt,now/1000);
+      this.render();
+    }
+    this.last=now;
+    this.raf=requestAnimationFrame(t=>this.loop(t));
+  }
+
+  step(dt,t){
+    const drawing=!!this.chamber.closest('.gm-stage')?.classList.contains('is-drawing');
+    const boost=drawing?1.38:1;
+    const maxR=Math.max(8,this.chamberRadius-this.ballRadius-5);
+    const maxSpeed=(this.chamberRadius<80?82:118)*boost;
+    const swirl=(this.bonus?74:82)*boost;
+    const turbulence=(this.bonus?34:40)*boost;
+    const lift=(this.bonus?9:12)*boost;
+
+    for(const b of this.balls){
+      const r=Math.hypot(b.x,b.y)||1;
+      const nx=b.x/r,ny=b.y/r;
+      const tx=-ny,ty=nx;
+      const phase=t*(1.65+(b.id%5)*.06)+b.id*1.731+this.seed;
+      const pulse=.68+.32*Math.sin(t*.88+b.id*.53);
+      const inward=Math.max(0,r/maxR-.48)*26;
+      const ax=tx*swirl*pulse + Math.sin(phase*1.37)*turbulence - nx*inward;
+      const ay=ty*swirl*pulse + Math.cos(phase*1.11)*turbulence - ny*inward - lift + Math.sin(t*2.2+b.id)*8*boost;
+      b.vx+=ax*dt;
+      b.vy+=ay*dt;
+      const drag=Math.exp(-.34*dt);
+      b.vx*=drag;b.vy*=drag;
+      const speed=Math.hypot(b.vx,b.vy);
+      if(speed>maxSpeed){const s=maxSpeed/speed;b.vx*=s;b.vy*=s}
+      b.x+=b.vx*dt;b.y+=b.vy*dt;
+      b.angle+=b.angular*dt;
+      b.angular*=Math.exp(-.18*dt);
+    }
+
+    this.resolveCollisions(dt,false);
+    this.constrainAll();
+  }
+
+  resolveCollisions(dt,quiet=false){
+    const balls=this.balls;
+    const minDist=this.ballRadius*2*.94;
+    const minDist2=minDist*minDist;
+    const restitution=.91;
+    for(let i=0;i<balls.length;i++){
+      const a=balls[i];
+      for(let j=i+1;j<balls.length;j++){
+        const b=balls[j];
+        let dx=b.x-a.x,dy=b.y-a.y;
+        let d2=dx*dx+dy*dy;
+        if(d2>=minDist2)continue;
+        if(d2<.0001){dx=.01*(j+1);dy=.01*(i+1);d2=dx*dx+dy*dy}
+        const d=Math.sqrt(d2),nx=dx/d,ny=dy/d;
+        const overlap=minDist-d;
+        const correction=overlap*.51;
+        a.x-=nx*correction;a.y-=ny*correction;
+        b.x+=nx*correction;b.y+=ny*correction;
+
+        if(quiet)continue;
+        const rvx=b.vx-a.vx,rvy=b.vy-a.vy;
+        const rel=rvx*nx+rvy*ny;
+        if(rel<0){
+          const impulse=-(1+restitution)*rel*.5;
+          a.vx-=impulse*nx;a.vy-=impulse*ny;
+          b.vx+=impulse*nx;b.vy+=impulse*ny;
+          const tx=-ny,ty=nx;
+          const tangent=rvx*tx+rvy*ty;
+          a.angular-=tangent*.018;
+          b.angular+=tangent*.018;
+          const hit=Math.min(1,Math.abs(rel)/80);
+          if(hit>.26){
+            a.el.style.setProperty('--impact',hit.toFixed(2));
+            b.el.style.setProperty('--impact',hit.toFixed(2));
+            clearTimeout(a.impactTimer);clearTimeout(b.impactTimer);
+            a.impactTimer=setTimeout(()=>a.el.style.setProperty('--impact','0'),90);
+            b.impactTimer=setTimeout(()=>b.el.style.setProperty('--impact','0'),90);
+          }
+        }
+      }
+    }
+  }
+
+  constrainAll(){
+    const limit=Math.max(6,this.chamberRadius-this.ballRadius-5);
+    const restitution=.88;
+    this.balls.forEach(b=>{
+      const d=Math.hypot(b.x,b.y)||1;
+      if(d<=limit)return;
+      const nx=b.x/d,ny=b.y/d;
+      b.x=nx*limit;b.y=ny*limit;
+      const outward=b.vx*nx+b.vy*ny;
+      if(outward>0){
+        b.vx-=(1+restitution)*outward*nx;
+        b.vy-=(1+restitution)*outward*ny;
+        const tangent=b.vx*(-ny)+b.vy*nx;
+        b.angular+=tangent*.026;
+      }
+    });
+  }
+
+  render(){
+    this.balls.forEach(b=>{
+      b.el.style.transform=`translate3d(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px,0)`;
+      b.el.style.setProperty('--spin',`${b.angle.toFixed(3)}rad`);
+    });
+  }
+
+  destroy(){
+    cancelAnimationFrame(this.raf);
+    this.resizeObserver?.disconnect();
+    this.intersectionObserver?.disconnect();
+    this.balls.forEach(b=>clearTimeout(b.impactTimer));
+    this.balls=[];
+  }
+}
+
 export class EventDrawMachine {
   constructor(mount){
     this.mount = mount;
@@ -79,7 +285,11 @@ export class EventDrawMachine {
     this.revealedRanks = new Set();
     this.sequence = [];
     this.activeRank = null;
+    this.mainPhysics = null;
+    this.bonusPhysics = null;
     this.build();
+    this.mainPhysics = new ChamberPhysics(this.mainChamber,{bonus:false,reduced:this.reduced});
+    this.bonusPhysics = new ChamberPhysics(this.bonusChamber,{bonus:true,reduced:this.reduced});
     this.tickTimer = window.setInterval(()=>this.tick(), 1000);
   }
 
@@ -94,7 +304,7 @@ export class EventDrawMachine {
         <div class="gm-flash"></div>
         <div class="gm-live-pill">Machine online</div>
         <div class="gm-machine main">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div></div></div>
           <div class="gm-machine-label">Main ball chamber</div>
         </div>
         <div class="gm-center">
@@ -112,7 +322,7 @@ export class EventDrawMachine {
           </div>
         </div>
         <div class="gm-machine bonus">
-          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div></div></div>
+          <div class="gm-chamber-wrap"><div class="gm-neck"></div><div class="gm-base"></div><div class="gm-chamber"><div class="gm-air-ring"></div><div class="gm-glass-caustic"></div><div class="gm-glass-sheen"></div><div class="gm-glass-glint"></div></div></div>
           <div class="gm-machine-label">Special ball chamber</div>
         </div>
       </div>`;
@@ -178,15 +388,19 @@ export class EventDrawMachine {
     if(!this.event) return;
     this.mainChamber.querySelectorAll('.gm-ball').forEach(x=>x.remove());
     this.bonusChamber.querySelectorAll('.gm-ball').forEach(x=>x.remove());
-    const mainVisible = clamp(Math.round(Number(this.event.white_ball_max || 30) * .42), 14, 30);
-    const bonusVisible = clamp(Math.round(Number(this.event.bonus_ball_max || 20) * .55), 10, 20);
+    const compact = window.matchMedia?.('(max-width:430px)').matches;
+    const mainVisible = clamp(Math.round(Number(this.event.white_ball_max || 30) * .42), 14, compact ? 22 : 30);
+    const bonusVisible = clamp(Math.round(Number(this.event.bonus_ball_max || 20) * .55), 9, compact ? 12 : 20);
     this.addPool(this.mainChamber, mainVisible, Number(this.event.white_ball_max || 69), false);
+    this.mainPhysics?.setBalls(this.mainChamber.querySelectorAll('.gm-ball'));
     if(this.event.bonus_ball_enabled){
       this.bonusMachine.classList.remove('offline');
       this.addPool(this.bonusChamber, bonusVisible, Number(this.event.bonus_ball_max || 26), true);
+      this.bonusPhysics?.setBalls(this.bonusChamber.querySelectorAll('.gm-ball'));
       this.bonusMachine.querySelector('.gm-machine-label').textContent = 'Special ball chamber';
     }else{
       this.bonusMachine.classList.add('offline');
+      this.bonusPhysics?.setBalls([]);
       this.bonusMachine.querySelector('.gm-machine-label').textContent = 'Special ball disabled';
     }
   }
@@ -197,18 +411,11 @@ export class EventDrawMachine {
       let n = 1 + Math.floor((i * max) / count);
       while(used.has(n) && n < max) n++;
       used.add(n);
-      const ball = create('span','gm-ball',pad2(n));
-      const spread = bonus ? 72 : 82;
-      ball.style.setProperty('--x0',`${motionPoint(i+1.1,spread)}px`);
-      ball.style.setProperty('--y0',`${motionPoint(i+2.7,spread)}px`);
-      ball.style.setProperty('--x1',`${motionPoint(i+4.3,spread)}px`);
-      ball.style.setProperty('--y1',`${motionPoint(i+6.1,spread)}px`);
-      ball.style.setProperty('--x2',`${motionPoint(i+8.2,spread)}px`);
-      ball.style.setProperty('--y2',`${motionPoint(i+10.4,spread)}px`);
-      ball.style.setProperty('--x3',`${motionPoint(i+12.5,spread)}px`);
-      ball.style.setProperty('--y3',`${motionPoint(i+14.7,spread)}px`);
-      ball.style.setProperty('--d',`${(7.2 + ((i * 17) % 35) / 10).toFixed(1)}s`);
-      ball.style.setProperty('--delay',`${(-((i * 29) % 80) / 10).toFixed(1)}s`);
+      const ball = create('span','gm-ball');
+      ball.dataset.number=String(n);
+      ball.setAttribute('aria-hidden','true');
+      const print=create('span','gm-ball-print',pad2(n));
+      ball.appendChild(print);
       chamber.appendChild(ball);
     }
   }
@@ -500,5 +707,7 @@ export class EventDrawMachine {
     this.destroyed = true;
     this.cancelScheduled();
     clearInterval(this.tickTimer);
+    this.mainPhysics?.destroy();
+    this.bonusPhysics?.destroy();
   }
 }

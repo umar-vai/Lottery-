@@ -100,7 +100,40 @@ begin
       from ranked
     ),'[]'::jsonb),
     'operational_health',private.lottery_operational_health_report(),
-    'credit_integrity',private.draw_credit_integrity_report()
+    'credit_integrity',coalesce((
+      select jsonb_build_object(
+        'mode','hourly_monitor',
+        'ok',(
+          m.last_status='succeeded'
+          and m.last_end>now()-interval '90 minutes'
+          and not m.failure_during_last_run
+        ),
+        'stale',(m.last_end is null or m.last_end<=now()-interval '90 minutes'),
+        'issue_total',case when m.failure_during_last_run then 1 else 0 end,
+        'checked_at',m.last_end,
+        'last_status',m.last_status
+      )
+      from (
+        select
+          d.start_time as last_start,
+          d.end_time as last_end,
+          d.status as last_status,
+          exists(
+            select 1
+            from public.audit_logs a
+            where a.action='draw_credit_integrity_failed'
+              and a.created_at>=d.start_time
+              and a.created_at<=coalesce(d.end_time,now())
+          ) as failure_during_last_run
+        from cron.job_run_details d
+        join cron.job j on j.jobid=d.jobid
+        where j.jobname='draw-credit-integrity-hourly'
+        order by d.start_time desc
+        limit 1
+      ) m
+    ),jsonb_build_object(
+      'mode','hourly_monitor','ok',false,'stale',true,'issue_total',0,'checked_at',null,'last_status','missing'
+    ))
   ) into v_result;
 
   return v_result;

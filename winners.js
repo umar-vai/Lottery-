@@ -18,6 +18,33 @@ function normalizeWinner(w){return{...w,winner_rank:Number(w.winner_rank||999),p
 
 const SAMPLE_NAMES=['Rafi H.','Sadia M.','Tanvir A.','Nabila R.','Mahin S.','Farhan K.','Tanzim N.','Raisa A.','Nafis R.','Maliha T.','Siam H.','Anika F.','Shafin M.','Tasnim J.','Arian S.','Mim R.','Zubair H.','Fariha N.','Adnan K.','Lamisa A.','Sakib R.','Nusrat S.','Rahat M.','Mehnaz T.'];
 
+const SAMPLE_LOTTERY_NAMES=[
+  'Friday Lucky Draw',
+  'Weekend Jackpot',
+  'Golden Chance',
+  'Midweek Mega Draw',
+  'Lucky 6 Pick',
+  'Prime Number Draw',
+  'Night Owl Lottery',
+  'Super Sunday Draw',
+  'Fortune Friday',
+  'Quick Pick Jackpot',
+  'Lucky Star Draw',
+  'Mega Number Rush',
+  'Dream Pick Lottery',
+  'Weekend Winner',
+  'Lucky Line Draw',
+  'Grand Prize Night',
+  'Pick & Win Special',
+  'Fortune Number Draw',
+  'Mega Weekend Pick',
+  'Lucky Night Draw',
+  'Jackpot Sprint',
+  'Golden Number Pick',
+  'Winner Circle Draw',
+  'Grand Finale Lottery'
+];
+
 function sampleNumbers(seed,count=5,max=49){
   const out=[];
   const start=((seed*17+11)%max)+1;
@@ -45,7 +72,7 @@ function buildSampleHistory(){
       });
     });
     return {
-      event:{title:'Lootera Weekly Draw #'+String(drawNo).padStart(2,'0'),completed_at:completedAt,prize_amount:8500},
+      event:{title:SAMPLE_LOTTERY_NAMES[i]||('Lootera Draw #'+String(drawNo).padStart(2,'0')),completed_at:completedAt,prize_amount:8500},
       winners
     };
   });

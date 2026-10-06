@@ -172,7 +172,7 @@ begin
   select count(*) into v_cron_failed
   from cron.job_run_details
   where start_time>now()-interval '24 hours'
-    and status<>'succeeded';
+    and status='failed';
 
   select count(*) into v_support_failed
   from public.support_claim_requests
@@ -359,3 +359,133 @@ revoke all on function public.admin_get_operations_incident_center() from public
 revoke all on function public.admin_get_admin_change_audit(integer) from public,anon;
 grant execute on function public.admin_get_operations_incident_center() to authenticated;
 grant execute on function public.admin_get_admin_change_audit(integer) to authenticated;
+
+
+-- Race-safe operational health: ignore the draw cron row while it is still
+-- running at the same second as the 5-minute health checker. Health is based
+-- on the most recent successful heartbeat and terminal failed rows only.
+create or replace function private.lottery_operational_health_report()
+returns jsonb
+language plpgsql
+security definer
+set search_path to 'pg_catalog','public','private','cron'
+as $function$
+declare
+  v_jobid bigint;
+  v_cron_active boolean:=false;
+  v_last_run timestamptz;
+  v_last_status text;
+  v_last_message text;
+  v_cron_failures_24h bigint:=0;
+  v_overdue bigint:=0;
+  v_open_failures bigint:=0;
+  v_recent_draws bigint:=0;
+  v_last_completed timestamptz;
+  v_incidents jsonb:='[]'::jsonb;
+  v_cron_ok boolean:=false;
+  v_ok boolean:=false;
+begin
+  select jobid,active
+    into v_jobid,v_cron_active
+  from cron.job
+  where jobname='lottery-events-every-minute'
+  limit 1;
+
+  if v_jobid is not null then
+    select start_time,status,return_message
+      into v_last_run,v_last_status,v_last_message
+    from cron.job_run_details
+    where jobid=v_jobid
+      and status='succeeded'
+    order by start_time desc
+    limit 1;
+
+    select count(*) into v_cron_failures_24h
+    from cron.job_run_details
+    where jobid=v_jobid
+      and start_time>now()-interval '24 hours'
+      and status='failed';
+  end if;
+
+  select count(*) into v_overdue
+  from public.lottery_events
+  where status='published'
+    and schedule_mode='scheduled'
+    and draw_at is not null
+    and draw_at<=now()-interval '2 minutes';
+
+  select count(*) into v_open_failures
+  from private.lottery_draw_runtime_state s
+  join public.lottery_events e on e.id=s.event_id
+  where e.status='published'
+    and s.consecutive_failures>0;
+
+  select count(*),max(completed_at)
+    into v_recent_draws,v_last_completed
+  from public.lottery_events
+  where status='completed'
+    and completed_at>now()-interval '24 hours';
+
+  select coalesce(jsonb_agg(to_jsonb(x)),'[]'::jsonb)
+    into v_incidents
+  from (
+    select
+      e.id as event_id,
+      e.slug,
+      e.title,
+      e.draw_at,
+      greatest(0,round(extract(epoch from (now()-e.draw_at))/60))::bigint as overdue_minutes,
+      coalesce(s.consecutive_failures,0) as consecutive_failures,
+      coalesce(s.total_failures,0) as total_failures,
+      s.first_failed_at,
+      s.last_failed_at,
+      s.last_error_state,
+      s.last_error
+    from public.lottery_events e
+    left join private.lottery_draw_runtime_state s on s.event_id=e.id
+    where e.status='published'
+      and (
+        s.consecutive_failures>0
+        or (
+          e.schedule_mode='scheduled'
+          and e.draw_at is not null
+          and e.draw_at<=now()-interval '2 minutes'
+        )
+      )
+    order by coalesce(s.last_failed_at,e.draw_at) desc
+    limit 20
+  ) x;
+
+  v_cron_ok :=
+    coalesce(v_cron_active,false)
+    and v_last_status='succeeded'
+    and v_last_run is not null
+    and v_last_run>=now()-interval '3 minutes';
+
+  v_ok:=v_cron_ok and v_cron_failures_24h=0 and v_overdue=0 and v_open_failures=0;
+
+  return jsonb_build_object(
+    'ok',v_ok,
+    'checked_at',clock_timestamp(),
+    'recovery_model','transaction rollback + automatic retry on the next minute',
+    'cron',jsonb_build_object(
+      'job_name','lottery-events-every-minute',
+      'active',coalesce(v_cron_active,false),
+      'healthy',v_cron_ok,
+      'last_run_at',v_last_run,
+      'last_status',v_last_status,
+      'last_message',v_last_message,
+      'failed_runs_24h',v_cron_failures_24h
+    ),
+    'draws',jsonb_build_object(
+      'overdue_scheduled',v_overdue,
+      'open_failure_incidents',v_open_failures,
+      'completed_24h',v_recent_draws,
+      'last_completed_at',v_last_completed
+    ),
+    'incidents',v_incidents
+  );
+end;
+$function$;
+
+revoke all on function private.lottery_operational_health_report() from public,anon,authenticated;

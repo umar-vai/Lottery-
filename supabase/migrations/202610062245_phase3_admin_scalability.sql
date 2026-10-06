@@ -149,7 +149,8 @@ begin
     exists(select 1 from numbered where rn=v_limit+1),
     (select created_at from visible order by created_at asc,id asc limit 1),
     (select id from visible order by created_at asc,id asc limit 1)
-  into v_rows,v_has_more,v_next_created_at,v_next_id;
+  into v_rows,v_has_more,v_next_created_at,v_next_id
+  from visible;
 
   return jsonb_build_object(
     'rows',v_rows,
@@ -229,7 +230,8 @@ begin
     exists(select 1 from numbered where rn=v_limit+1),
     (select created_at from visible order by created_at asc,id asc limit 1),
     (select id from visible order by created_at asc,id asc limit 1)
-  into v_rows,v_has_more,v_next_created_at,v_next_id;
+  into v_rows,v_has_more,v_next_created_at,v_next_id
+  from visible;
 
   return jsonb_build_object(
     'rows',v_rows,
@@ -314,7 +316,8 @@ begin
     exists(select 1 from numbered where rn=v_limit+1),
     (select created_at from visible order by created_at asc,id asc limit 1),
     (select id from visible order by created_at asc,id asc limit 1)
-  into v_rows,v_has_more,v_next_created_at,v_next_id;
+  into v_rows,v_has_more,v_next_created_at,v_next_id
+  from visible;
 
   return jsonb_build_object(
     'rows',v_rows,

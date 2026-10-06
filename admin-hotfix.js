@@ -40,16 +40,16 @@
       var gate = byId('authGate');
       var app = byId('adminApp');
       if(gate && !gate.hidden && (!app || app.hidden)){
-        setGate('The session check is taking too long. Tap Continue with Google to refresh your admin session.', true);
+        setGate('The session check is taking too long. Tap Login to refresh your admin session.', true);
       }
     }, 6500);
   });
 
   window.addEventListener('error', function(e){
-    setGate('Admin script error: ' + (e.message || 'unknown browser error') + '. Tap Continue with Google to retry.', true);
+    setGate('Admin script error: ' + (e.message || 'unknown browser error') + '. Tap Login to retry.', true);
   });
   window.addEventListener('unhandledrejection', function(e){
     var reason = e.reason && (e.reason.message || String(e.reason));
-    setGate('Admin startup failed: ' + (reason || 'network/session error') + '. Tap Continue with Google to retry.', true);
+    setGate('Admin startup failed: ' + (reason || 'network/session error') + '. Tap Login to retry.', true);
   });
 })();

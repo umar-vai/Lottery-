@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#07100c">
   <title>Winners Hall — Lootera.win</title>
   <link rel="stylesheet" href="site-shell.css?v=4">
-  <link rel="stylesheet" href="winners.css?v=1">
+  <link rel="stylesheet" href="winners.css?v=2">
 </head>
 <body>
   <div class="wh-ambient wh-a"></div><div class="wh-ambient wh-b"></div>
@@ -42,8 +42,13 @@
       <div class="wh-section-head archive-head"><div><span class="wh-kicker">FULL HISTORY</span><h2>Winner archive</h2></div><div class="wh-tools"><input id="winnerSearch" type="search" placeholder="Search lottery or winner…" autocomplete="off"><span id="archiveCount">0 lotteries</span></div></div>
       <div id="archiveGrid" class="wh-archive-grid"><div class="wh-loading">Loading winner history…</div></div>
     </section>
+
+    <section class="wh-archive wh-sample-archive" aria-label="Sample completed lottery history">
+      <div class="wh-section-head"><div><span class="wh-kicker">SAMPLE HISTORY</span><h2>Previous draw preview</h2><p class="wh-sample-note">Sample records showing how a populated winner history will look.</p></div><span class="wh-sample-count">24 samples</span></div>
+      <div id="sampleArchiveGrid" class="wh-archive-grid"></div>
+    </section>
   </main>
   <script src="site-shell.js?v=26"></script>
-  <script type="module" src="winners.js?v=2"></script>
+  <script type="module" src="winners.js?v=3"></script>
 </body>
 </html>

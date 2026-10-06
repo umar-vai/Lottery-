@@ -17,6 +17,8 @@ const adminAuditMigration='supabase/migrations/202610061930_phase2_admin_audit_i
 const adminAuditTest='supabase/tests/phase2_admin_audit_incidents.sql';
 const performanceRlsMigration='supabase/migrations/202610061945_phase2_performance_rls_cleanup.sql';
 const performanceRlsTest='supabase/tests/phase2_performance_rls_cleanup.sql';
+const publicPrivacyMigration='supabase/migrations/202610062000_phase2_public_api_privacy.sql';
+const publicPrivacyTest='supabase/tests/phase2_public_api_privacy.sql';
 
 if(!exists(migration)) fail('Missing Phase 2 draw reliability migration.');
 else {
@@ -139,6 +141,47 @@ else {
 
 if(!exists('PHASE-2-PERFORMANCE-RLS.md')) fail('Missing Phase 2 performance/RLS documentation.');
 
+if(!exists(publicPrivacyMigration)) fail('Missing Phase 2 public API privacy migration.');
+else {
+  const sql=read(publicPrivacyMigration);
+  for(const marker of [
+    'public_winner_key',
+    'public_ticket_ref',
+    'sanitize_lottery_winner_summary',
+    'winner_key text',
+    'ticket_ref text',
+    'revoke select on table public.lottery_events',
+    'public can read visible payment providers'
+  ]) if(!sql.includes(marker)) fail('Public privacy migration missing marker: '+marker);
+}
+
+if(!exists(publicPrivacyTest)) fail('Missing Phase 2 public API privacy runtime test.');
+else {
+  const sql=read(publicPrivacyTest);
+  for(const marker of [
+    'Browser roles can still read lottery_events.created_by',
+    'Public winner RPC still exposes internal identifiers',
+    'Stored winner_summary still contains raw internal IDs',
+    'Anon can see hidden/disabled payment providers'
+  ]) if(!sql.includes(marker)) fail('Public privacy test missing marker: '+marker);
+}
+
+if(!exists('PHASE-2-PUBLIC-API-PRIVACY.md')) fail('Missing public API privacy documentation.');
+
+if(exists('event.js')){
+  const js=read('event.js');
+  if(js.includes(".from('lottery_events').select('*')")) fail('Public event page still uses SELECT * on lottery_events.');
+  if(js.includes('ticket_id:w.ticket_id')||js.includes('user_id:w.user_id')) fail('Public event winner normalizer still consumes raw internal IDs.');
+  if(!js.includes('ticket_ref')||!js.includes('winner_key')) fail('Public event page does not consume privacy-safe winner references.');
+}
+
+if(exists('home-v2.js')){
+  const js=read('home-v2.js');
+  if(js.includes('r.user_id||r.display_name||r.ticket_id')) fail('Home winner grouping still uses raw IDs.');
+  if(!js.includes('r.winner_key||r.display_name||r.ticket_ref')) fail('Home winner grouping does not use pseudonymous references.');
+}
+
+
 
 
 
@@ -176,4 +219,4 @@ if(failures.length){
   failures.forEach((m,i)=>console.error((i+1)+'. '+m));
   process.exit(1);
 }
-console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, and Supabase performance/RLS cleanup are present.');
+console.log('PHASE 2 RELIABILITY CHECK PASSED — auth recovery, draw safety, reconciliation, recovery monitoring, canonical admin audit, Incident Center, performance/RLS cleanup, and public API privacy guards are present.');

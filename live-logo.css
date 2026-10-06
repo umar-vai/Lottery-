@@ -213,3 +213,19 @@
 @media(prefers-reduced-motion:reduce){
   .lootera-ball-canvas{transition:none}
 }
+
+
+/* Footer uses the exact same animated Lootera mark as the header. */
+.d01-footer-live-brand{
+  margin:0 0 10px;
+  width:max-content;
+}
+.d01-footer-live-brand.lootera-live-brand.d01-brand{
+  color:#f7fafc!important;
+}
+.d01-footer-live-brand::before{
+  opacity:.72;
+}
+@media(max-width:560px){
+  .d01-footer-live-brand{margin-bottom:9px}
+}

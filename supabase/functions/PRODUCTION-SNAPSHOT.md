@@ -9,9 +9,9 @@ This directory mirrors the Edge Functions deployed to Supabase project `Lottery 
 | `claim-support-points` | ACTIVE | 3 | enabled | `49d3b97b59841aabaa2a6f11863aa770f1930f85f9a2c1ea803a33312de639a8` | Current authenticated support claim |
 | `binance-pay-create-order` | ACTIVE | 1 | enabled | `48cbde4a7cc6ffd2ec63d94e0ae023e33acf5fb17ad3b73e6c87a181df4f586c` | Current Binance Pay order creation |
 | `binance-pay-webhook` | ACTIVE | 1 | disabled | `750bab5ade2f2947937fc2722173d055b1629fcb9ab9496f2305ab7fd0fd9a15` | External Binance webhook |
-| `phone-bridge` | ACTIVE | 2 | disabled | `69aa53871751026f9cdbdd7f088d36238ffb920ae958b84daabff87708e944a7` | Legacy/deprecated bridge |
-| `bridge-device-admin` | ACTIVE | 2 | enabled | `7f0d4a076c4299c97e4f027e2cb30676b3614b11fe5d9a21c0729742d762f685` | Legacy/deprecated bridge admin |
-| `claim-demo-credit` | ACTIVE | 3 | enabled | `8d4297f1f4003e60b0dd1d04cc619e45f05d40bf85a530f11134647ee4e5cd1d` | Decommissioned 410 stub |
+| `phone-bridge` | ACTIVE | 3 | disabled | `6c6908f36efdcbc56387a3783b0785e617fb95f184528eb4a62be9d53efe1b6c` | Decommissioned 410 stub |
+| `bridge-device-admin` | ACTIVE | 3 | enabled | `04fc5c92a1adcb5096fb1e5c08623ea7825978d785db9683d5b97fd1d25ae51b` | Decommissioned 410 stub |
+| `claim-demo-credit` | ACTIVE | 4 | enabled | `ddfc36b370e92e8c9add77ec105cb620ce6a482362cc646a93c12210e821737e` | Decommissioned 410 stub |
 
 ## Authentication notes
 

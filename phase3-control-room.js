@@ -57,7 +57,7 @@ function renderHealth(){
   var h=S.data.operational_health||{},c=S.data.credit_integrity||{},cron=h.cron||{},draws=h.draws||{};
   var html='';
   html+=healthCard('Draw worker',!!h.ok,h.ok?'HEALTHY':'ATTENTION',cron.last_status?('Last run '+String(cron.last_status).toLowerCase()):'No run status');
-  html+=healthCard('Draw Credit',!!c.ok,c.ok?'RECONCILED':'ISSUES',num(c.issue_total||0)+' integrity issue(s)');
+  html+=healthCard('Integrity monitor',c.stale?null:!!c.ok,c.stale?'STALE':(c.ok?'MONITOR CLEAR':'ATTENTION'),c.checked_at?('Hourly check '+fmt(c.checked_at)):'No completed hourly check');
   html+=healthCard('Overdue draws',Number(draws.overdue_scheduled||0)===0,numberText(draws.overdue_scheduled||0),Number(draws.open_failure_incidents||0)+' open failure incident(s)');
   html+=healthCard('Cron failures / 24h',Number(cron.failed_runs_24h||0)===0,numberText(cron.failed_runs_24h||0),cron.last_run_at?('Last '+fmt(cron.last_run_at)):'No recent run');
   $('controlRoomHealth').innerHTML=html;

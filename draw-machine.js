@@ -892,7 +892,8 @@ export class EventDrawMachine {
   mountUltraBall(node,number,bonus,{spin=false,angle=.35}={}){
     if(!node)return null;
     const sphere=create('span','gm-ultra-sphere');
-    const fallback=create('span',`gm-ultra-fallback${bonus?' bonus':''}`,pad2(number));
+    const fallback=create('span',`gm-ultra-fallback${bonus?' bonus':''}`);
+    fallback.dataset.number=pad2(number);
     sphere.appendChild(fallback);
     node.appendChild(sphere);
 

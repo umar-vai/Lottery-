@@ -51,6 +51,18 @@ begin
   if not has_function_privilege('authenticated','public.admin_get_draw_credit_integrity_report()','EXECUTE') then
     raise exception 'Authenticated role must be able to call admin integrity RPC before internal is_admin() authorization';
   end if;
+
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname in ('public','private')
+      and p.proname ilike '%support%'
+      and p.prosrc ilike '%profiles%'
+      and p.prosrc ilike '%balance%'
+  ) then
+    raise exception 'Support/Love Points function appears to write Draw Credit profile balances';
+  end if;
 end
 $phase2_reconcile$;
 

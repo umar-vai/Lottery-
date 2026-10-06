@@ -665,6 +665,7 @@ export class EventDrawMachine {
 
   prepareSlots(){
     if(!this.event) return;
+    this.rail.querySelectorAll('.gm-result-ball').forEach(node=>this.destroyUltraBall(node));
     this.rail.replaceChildren();
     const count = Number(this.event.white_ball_count || 5);
     for(let i=0;i<count;i++){
@@ -880,11 +881,53 @@ export class EventDrawMachine {
     this.playRankedSequence(winners,Date.now(),{replay:true});
   }
 
+  destroyUltraBall(node){
+    if(!node)return;
+    cancelAnimationFrame(node._gmSpinRaf||0);
+    node._gmRenderer?.destroy?.();
+    node._gmRenderer=null;
+    node._gmSpinRaf=0;
+  }
+
+  mountUltraBall(node,number,bonus,{spin=false,angle=.35}={}){
+    if(!node)return null;
+    const sphere=create('span','gm-ultra-sphere');
+    const fallback=create('span',`gm-ultra-fallback${bonus?' bonus':''}`);
+    fallback.dataset.number=pad2(number);
+    sphere.appendChild(fallback);
+    node.appendChild(sphere);
+
+    const renderer=new ChamberBallRenderer(sphere,{bonus});
+    node._gmRenderer=renderer;
+    const draw=(a)=>{
+      const rect=sphere.getBoundingClientRect();
+      const radius=Math.max(1,Math.min(rect.width,rect.height)*.5);
+      renderer.render([{x:0,y:0,angle:a,number:Number(number)||1}],radius);
+      if(renderer.ready) fallback.hidden=true;
+    };
+
+    if(spin && renderer.ready && !this.reduced){
+      const started=performance.now();
+      const loop=(now)=>{
+        if(!node.isConnected)return;
+        draw(angle+(now-started)*.0062);
+        node._gmSpinRaf=requestAnimationFrame(loop);
+      };
+      node._gmSpinRaf=requestAnimationFrame(loop);
+    }else{
+      requestAnimationFrame(()=>draw(angle));
+    }
+    return sphere;
+  }
+
   setFinalBall(key, number, bonus){
     const slot = this.rail.querySelector(`.gm-result-slot[data-index="${key}"]`);
     if(!slot) return;
-    slot.className = `gm-result-ball${bonus?' bonus':''}`;
-    slot.textContent = pad2(number);
+    this.destroyUltraBall(slot);
+    slot.replaceChildren();
+    slot.className = `gm-result-ball gm-ultra-ball${bonus?' bonus':''}`;
+    slot.setAttribute('aria-label',`${bonus?'Special ball':'Main ball'} ${number}`);
+    this.mountUltraBall(slot,number,bonus,{spin:false,angle:(Number(number)||1)*.173});
   }
 
   flyBall(key, number, bonus, duration){
@@ -894,25 +937,29 @@ export class EventDrawMachine {
     const stageRect = this.stage.getBoundingClientRect();
     const source = (bonus ? this.bonusChamber : this.mainChamber).getBoundingClientRect();
     const target = slot.getBoundingClientRect();
-    const ball = create('span',`gm-flight${bonus?' bonus':''}`,pad2(number));
-    const sx = source.left + source.width/2 - stageRect.left - 23;
-    const sy = source.top + source.height/2 - stageRect.top - 23;
-    const tx = target.left + target.width/2 - stageRect.left - 23;
-    const ty = target.top + target.height/2 - stageRect.top - 23;
+    const ball = create('span',`gm-flight gm-ultra-ball${bonus?' bonus':''}`);
+    ball.setAttribute('aria-hidden','true');
+    this.stage.appendChild(ball);
+    this.mountUltraBall(ball,number,bonus,{spin:true,angle:(Number(number)||1)*.137});
+    const ballRect=ball.getBoundingClientRect();
+    const half=Math.max(1,ballRect.width/2);
+    const sx = source.left + source.width/2 - stageRect.left - half;
+    const sy = source.top + source.height/2 - stageRect.top - half;
+    const tx = target.left + target.width/2 - stageRect.left - half;
+    const ty = target.top + target.height/2 - stageRect.top - half;
     ball.style.left = `${sx}px`;
     ball.style.top = `${sy}px`;
-    this.stage.appendChild(ball);
     const dx = tx-sx, dy = ty-sy;
     const arc = bonus ? -70 : -92;
     const animation = ball.animate([
-      { transform:'translate3d(0,0,0) rotate(0deg) scale(.72)', opacity:.18 },
-      { transform:`translate3d(${dx*.22}px,${dy*.22+arc*.78}px,0) rotate(190deg) scale(1.08)`, opacity:1, offset:.28 },
-      { transform:`translate3d(${dx*.58}px,${dy*.58+arc}px,0) rotate(520deg) scale(1.04)`, opacity:1, offset:.60 },
-      { transform:`translate3d(${dx*.84}px,${dy*.84-26}px,0) rotate(820deg) scale(1)`, opacity:1, offset:.84 },
-      { transform:`translate3d(${dx}px,${dy}px,0) rotate(1080deg) scale(1)`, opacity:1 }
+      { transform:'translate3d(0,0,0) scale(.72)', opacity:.18 },
+      { transform:`translate3d(${dx*.22}px,${dy*.22+arc*.78}px,0) scale(1.08)`, opacity:1, offset:.28 },
+      { transform:`translate3d(${dx*.58}px,${dy*.58+arc}px,0) scale(1.04)`, opacity:1, offset:.60 },
+      { transform:`translate3d(${dx*.84}px,${dy*.84-26}px,0) scale(1)`, opacity:1, offset:.84 },
+      { transform:`translate3d(${dx}px,${dy}px,0) scale(1)`, opacity:1 }
     ],{ duration, easing:'cubic-bezier(.12,.72,.2,1)', fill:'forwards' });
-    animation.onfinish=()=>{ ball.remove(); this.setFinalBall(key,number,bonus); };
-    animation.oncancel=()=>ball.remove();
+    animation.onfinish=()=>{ this.destroyUltraBall(ball); ball.remove(); this.setFinalBall(key,number,bonus); };
+    animation.oncancel=()=>{ this.destroyUltraBall(ball); ball.remove(); };
   }
 
   finishSequence(){
@@ -943,7 +990,7 @@ export class EventDrawMachine {
   cancelScheduled(){
     this.timeouts.forEach(id=>clearTimeout(id));
     this.timeouts=[];
-    this.stage?.querySelectorAll('.gm-flight').forEach(x=>x.remove());
+    this.stage?.querySelectorAll('.gm-flight').forEach(x=>{this.destroyUltraBall(x);x.remove()});
   }
 
   destroy(){

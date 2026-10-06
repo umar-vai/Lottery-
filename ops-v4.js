@@ -4,7 +4,7 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
+var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,adminChanges:null,editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -18,7 +18,8 @@ function session(){try{var x=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-to
 function ensureSession(force){if(window.Draw01Shell&&window.Draw01Shell.ensureSession)return window.Draw01Shell.ensureSession(!!force).then(function(s){S.session=s||null;return S.session});S.session=S.session||session();return Promise.resolve(S.session)}
 function req(path,opt,retried){opt=opt||{};return ensureSession(false).then(function(){var h=Object.assign({},opt.headers||{});h.apikey=KEY;if(S.session)h.Authorization='Bearer '+S.session.access_token;if(opt.body)h['Content-Type']='application/json';return fetch(BASE+path,Object.assign({},opt,{headers:h})).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=t}if(!r.ok){var er=new Error((d&&d.message)||(d&&d.error_description)||(d&&d.error)||('HTTP '+r.status));er.status=r.status;throw er}return d})})}).catch(function(e){if(!retried&&(e.status===401||e.status===403))return ensureSession(true).then(function(s){if(!s)throw e;return req(path,opt,true)});throw e})}
 function rest(path,opt){return req('/rest/v1/'+path,opt)}
-function rpc(name,args){return rest('rpc/'+name,{method:'POST',body:JSON.stringify(args||{})})}
+function rpc(name,args,reason){var h={};if(reason)h['x-admin-reason']=String(reason).slice(0,500);return rest('rpc/'+name,{method:'POST',headers:h,body:JSON.stringify(args||{})})}
+function requireReason(message,suggested){var v=prompt(message,suggested||'');if(v===null)return null;v=String(v).trim();if(!v){note('A reason is required for this admin action.',true);return null}return v.slice(0,500)}
 function safe(p,fallback){return p.catch(function(e){console.warn(e);return fallback})}
 function note(m,e){var t=$('toast');if(!t)return;t.textContent=m;t.className=e?'err':'';t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none'},4200)}
 function capacity(v){return v==null?'Unlimited':Number(v).toLocaleString()}
@@ -77,14 +78,16 @@ function load(){
     safe(rest('balance_ledger?select=*&order=created_at.desc&limit=2000'),[]),
     safe(rest('audit_logs?select=*&order=created_at.desc&limit=500'),[]),
     safe(rpc('admin_get_draw_credit_integrity_report',{}),null),
-    safe(rpc('admin_get_lottery_operational_health',{}),null)
+    safe(rpc('admin_get_lottery_operational_health',{}),null),
+    safe(rpc('admin_get_operations_incident_center',{}),null),
+    safe(rpc('admin_get_admin_change_audit',{p_limit:150}),null)
   ]).then(function(x){
-    S.events=x[0]||[];S.tickets=x[1]||[];S.tiers=x[2]||[];S.profiles=x[3]||[];S.ledger=x[4]||[];S.audit=x[5]||[];S.integrity=x[6]||null;S.opsHealth=x[7]||null;
+    S.events=x[0]||[];S.tickets=x[1]||[];S.tiers=x[2]||[];S.profiles=x[3]||[];S.ledger=x[4]||[];S.audit=x[5]||[];S.integrity=x[6]||null;S.opsHealth=x[7]||null;S.incidents=x[8]||null;S.adminChanges=x[9]||null;
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
 
-function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderAdminChanges();renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit();startCountdown()}
 function renderStats(){
   var open=S.events.filter(function(e){return statusView(e)==='open'}).length;
   var totalCredits=S.profiles.reduce(function(a,p){return a+Number(p.balance||0)},0);
@@ -187,8 +190,47 @@ function refreshOperationalHealth(){
 }
 function retryDueDraws(){
   if(!confirm('Retry all scheduled draws that are currently due? Each draw remains transaction-safe and failed attempts roll back.'))return;
+  var reason=requireReason('Why are you manually retrying due draws?','Manual recovery retry');
+  if(reason===null)return;
   var b=$('retryDueDraws');if(b)b.disabled=true;
-  rpc('admin_retry_due_lottery_events',{}).then(function(r){S.opsHealth=r;renderOperationalHealth();note(r&&r.ok?'Due draws retried; operations are healthy':'Retry completed; some draw incidents still need attention',!(r&&r.ok));return load()}).catch(function(e){note('Retry failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+  rpc('admin_retry_due_lottery_events',{},reason).then(function(r){S.opsHealth=r;renderOperationalHealth();note(r&&r.ok?'Due draws retried; operations are healthy':'Retry completed; some draw incidents still need attention',!(r&&r.ok));return load()}).catch(function(e){note('Retry failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+}
+function renderIncidents(){
+  var r=S.incidents,st=$('incidentStatus'),sum=$('incidentSummary'),list=$('incidentList');
+  if(!st||!sum||!list)return;
+  if(!r){st.textContent='UNAVAILABLE';st.className='status-pill cancelled';sum.innerHTML='';list.innerHTML='<div class="record-card"><strong>Incident Center could not be loaded.</strong></div>';return}
+  var c=r.counts||{},rows=Array.isArray(r.recent_incidents)?r.recent_incidents:[],ok=!!r.ok;
+  st.textContent=ok?'HEALTHY':'ATTENTION';st.className='status-pill '+(ok?'completed':'cancelled');
+  sum.innerHTML=[
+    info('Open issues',String(Number(r.open_issue_count||0))),
+    info('Cron failures · 24h',String(Number(c.cron_failures_24h||0))),
+    info('Support failures · 24h',String(Number(c.support_failures_24h||0))),
+    info('Payment failures · 24h',String(Number(c.payment_failures_24h||0))),
+    info('Credit failures · 24h',String(Number(c.credit_request_failures_24h||0))),
+    info('Auth audit events · 24h',String(Number(c.auth_audit_events_24h||0))),
+    info('Checked',fmt(r.checked_at))
+  ].join('');
+  if(!rows.length){list.innerHTML='<div class="record-card"><strong>No application/database incidents in the last 24 hours.</strong></div>';return}
+  list.innerHTML=rows.map(function(x){return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>'+esc(x.title||'Incident')+'</strong><span class="status-pill '+(x.severity==='critical'?'cancelled':'locked')+'">'+esc(String(x.severity||'warning').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(x.category||'system')+'</span><span>'+esc(x.detail||'')+'</span><span>'+esc(fmt(x.created_at))+'</span></div></div></div>'}).join('')
+}
+function renderAdminChanges(){
+  var r=S.adminChanges||{},rows=Array.isArray(r.rows)?r.rows:[],root=$('adminChangeList'),summary=$('adminChangeSummary');
+  if(!root||!summary)return;
+  summary.textContent=Number(r.count_24h||0)+' changes in last 24h';
+  if(!rows.length){root.innerHTML='<div class="record-card"><strong>No canonical admin changes recorded yet.</strong></div>';return}
+  root.innerHTML=rows.map(function(x){
+    var actor=x.actor_name||x.actor_email||'Admin';
+    var before=x.old_data?JSON.stringify(x.old_data):'—',after=x.new_data?JSON.stringify(x.new_data):'—';
+    return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>'+esc(String(x.action||'admin change').replace(/_/g,' '))+'</strong><span class="status-pill">'+esc(x.table_name||'record')+'</span></div><div class="record-meta"><span>'+esc(actor)+'</span><span>Reason: '+esc(x.reason||'Not supplied')+'</span><span>Row '+esc(x.row_id||'—')+'</span><span>'+esc(fmt(x.created_at))+'</span></div><details><summary>Before / after</summary><div class="record-meta"><span>Before: '+esc(before)+'</span><span>After: '+esc(after)+'</span></div></details></div></div>'
+  }).join('')
+}
+function refreshIncidents(){
+  var b=$('refreshIncidents');if(b)b.disabled=true;
+  return rpc('admin_get_operations_incident_center',{}).then(function(r){S.incidents=r;renderIncidents();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+}
+function refreshAdminChanges(){
+  var b=$('refreshAdminChanges');if(b)b.disabled=true;
+  return rpc('admin_get_admin_change_audit',{p_limit:150}).then(function(r){S.adminChanges=r;renderAdminChanges()}).catch(function(e){note('Admin audit refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
 }
 
 function canRun(e){if(e.status!=='published')return false;if(ticketCount(e.id)<Number(e.winner_count||1))return false;if(e.schedule_mode==='manual')return true;return !e.cutoff_at||Date.now()>=new Date(e.cutoff_at).getTime()}
@@ -256,7 +298,7 @@ function renderPlayers(){
     main.innerHTML='<div class="record-title"><strong>'+esc(p.display_name||'Player')+'</strong><span class="status-pill">'+esc((p.role||'player').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(p.email||'')+'</span><span class="credit-balance">'+credits(p.balance)+'</span><span>Joined '+esc(fmt(p.created_at))+'</span></div>';
     var a=document.createElement('div');a.className='record-actions';a.appendChild(button('Set balance','primary',function(){openBalance(p)}));
     var role=document.createElement('select');role.className='role-select';role.innerHTML='<option value="player">Player</option><option value="admin">Admin</option>';role.value=p.role;role.disabled=S.user&&p.id===S.user.id;
-    role.onchange=function(){rpc('admin_set_user_role',{p_user_id:p.id,p_role:role.value}).then(function(){note('Role updated');return load()}).catch(function(e){note(e.message,true)})};
+    role.onchange=function(){var previous=p.role;var reason=requireReason('Why are you changing this user role?','Role change for '+(p.display_name||p.email||'user'));if(reason===null){role.value=previous;return}rpc('admin_set_user_role',{p_user_id:p.id,p_role:role.value},reason).then(function(){note('Role updated');return load()}).catch(function(e){role.value=previous;note(e.message,true)})};
     a.appendChild(role);row.appendChild(main);row.appendChild(a);root.appendChild(row)
   })
 }
@@ -309,9 +351,13 @@ function formArgs(){
   }
 }
 function saveEvent(ev){
-  ev.preventDefault();var p,label=S.editing?'Lottery updated':'Lottery created';
-  if(S.editingCompleted){p=rpc('admin_update_completed_event_metadata',{p_event_id:S.editing.id,p_title:$('fTitle').value.trim(),p_slug:$('fSlug').value.trim()||slugify($('fTitle').value),p_description:$('fDescription').value.trim()})}
-  else{var a;try{a=formArgs()}catch(e){note(e.message,true);return}if(S.editing){a.p_event_id=S.editing.id;a.p_status=$('fStatus').value;p=rpc('admin_update_lottery_event_v3',a)}else{a.p_publish=$('fStatus').value==='published';p=rpc('admin_create_lottery_event_v3',a)}}
+  ev.preventDefault();var p,label=S.editing?'Lottery updated':'Lottery created',reason;
+  if(S.editing){
+    reason=requireReason('Why are you changing this lottery?',S.editingCompleted?'Completed lottery metadata correction':'Lottery configuration update');
+    if(reason===null)return
+  }else reason='Created lottery: '+($('fTitle').value.trim()||'Untitled lottery');
+  if(S.editingCompleted){p=rpc('admin_update_completed_event_metadata',{p_event_id:S.editing.id,p_title:$('fTitle').value.trim(),p_slug:$('fSlug').value.trim()||slugify($('fTitle').value),p_description:$('fDescription').value.trim()},reason)}
+  else{var a;try{a=formArgs()}catch(e){note(e.message,true);return}if(S.editing){a.p_event_id=S.editing.id;a.p_status=$('fStatus').value;p=rpc('admin_update_lottery_event_v3',a,reason)}else{a.p_publish=$('fStatus').value==='published';p=rpc('admin_create_lottery_event_v3',a,reason)}}
   $('saveEventBtn').disabled=true;
   p.then(function(){$('eventDialog').close();note(label);S.editing=null;S.editingCompleted=false;return load()}).catch(function(e){note(e.message,true)}).finally(function(){$('saveEventBtn').disabled=false})
 }
@@ -321,23 +367,24 @@ function statusArgs(e,status){return{
   p_white_ball_count:e.white_ball_count,p_white_ball_max:e.white_ball_max,p_bonus_ball_enabled:e.bonus_ball_enabled,p_bonus_ball_max:e.bonus_ball_max,
   p_schedule_mode:e.schedule_mode||'scheduled',p_opens_at:e.opens_at,p_cutoff_at:e.cutoff_at,p_draw_at:e.draw_at,p_winner_prizes:prizesFor(e.id),p_status:status
 }}
-function changeStatus(e,status){var msg=status==='cancelled'?'Cancel this lottery? Existing tickets remain recorded.':'Publish this lottery to the public site?';if(!confirm(msg))return;rpc('admin_update_lottery_event_v3',statusArgs(e,status)).then(function(){note('Lottery '+status);return load()}).catch(function(x){note(x.message,true)})}
-function deleteEvent(e){if(!confirm('Permanently delete this lottery? This is only allowed when it has no tickets.'))return;rpc('admin_delete_lottery_event',{p_event_id:e.id}).then(function(){note('Lottery deleted');return load()}).catch(function(x){note(x.message,true)})}
+function changeStatus(e,status){var msg=status==='cancelled'?'Cancel this lottery? Existing tickets remain recorded.':'Publish this lottery to the public site?';if(!confirm(msg))return;var reason=requireReason('Why are you '+(status==='cancelled'?'cancelling':'publishing')+' this lottery?',status==='cancelled'?'Lottery cancelled by admin':'Lottery approved for publication');if(reason===null)return;rpc('admin_update_lottery_event_v3',statusArgs(e,status),reason).then(function(){note('Lottery '+status);return load()}).catch(function(x){note(x.message,true)})}
+function deleteEvent(e){if(!confirm('Permanently delete this lottery? This is only allowed when it has no tickets.'))return;var reason=requireReason('Why are you permanently deleting this lottery?','Unused lottery cleanup');if(reason===null)return;rpc('admin_delete_lottery_event',{p_event_id:e.id},reason).then(function(){note('Lottery deleted');return load()}).catch(function(x){note(x.message,true)})}
 function runEvent(e){
   var tc=ticketCount(e.id),wc=Number(e.winner_count||1);if(tc<wc){note('This lottery needs at least '+wc+' tickets before drawing '+wc+' winners.',true);return}
   if(!confirm('Run the secure ticket-pool draw now? Winners will be selected only from this lottery’s '+tc+' existing tickets.'))return;
-  rpc('admin_run_lottery_event',{p_event_id:e.id}).then(function(){note('Lottery draw completed');return load()}).catch(function(x){note(x.message,true)})
+  var reason=requireReason('Why are you manually running this draw?','Manual draw execution');if(reason===null)return;
+  rpc('admin_run_lottery_event',{p_event_id:e.id},reason).then(function(){note('Lottery draw completed');return load()}).catch(function(x){note(x.message,true)})
 }
 
 function openBalance(p){S.balanceUser=p;$('balanceTitle').textContent=p.display_name||'Player';$('balanceEmail').textContent=(p.email||'')+' · Current '+credits(p.balance);$('balanceInput').value=Number(p.balance||0);$('balanceNote').value='';$('balanceDialog').showModal()}
-function saveBalance(ev){ev.preventDefault();if(!S.balanceUser)return;var amount=Number($('balanceInput').value);if(!Number.isFinite(amount)||amount<0){note('Balance must be zero or greater',true);return}rpc('admin_set_user_balance',{p_user_id:S.balanceUser.id,p_balance:amount,p_note:$('balanceNote').value.trim()||'Admin balance adjustment'}).then(function(){$('balanceDialog').close();note('Balance updated');return load()}).catch(function(e){note(e.message,true)})}
+function saveBalance(ev){ev.preventDefault();if(!S.balanceUser)return;var amount=Number($('balanceInput').value),reason=$('balanceNote').value.trim();if(!Number.isFinite(amount)||amount<0){note('Balance must be zero or greater',true);return}if(!reason){note('Admin reason is required.',true);return}rpc('admin_set_user_balance',{p_user_id:S.balanceUser.id,p_balance:amount,p_note:reason},reason).then(function(){$('balanceDialog').close();note('Balance updated');return load()}).catch(function(e){note(e.message,true)})}
 
 function activateTab(buttonEl){var target=$(buttonEl.dataset.tab);if(!target)return;document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});buttonEl.classList.add('active');target.classList.add('active');if(buttonEl.dataset.tab==='support'){if(window.Draw01SupportAdmin)window.Draw01SupportAdmin.refresh();if(window.Draw01SupportWalletAdmin)window.Draw01SupportWalletAdmin.refresh()}}
 function bind(){
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){activateTab(b)}});
   $('retryBtn').onclick=boot;
   if($('topCreate'))$('topCreate').onclick=openCreate;
-  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('refreshTickets').onclick=load;$('refreshWinners').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;
+  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('refreshTickets').onclick=load;$('refreshWinners').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;if($('refreshAdminChanges'))$('refreshAdminChanges').onclick=refreshAdminChanges;
   $('eventStatusFilter').onchange=renderEvents;$('ticketEventFilter').onchange=renderTickets;$('ticketSearch').oninput=function(){S.ticketQuery=normalize(this.value);renderTickets()};$('playerSearch').oninput=function(){S.playerQuery=normalize(this.value);renderPlayers()};$('ledgerUserFilter').onchange=renderLedger;
   $('closeEventModal').onclick=$('cancelEventModal').onclick=function(){$('eventDialog').close()};$('eventForm').onsubmit=saveEvent;
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};

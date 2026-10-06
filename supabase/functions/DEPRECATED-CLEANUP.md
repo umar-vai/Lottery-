@@ -33,3 +33,24 @@ All three deprecated endpoints already return HTTP `410 Gone` in production.
 This is intentionally safer than silently leaving historical behavior available. The current connector does not expose an Edge Function delete action, so physical deletion was not attempted from ChatGPT.
 
 The sources remain in Git while the deployed 410 stubs exist so source control matches production. They may be physically deleted later through Supabase Dashboard/CLI after an additional no-traffic observation window.
+
+
+## Second retirement observation — 2026-10-06
+
+A second 24-hour function-edge log check was completed before Phase 2 closeout.
+
+Observed current endpoint traffic:
+
+- `support-device-admin`: 317 requests
+- `claim-support-points`: 2 requests
+- `support-phone-bridge`: 1 request
+
+Observed deprecated endpoint traffic:
+
+- `phone-bridge`: **0**
+- `bridge-device-admin`: **0**
+- `claim-demo-credit`: **0**
+
+Repository caller search again found no active caller for the deprecated names. They are retirement-ready.
+
+Physical deletion is still pending because the connected Supabase tool surface exposes list/get/deploy but not Edge Function deletion. Until a deletion-capable Supabase surface is available, all three production endpoints remain inert `410 Gone` stubs and source control must keep the matching stub code.

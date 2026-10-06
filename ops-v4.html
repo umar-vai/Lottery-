@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="platform-controls-admin.css?v=2">
   <link rel="stylesheet" href="admin-canonical-v8.css?v=1">
   <link rel="stylesheet" href="admin-canonical-v9.css?v=1">
+  <link rel="stylesheet" href="phase3-control-room.css?v=1">
   <script src="support-center.js?v=8" data-d01-support-center="1" defer></script>
 </head>
 <body>
@@ -40,6 +41,7 @@
 
       <nav class="tabs glass canonical-admin-tabs" aria-label="Admin sections">
         <button data-tab="overview" class="active">Overview</button>
+        <button data-tab="control-room">Control Room</button>
         <button data-tab="events">Lotteries</button>
         <button data-tab="tickets">Tickets</button>
         <button data-tab="winners">Winners</button>
@@ -56,6 +58,34 @@
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">SYSTEM INTEGRITY</span><h2>Credit reconciliation</h2><p>Draw Credits are checked against the immutable ledger, ticket purchases, prizes, Slots and Plinko.</p></div><span id="integrityStatus" class="status-pill">CHECKING</span></div><div id="integrityInfo" class="info-grid"></div><div class="section-label">Automatic check runs hourly</div><div class="action-grid"><button id="refreshIntegrity" class="btn ghost compact" type="button">Check now</button></div></article>
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">DRAW OPERATIONS</span><h2>Recovery & cron health</h2><p>Monitors the automatic draw worker, overdue scheduled draws and recoverable draw incidents.</p></div><span id="opsHealthStatus" class="status-pill">CHECKING</span></div><div id="opsHealthInfo" class="info-grid"></div><div class="section-label" id="opsHealthHint">Automatic health check runs every 5 minutes</div><div class="action-grid"><button id="refreshOpsHealth" class="btn ghost compact" type="button">Check now</button><button id="retryDueDraws" class="btn primary compact" type="button">Retry due draws</button></div></article>
       </div></section>
+
+      <section id="control-room" class="tab">
+        <div class="control-room-shell">
+          <section class="control-room-head glass">
+            <div>
+              <span class="eyebrow"><span class="cr-live-dot"></span>LIVE OPERATIONS</span>
+              <h2>Draw Control Room</h2>
+              <p>One operational view for draw readiness, countdowns, ticket/player capacity, winner progress, recovery state and Draw Credit integrity.</p>
+            </div>
+            <div class="control-room-actions">
+              <span id="controlRoomOpsState" class="status-pill">CHECKING</span>
+              <button id="controlRoomRefresh" class="btn ghost compact" type="button">Refresh live state</button>
+              <button id="controlRoomRetryDue" class="btn warn compact" type="button" disabled>Retry due draws</button>
+            </div>
+          </section>
+
+          <section id="controlRoomHealth" class="cr-health-row"></section>
+          <section id="controlRoomSummary" class="cr-summary-grid"></section>
+
+          <section class="panel glass">
+            <div class="panel-head">
+              <div><span class="eyebrow">EVENT COMMAND BOARD</span><h2>Live lifecycle & draw readiness</h2><p>Database-clock state with server-authoritative ticket/player counts and recovery status.</p></div>
+              <span id="controlRoomStamp" class="muted-pill">Not loaded</span>
+            </div>
+            <div id="controlRoomEvents" class="cr-event-list" style="margin-top:14px"><div class="cr-empty">Loading Control Room…</div></div>
+          </section>
+        </div>
+      </section>
 
       <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">LOTTERY MANAGEMENT</span><h2>Lotteries</h2><p>Each lottery stays as a visual record card. Click a card to edit the lottery; ticket records are kept separately in Tickets.</p></div><button id="createEventBtn" class="btn primary">+ Create lottery</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 lotteries</span></div><div id="eventList" class="admin-event-record-grid"></div></article></section>
 
@@ -115,6 +145,7 @@
   <script src="support-live.js?v=8" defer></script>
   <script src="ops-v4.js?v=8" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
+  <script src="phase3-control-room.js?v=1" defer></script>
   <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>
   <script src="platform-controls-admin.js?v=4" defer></script>

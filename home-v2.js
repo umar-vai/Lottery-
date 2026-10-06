@@ -73,8 +73,8 @@ function renderEvents(){
 function aggregateWinners(rows){
   const map=new Map();
   rows.forEach(r=>{
-    const key=r.user_id||r.display_name||r.ticket_id;
-    const cur=map.get(key)||{user_id:r.user_id,display_name:r.display_name||'Winner',avatar_url:r.avatar_url||'',total:0,wins:0,bestRank:999,event_title:r.event_title||''};
+    const key=r.winner_key||r.display_name||r.ticket_ref;
+    const cur=map.get(key)||{winner_key:r.winner_key,display_name:r.display_name||'Winner',avatar_url:r.avatar_url||'',total:0,wins:0,bestRank:999,event_title:r.event_title||''};
     cur.total+=Number(r.prize_awarded||0);cur.wins+=1;cur.bestRank=Math.min(cur.bestRank,Number(r.winner_rank||999));if(!cur.event_title&&r.event_title)cur.event_title=r.event_title;map.set(key,cur)
   });
   return [...map.values()].sort((a,b)=>b.total-a.total||a.bestRank-b.bestRank)

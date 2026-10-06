@@ -19,7 +19,7 @@ if (BACKEND_READY) {
     <div class="event-cover-preview" id="eventCoverPreview"><span>No cover selected</span></div>
     <div class="event-cover-tools">
       <div><span class="eyebrow">EVENT COVER</span><h3>Cover photo</h3></div>
-      <p>Upload a JPG, PNG or WebP image up to 5 MB. It will appear on the homepage event card and behind the event hero title.</p>
+      <p>Upload a JPG, PNG or WebP image up to 5 MB. It will appear on the homepage lottery card and behind the lottery hero title.</p>
       <input id="eventCoverFile" type="file" accept="image/jpeg,image/png,image/webp">
       <div class="event-cover-actions"><button type="button" class="btn ghost compact" id="removeEventCover">Remove cover</button></div>
       <div class="event-cover-status" id="eventCoverStatus"></div>
@@ -45,7 +45,7 @@ if (BACKEND_READY) {
     }
     const img = document.createElement('img');
     img.src = url;
-    img.alt = 'Event cover preview';
+    img.alt = 'Lottery cover preview';
     preview.appendChild(img);
   }
   async function loadExisting() {
@@ -78,7 +78,7 @@ if (BACKEND_READY) {
     if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     previewObjectUrl = URL.createObjectURL(file);
     setPreview(previewObjectUrl);
-    setStatus('Cover uploaded. Save the event to apply it.', 'ok');
+    setStatus('Cover uploaded. Save the lottery to apply it.', 'ok');
   }
   async function applyPendingCover() {
     if (pendingUrl === null) return;
@@ -87,7 +87,7 @@ if (BACKEND_READY) {
     setStatus('Applying cover…');
     await new Promise(r => setTimeout(r, 220));
     const { data:event, error:findError } = await supabase.from('lottery_events').select('id').eq('slug', slug).maybeSingle();
-    if (findError || !event) { setStatus(findError?.message || 'Event saved, but cover could not be linked.', 'err'); return; }
+    if (findError || !event) { setStatus(findError?.message || 'Lottery saved, but cover could not be linked.', 'err'); return; }
     const { error } = await supabase.rpc('admin_set_event_cover', {p_event_id:event.id,p_cover_image_url:pendingUrl});
     if (error) { setStatus(error.message, 'err'); return; }
     existingUrl = pendingUrl || '';
@@ -95,7 +95,7 @@ if (BACKEND_READY) {
   }
 
   fileInput.addEventListener('change', () => uploadCover(fileInput.files?.[0]));
-  removeBtn.addEventListener('click', () => { pendingUrl=''; setPreview(''); setStatus('Cover will be removed when you save the event.'); });
+  removeBtn.addEventListener('click', () => { pendingUrl=''; setPreview(''); setStatus('Cover will be removed when you save the lottery.'); });
   form.addEventListener('submit', () => { saveRequested = true; }, true);
   document.getElementById('cancelEventModal')?.addEventListener('click', () => { saveRequested=false; });
   document.getElementById('closeEventModal')?.addEventListener('click', () => { saveRequested=false; });

@@ -42,7 +42,7 @@ function install(){
     $('supportTxSearch').oninput=function(){clearTimeout(S.timer);S.timer=setTimeout(function(){loadTransactions(true)},300)}
   }
   if(window.LovePointsBrand)window.LovePointsBrand.apply(section);
-  load(true)
+  if(section.classList.contains('active'))load(true)
 }
 function loadSummary(){
   return rpc('admin_get_support_operations_summary',{}).then(function(d){S.summary=d||{};if($('supportSummaryReceived'))$('supportSummaryReceived').textContent=money(S.summary.support_received);if($('supportSummaryPoints'))$('supportSummaryPoints').textContent=num(S.summary.love_points)+' LP';if($('supportSummaryCredits'))$('supportSummaryCredits').textContent=num(S.summary.draw_credits)+' cr';if($('supportSummaryPhones'))$('supportSummaryPhones').textContent=String(Number(S.summary.enabled_phones||0));return d})

@@ -88,3 +88,14 @@ Every browser-callable function:
 - performs reads only.
 
 No ticket, Draw Credit, game, winner, or Support Point write path is changed.
+
+
+## Love Points player-row compatibility
+
+The previous canonical Players enhancer called `support-device-admin { action: 'list' }` and downloaded up to 2,000 profiles plus 2,000 Support Point wallets, then repeated that bulk request every 10 seconds.
+
+That polling path is removed from the Players tab.
+
+The paginated player RPC already returns the current Support Point balance for each visible row. The canonical enhancer reads that row-local value and keeps the existing `adjust_support` mutation for explicit admin edits. `adjust_support` safely upserts a missing wallet and continues to write the canonical Support Point adjustment audit.
+
+This keeps Draw Credits and Support Points separate while removing a second hidden bulk preload.

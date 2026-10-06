@@ -211,7 +211,10 @@ const liveEdgeFunctions = [
   'support-device-admin',
   'claim-support-points',
   'binance-pay-create-order',
-  'binance-pay-webhook',
+  'binance-pay-webhook'
+];
+
+const deprecatedEdgeStubs = [
   'phone-bridge',
   'bridge-device-admin',
   'claim-demo-credit'
@@ -220,6 +223,14 @@ const liveEdgeFunctions = [
 for (const slug of liveEdgeFunctions) {
   const entry = 'supabase/functions/' + slug + '/index.ts';
   if (!exists(entry)) fail('Missing source-controlled production Edge Function: ' + entry);
+}
+
+for (const slug of deprecatedEdgeStubs) {
+  const entry = 'supabase/functions/' + slug + '/index.ts';
+  if (!exists(entry)) { fail('Missing source-controlled deprecated Edge Function stub: ' + entry); continue; }
+  const source = read(entry);
+  if (!/status\s*:\s*410/.test(source)) fail('Deprecated Edge Function must remain a 410 Gone stub until physical deletion: ' + slug);
+  if (!/decommissioned/i.test(source)) fail('Deprecated Edge Function stub must state it is decommissioned: ' + slug);
 }
 
 if (!exists('supabase/functions/PRODUCTION-SNAPSHOT.md')) {

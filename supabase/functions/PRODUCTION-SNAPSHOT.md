@@ -18,8 +18,8 @@ This directory mirrors the Edge Functions deployed to Supabase project `Lottery 
 - `support-phone-bridge` intentionally disables Supabase JWT verification because it authenticates devices with its own `x-bridge-token`.
 - `binance-pay-webhook` intentionally disables Supabase JWT verification because an external provider webhook cannot carry a Supabase user JWT; provider authenticity must be validated inside the function.
 - Current user/admin functions use Supabase JWT verification.
-- Legacy `phone-bridge` is retained only for compatibility/deprecation tracking.
-- `claim-demo-credit` is decommissioned and can be deleted from Supabase after confirming no callers remain.
+- `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit` are decommissioned 410 stubs.
+- Two caller/log observation passes found no active callers and zero recent traffic for all three. They are ready for physical deletion once a deletion-capable Supabase surface is available.
 
 ## Source-control rule
 

@@ -298,3 +298,10 @@
 @media(prefers-reduced-motion:reduce){
   .gm-glass-sheen{animation:none!important;opacity:.20}
 }
+
+.gm-ball.gm-impact{animation:gmImpactFlash .12s ease-out!important}
+@keyframes gmImpactFlash{
+  0%{filter:brightness(1.22) saturate(1.06)}
+  100%{filter:brightness(1) saturate(1)}
+}
+@media(prefers-reduced-motion:reduce){.gm-ball.gm-impact{animation:none!important}}

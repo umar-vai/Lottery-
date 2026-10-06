@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="phase3-lifecycle.css?v=1">
   <link rel="stylesheet" href="phase3-investigation.css?v=1">
   <link rel="stylesheet" href="phase3-scalability.css?v=1">
+  <link rel="stylesheet" href="phase3-remaining-scalability.css?v=1">
   <script src="support-center.js?v=8" data-d01-support-center="1" defer></script>
 </head>
 <body>
@@ -91,7 +92,7 @@
         </div>
       </section>
 
-      <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">LOTTERY MANAGEMENT</span><h2>Lotteries</h2><p>Each lottery stays as a visual record card. Click a card to edit the lottery; ticket records are kept separately in Tickets.</p></div><button id="createEventBtn" class="btn primary">+ Create lottery</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 lotteries</span></div><div id="eventList" class="admin-event-record-grid"></div></article></section>
+      <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">LOTTERY MANAGEMENT</span><h2>Lotteries</h2><p>Each lottery stays as a visual record card. Click a card to edit the lottery; ticket records are kept separately in Tickets.</p></div><button id="createEventBtn" class="btn primary">+ Create lottery</button></div><div class="filter-row remaining-page-meta"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><input id="eventSearch" type="search" autocomplete="off" placeholder="Search title, slug or lottery ID"><span id="eventSummary" class="muted-pill">0 loaded</span></div><div id="eventList" class="admin-event-record-grid"></div><div class="sc-page-actions"><button id="eventLoadMore" class="btn ghost compact" type="button" hidden>Load more lotteries</button></div></article></section>
 
       <section id="tickets" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">TICKET MANAGEMENT</span><h2>Tickets by lottery</h2><p>Tickets load in bounded server pages. Search or filter without preloading the full ticket table into the browser.</p></div><button id="refreshTickets" class="btn ghost compact">Refresh</button></div><div class="ticket-toolbar"><select id="ticketEventFilter"><option value="all">All lotteries</option></select><input id="ticketSearch" type="search" autocomplete="off" placeholder="Search player, email, ticket ID or lottery"><span id="ticketSummary" class="muted-pill">0 loaded</span></div><div id="ticketEventList" class="ticket-event-list"></div><div class="sc-page-actions"><button id="ticketLoadMore" class="btn ghost compact" type="button" hidden>Load more tickets</button></div></article></section>
 
@@ -126,10 +127,10 @@
           <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">OPERATIONS INCIDENT CENTER</span><h2>Platform incidents</h2><p>Current draw, credit, cron, support and payment failures in one place.</p></div><span id="incidentStatus" class="status-pill">CHECKING</span></div><div id="incidentSummary" class="info-grid"></div><div class="action-grid"><button id="refreshIncidents" class="btn ghost compact" type="button">Refresh incidents</button></div></article>
           <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT INCIDENTS</span><h2>Needs attention / history</h2><p>Application and database incidents from the previous 24 hours.</p></div></div><div id="incidentList" class="records"></div></article>
         </div>
-        <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CANONICAL ADMIN CHANGES</span><h2>Who changed what</h2><p>Actor, reason and exact before/after snapshots for sensitive admin mutations.</p></div><button id="refreshAdminChanges" class="btn ghost compact" type="button">Refresh changes</button></div><div id="adminChangeSummary" class="muted-pill">0 changes</div><div id="adminChangeList" class="records"></div></article>
+        <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CANONICAL ADMIN CHANGES</span><h2>Who changed what</h2><p>Actor, reason and exact before/after snapshots for sensitive admin mutations.</p></div><button id="refreshAdminChanges" class="btn ghost compact" type="button">Refresh changes</button></div><div class="remaining-page-meta"><input id="adminChangeSearch" type="search" autocomplete="off" placeholder="Search actor, action, reason or row"><select id="adminChangeTableFilter"><option value="all">All tables</option><option value="profiles">Profiles</option><option value="lottery_events">Lottery events</option><option value="event_prize_tiers">Prize tiers</option><option value="platform_controls">Platform controls</option><option value="credit_requests">Credit requests</option><option value="support_point_adjustments">Support point adjustments</option></select><span id="adminChangeSummary" class="muted-pill">0 changes</span></div><div id="adminChangeList" class="records"></div><div class="sc-page-actions"><button id="adminChangeLoadMore" class="btn ghost compact" type="button" hidden>Load more changes</button></div></article>
       </section>
 
-      <section id="audit" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">AUDIT TRAIL</span><h2>Admin activity</h2><p>Administrative changes and automatic draw actions.</p></div><button id="refreshAudit" class="btn ghost compact">Refresh</button></div><div id="auditList" class="timeline"></div></article></section>
+      <section id="audit" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">AUDIT TRAIL</span><h2>Admin activity</h2><p>Administrative changes and automatic draw actions load in stable server pages.</p></div><button id="refreshAudit" class="btn ghost compact">Refresh</button></div><div class="remaining-page-meta"><input id="auditSearch" type="search" autocomplete="off" placeholder="Search action, actor or entity"><span id="auditSummary" class="muted-pill">0 loaded</span></div><div id="auditList" class="timeline"></div><div class="sc-page-actions"><button id="auditLoadMore" class="btn ghost compact" type="button" hidden>Load more audit rows</button></div></article></section>
     </section>
   </main>
 
@@ -212,6 +213,7 @@
   <script src="phase3-lifecycle.js?v=1" defer></script>
   <script src="phase3-investigation.js?v=1" defer></script>
   <script src="phase3-scalability.js?v=1" defer></script>
+  <script src="phase3-remaining-scalability.js?v=1" defer></script>
   <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>
   <script src="platform-controls-admin.js?v=4" defer></script>

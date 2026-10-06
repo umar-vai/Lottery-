@@ -4,7 +4,7 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
+var S={session:null,user:null,profile:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -76,14 +76,15 @@ function load(){
     safe(rest('profiles?select=id,display_name,email,role,balance,created_at&order=created_at.desc&limit=1000'),[]),
     safe(rest('balance_ledger?select=*&order=created_at.desc&limit=2000'),[]),
     safe(rest('audit_logs?select=*&order=created_at.desc&limit=500'),[]),
-    safe(rpc('admin_get_draw_credit_integrity_report',{}),null)
+    safe(rpc('admin_get_draw_credit_integrity_report',{}),null),
+    safe(rpc('admin_get_lottery_operational_health',{}),null)
   ]).then(function(x){
-    S.events=x[0]||[];S.tickets=x[1]||[];S.tiers=x[2]||[];S.profiles=x[3]||[];S.ledger=x[4]||[];S.audit=x[5]||[];S.integrity=x[6]||null;
+    S.events=x[0]||[];S.tickets=x[1]||[];S.tiers=x[2]||[];S.profiles=x[3]||[];S.ledger=x[4]||[];S.audit=x[5]||[];S.integrity=x[6]||null;S.opsHealth=x[7]||null;
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
 
-function render(){renderStats();renderOverview();renderIntegrity();renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderEvents();renderTickets();renderWinners();renderPlayers();renderLedger();renderAudit();startCountdown()}
 function renderStats(){
   var open=S.events.filter(function(e){return statusView(e)==='open'}).length;
   var totalCredits=S.profiles.reduce(function(a,p){return a+Number(p.balance||0)},0);
@@ -149,6 +150,45 @@ function renderIntegrity(){
 function refreshIntegrity(){
   var b=$('refreshIntegrity');if(b)b.disabled=true;
   return rpc('admin_get_draw_credit_integrity_report',{}).then(function(r){S.integrity=r;renderIntegrity();note(r&&r.ok?'Integrity check passed':'Integrity check found issues',!(r&&r.ok))}).catch(function(e){note('Integrity check failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+}
+function renderOperationalHealth(){
+  var st=$('opsHealthStatus'),root=$('opsHealthInfo'),hint=$('opsHealthHint'),retry=$('retryDueDraws'),r=S.opsHealth;
+  if(!st||!root)return;
+  if(!r){
+    st.textContent='UNAVAILABLE';st.className='status-pill cancelled';
+    root.innerHTML='<div class="overview-empty">Operational health could not be loaded.</div>';
+    if(retry)retry.disabled=true;
+    return;
+  }
+  var c=r.cron||{},d=r.draws||{},inc=Array.isArray(r.incidents)?r.incidents:[],ok=!!r.ok;
+  st.textContent=ok?'HEALTHY':'ATTENTION';
+  st.className='status-pill '+(ok?'completed':'cancelled');
+  root.innerHTML=[
+    info('Draw cron',c.healthy?'Healthy':'Needs attention'),
+    info('Last heartbeat',fmt(c.last_run_at)),
+    info('Cron failures · 24h',String(Number(c.failed_runs_24h||0))),
+    info('Overdue draws',String(Number(d.overdue_scheduled||0))),
+    info('Open incidents',String(Number(d.open_failure_incidents||0))),
+    info('Completed · 24h',String(Number(d.completed_24h||0))),
+    info('Last completed',fmt(d.last_completed_at)),
+    info('Recovery','Next-minute retry')
+  ].join('');
+  if(hint){
+    if(inc.length){
+      var first=inc[0]||{};
+      hint.textContent='Latest incident: '+(first.title||first.slug||String(first.event_id||'event'))+(first.last_error?' · '+first.last_error:'');
+    }else hint.textContent='Automatic health check runs every 5 minutes';
+  }
+  if(retry)retry.disabled=Number(d.overdue_scheduled||0)===0&&Number(d.open_failure_incidents||0)===0;
+}
+function refreshOperationalHealth(){
+  var b=$('refreshOpsHealth');if(b)b.disabled=true;
+  return rpc('admin_get_lottery_operational_health',{}).then(function(r){S.opsHealth=r;renderOperationalHealth();note(r&&r.ok?'Draw operations healthy':'Draw operations need attention',!(r&&r.ok))}).catch(function(e){note('Operational health check failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+}
+function retryDueDraws(){
+  if(!confirm('Retry all scheduled draws that are currently due? Each draw remains transaction-safe and failed attempts roll back.'))return;
+  var b=$('retryDueDraws');if(b)b.disabled=true;
+  rpc('admin_retry_due_lottery_events',{}).then(function(r){S.opsHealth=r;renderOperationalHealth();note(r&&r.ok?'Due draws retried; operations are healthy':'Retry completed; some draw incidents still need attention',!(r&&r.ok));return load()}).catch(function(e){note('Retry failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
 }
 
 function canRun(e){if(e.status!=='published')return false;if(ticketCount(e.id)<Number(e.winner_count||1))return false;if(e.schedule_mode==='manual')return true;return !e.cutoff_at||Date.now()>=new Date(e.cutoff_at).getTime()}
@@ -297,7 +337,7 @@ function bind(){
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){activateTab(b)}});
   $('retryBtn').onclick=boot;
   if($('topCreate'))$('topCreate').onclick=openCreate;
-  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('refreshTickets').onclick=load;$('refreshWinners').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;
+  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;$('refreshTickets').onclick=load;$('refreshWinners').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;
   $('eventStatusFilter').onchange=renderEvents;$('ticketEventFilter').onchange=renderTickets;$('ticketSearch').oninput=function(){S.ticketQuery=normalize(this.value);renderTickets()};$('playerSearch').oninput=function(){S.playerQuery=normalize(this.value);renderPlayers()};$('ledgerUserFilter').onchange=renderLedger;
   $('closeEventModal').onclick=$('cancelEventModal').onclick=function(){$('eventDialog').close()};$('eventForm').onsubmit=saveEvent;
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};

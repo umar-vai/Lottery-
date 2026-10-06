@@ -52,6 +52,7 @@
       <section id="overview" class="tab active"><div class="dashboard-grid">
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">NEXT / ACTIVE LOTTERY</span><h2 id="focusTitle">No published lottery</h2></div><span id="focusStatus" class="status-pill">—</span></div><div id="focusInfo" class="info-grid"></div><div class="section-label">Quick actions</div><div id="focusActions" class="action-grid"></div></article>
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT ACTIVITY</span><h2>Operations feed</h2></div><button id="refreshOverview" class="icon-btn">↻</button></div><div id="overviewAudit" class="timeline compact-timeline"></div></article>
+        <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">SYSTEM INTEGRITY</span><h2>Credit reconciliation</h2><p>Draw Credits are checked against the immutable ledger, ticket purchases, prizes, Slots and Plinko.</p></div><span id="integrityStatus" class="status-pill">CHECKING</span></div><div id="integrityInfo" class="info-grid"></div><div class="section-label">Automatic check runs hourly</div><div class="action-grid"><button id="refreshIntegrity" class="btn ghost compact" type="button">Check now</button></div></article>
       </div></section>
 
       <section id="events" class="tab"><article class="panel glass"><div class="panel-head"><div><span class="eyebrow">LOTTERY MANAGEMENT</span><h2>Lotteries</h2><p>Each lottery stays as a visual record card. Click a card to edit the lottery; ticket records are kept separately in Tickets.</p></div><button id="createEventBtn" class="btn primary">+ Create lottery</button></div><div class="filter-row"><select id="eventStatusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><span id="eventSummary" class="muted-pill">0 lotteries</span></div><div id="eventList" class="admin-event-record-grid"></div></article></section>
@@ -102,7 +103,7 @@
   <div id="toast"></div>
   <script src="site-shell.js?v=29"></script>
   <script src="support-live.js?v=8" defer></script>
-  <script src="ops-v4.js?v=5" defer></script>
+  <script src="ops-v4.js?v=6" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script type="module" src="event-cover-admin.js?v=2"></script>
   <script src="support-wallet-admin.js?v=4" defer></script>

@@ -5,7 +5,7 @@ This directory mirrors the Edge Functions deployed to Supabase project `Lottery 
 | Function | Status | Version | JWT verification | Production bundle SHA-256 | Role |
 |---|---|---:|---|---|---|
 | `support-phone-bridge` | ACTIVE | 3 | disabled | `2b8a92a624d84ff080e0e3ac7c0272a61dda40fcfdf720abbb19535bb6e090ac` | Current custom-token phone ingest |
-| `support-device-admin` | ACTIVE | 3 | enabled | `dd8968f136b5b80a84f70110b8df8d09bb9bbff051eac4df1d6ed1f360ddb979` | Current admin device management |
+| `support-device-admin` | ACTIVE | 4 | enabled | `05dd992f32baa7c458b3c4fd4bd8ff670e999dcaeb7d5f95601c4dea2f0669c7` | Current admin device management; bounded compatibility reads |
 | `claim-support-points` | ACTIVE | 3 | enabled | `49d3b97b59841aabaa2a6f11863aa770f1930f85f9a2c1ea803a33312de639a8` | Current authenticated support claim |
 | `binance-pay-create-order` | ACTIVE | 1 | enabled | `48cbde4a7cc6ffd2ec63d94e0ae023e33acf5fb17ad3b73e6c87a181df4f586c` | Current Binance Pay order creation |
 | `binance-pay-webhook` | ACTIVE | 1 | disabled | `750bab5ade2f2947937fc2722173d055b1629fcb9ab9496f2305ab7fd0fd9a15` | External Binance webhook |

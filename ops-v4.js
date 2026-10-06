@@ -248,7 +248,12 @@ function prizeTierHtml(e){var ts=tiersFor(e.id);if(!ts.length)return'<div class=
 function participantHtml(e,tickets){
   var ts=tickets||ticketsFor(e.id),pm=pmap();if(!ts.length)return'<div class="empty-sub">No tickets in this lottery yet.</div>';
   var groups={};ts.forEach(function(t){(groups[t.user_id]||(groups[t.user_id]=[])).push(t)});
-  return Object.keys(groups).map(function(uid){var p=pm[uid]||{},arr=groups[uid];return'<div class="participant-card"><div class="participant-head"><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+' · '+arr.length+' ticket'+(arr.length===1?'':'s')+'</span></div><span class="credit-balance">'+credits(p.balance||0)+'</span></div><div class="participant-tickets">'+arr.map(function(t){return'<div class="ticket-line"><div><b>Ticket '+esc(String(t.id).slice(0,8))+'</b>'+(t.is_winner?'<span class="winner-rank">#'+t.winner_rank+' WINNER</span>':'')+'</div>'+numbersHtml(t)+'<div class="ticket-meta"><span>'+credits(t.price_paid)+'</span><span>'+esc(fmt(t.created_at))+'</span>'+(t.is_winner?'<strong>'+credits(t.prize_awarded)+' prize</strong>':'')+'</div></div>'}).join('')+'</div></div>'}).join('')
+  return Object.keys(groups).map(function(uid){
+    var p=pm[uid]||{},arr=groups[uid];
+    return '<div class="participant-card"><div class="participant-head"><div><strong>'+esc(p.display_name||p.email||'Player')+'</strong><span>'+esc(p.email||'')+' · '+arr.length+' ticket'+(arr.length===1?'':'s')+'</span></div><div class="participant-head-actions"><span class="credit-balance">'+credits(p.balance||0)+'</span><button class="btn ghost compact inv-inline-action" type="button" data-investigate-player="'+esc(uid)+'">Investigate player</button></div></div><div class="participant-tickets">'+arr.map(function(t){
+      return '<div class="ticket-line"><div><b>Ticket '+esc(String(t.id).slice(0,8))+'</b>'+(t.is_winner?'<span class="winner-rank">#'+t.winner_rank+' WINNER</span>':'')+'</div>'+numbersHtml(t)+'<div class="ticket-meta"><span>'+credits(t.price_paid)+'</span><span>'+esc(fmt(t.created_at))+'</span>'+(t.is_winner?'<strong>'+credits(t.prize_awarded)+' prize</strong>':'')+'</div><button class="btn ghost compact inv-inline-action" type="button" data-investigate-ticket="'+esc(t.id)+'">Inspect ticket</button></div>'
+    }).join('')+'</div></div>'
+  }).join('')
 }
 function renderEvents(){
   var f=$('eventStatusFilter').value||'all',rows=S.events.filter(function(e){return f==='all'||e.status===f}),root=$('eventList');
@@ -280,7 +285,10 @@ function renderTickets(){
   $('ticketSummary').textContent=shown+' ticket'+(shown===1?'':'s');root.innerHTML='';
   if(!groups.length){root.innerHTML='<div class="empty-sub">No tickets matched this view.</div>';return}
   groups.forEach(function(g){var e=g.event,section=document.createElement('section');section.className='ticket-event-group';section.innerHTML='<div class="ticket-event-head"><div><span class="eyebrow">'+esc(statusLabel(e))+'</span><h3>'+esc(e.title)+'</h3><p>'+g.tickets.length+' ticket'+(g.tickets.length===1?'':'s')+' shown · '+playerCount(e.id)+' total players</p></div><button class="btn ghost compact" type="button">Edit lottery</button></div><div class="participant-list">'+participantHtml(e,g.tickets)+'</div>';
-    section.querySelector('button').onclick=function(){openEdit(e)};root.appendChild(section)
+    var editButton=section.querySelector('.ticket-event-head > button');if(editButton)editButton.onclick=function(){openEdit(e)};
+    section.querySelectorAll('[data-investigate-player]').forEach(function(b){b.onclick=function(){if(window.Draw01Investigation)window.Draw01Investigation.openPlayer(b.getAttribute('data-investigate-player'));else note('Investigation workspace is still loading.',true)}});
+    section.querySelectorAll('[data-investigate-ticket]').forEach(function(b){b.onclick=function(){if(window.Draw01Investigation)window.Draw01Investigation.openTicket(b.getAttribute('data-investigate-ticket'));else note('Investigation workspace is still loading.',true)}});
+    root.appendChild(section)
   })
 }
 
@@ -298,7 +306,7 @@ function renderPlayers(){
     var row=document.createElement('div');row.className='record-card';
     var main=document.createElement('div');main.className='record-main';
     main.innerHTML='<div class="record-title"><strong>'+esc(p.display_name||'Player')+'</strong><span class="status-pill">'+esc((p.role||'player').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(p.email||'')+'</span><span class="credit-balance">'+credits(p.balance)+'</span><span>Joined '+esc(fmt(p.created_at))+'</span></div>';
-    var a=document.createElement('div');a.className='record-actions';a.appendChild(button('Set balance','primary',function(){openBalance(p)}));
+    var a=document.createElement('div');a.className='record-actions';a.appendChild(button('Investigate','ghost',function(){if(window.Draw01Investigation)window.Draw01Investigation.openPlayer(p.id);else note('Investigation workspace is still loading.',true)}));a.appendChild(button('Set balance','primary',function(){openBalance(p)}));
     var role=document.createElement('select');role.className='role-select';role.innerHTML='<option value="player">Player</option><option value="admin">Admin</option>';role.value=p.role;role.disabled=S.user&&p.id===S.user.id;
     role.onchange=function(){var previous=p.role;var reason=requireReason('Why are you changing this user role?','Role change for '+(p.display_name||p.email||'user'));if(reason===null){role.value=previous;return}rpc('admin_set_user_role',{p_user_id:p.id,p_role:role.value},reason).then(function(){note('Role updated');return load()}).catch(function(e){role.value=previous;note(e.message,true)})};
     a.appendChild(role);row.appendChild(main);row.appendChild(a);root.appendChild(row)

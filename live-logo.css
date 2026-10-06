@@ -197,7 +197,7 @@
 @media(max-width:560px){
   .lootera-letter-l{width:15px;height:20px;flex-basis:15px}
   .lootera-word-rest{font-size:17px}
-  .lootera-balls{width:40px;height:25px;flex-basis:40px}
+  .lootera-balls{width:40px;height:25px;flex-basis:40px;margin-left:-4px;margin-right:-4px}
   .lootera-fallback-ball{width:18px;height:18px;font-size:9px}
   .lootera-live-brand::before{bottom:-7px;height:8px}
 }
@@ -205,7 +205,7 @@
 @media(max-width:390px){
   .lootera-letter-l{width:13px;height:18px;flex-basis:13px}
   .lootera-word-rest{font-size:15px}
-  .lootera-balls{width:35px;height:22px;flex-basis:35px}
+  .lootera-balls{width:35px;height:22px;flex-basis:35px;margin-left:-3px;margin-right:-3px}
   .lootera-fallback-ball{width:16px;height:16px;font-size:8px}
   .lootera-live-brand::before{bottom:-6px;height:7px}
 }

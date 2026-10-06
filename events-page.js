@@ -49,7 +49,7 @@ function render(){
 }
 function selectCategory(next){if(next===category)return;category=next;history.replaceState(null,'',`lotteries.html?view=${encodeURIComponent(category)}`);const grid=$('eventsPageGrid');grid.classList.add('is-switching');setTimeout(()=>{render();grid.classList.remove('is-switching')},90)}
 async function load(){
-  if(!supabase){$('eventsPageGrid').innerHTML='<div class="events-empty">Events backend is not configured.</div>';return}
+  if(!supabase){$('eventsPageGrid').innerHTML='<div class="events-empty">Lottery backend is not configured.</div>';return}
   const {data,error}=await supabase.from('lottery_events').select('id,slug,title,description,status,ticket_price,prize_amount,max_tickets_per_user,opens_at,cutoff_at,draw_at,schedule_mode,winner_count,cover_image_url,created_at,completed_at').order('created_at',{ascending:false}).limit(250);
   if(error){$('eventsPageGrid').innerHTML='<div class="events-empty">লটারিগুলো এখন লোড করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।</div>';return}
   events=data||[];render()

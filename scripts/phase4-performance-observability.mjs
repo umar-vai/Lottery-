@@ -9,6 +9,8 @@ const fail=m=>failures.push(m);
 
 const migration='supabase/migrations/202610070245_phase4_performance_observability.sql';
 const runtimeTest='supabase/tests/phase4_performance_observability.sql';
+const legacyMigration='supabase/migrations/202610070330_phase4_retire_legacy_support_claims.sql';
+const legacyTest='supabase/tests/phase4_legacy_support_retirement.sql';
 
 if(!exists(migration)) fail('Missing Phase 4 performance/observability migration.');
 else {
@@ -31,6 +33,28 @@ else {
     'Keyset pagination RPC contains OFFSET',
     'balance_ledger_created_id_idx'
   ]) if(!sql.includes(marker)) fail('Phase 4 runtime test missing marker: '+marker);
+}
+
+
+if(!exists(legacyMigration)) fail('Missing Phase 4 legacy Support retirement migration.');
+else {
+  const sql=read(legacyMigration);
+  for(const marker of [
+    'support_pending_claims',
+    'service_submit_support_claim(uuid,text,text)',
+    'service_settle_pending_support_transaction(uuid)',
+    'private.settle_support_claim_request(uuid)'
+  ]) if(!sql.includes(marker)) fail('Legacy Support retirement migration missing marker: '+marker);
+}
+
+if(!exists(legacyTest)) fail('Missing Phase 4 legacy Support retirement runtime test.');
+else {
+  const sql=read(legacyTest);
+  for(const marker of [
+    'Legacy support_pending_claims table still exists',
+    'Canonical Support claim/settlement functions are missing',
+    'Private canonical settlement implementation is directly executable'
+  ]) if(!sql.includes(marker)) fail('Legacy Support retirement test missing marker: '+marker);
 }
 
 if(!exists('support-live.js')) fail('Missing Support live client.');

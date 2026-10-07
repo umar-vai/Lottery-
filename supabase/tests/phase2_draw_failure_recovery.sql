@@ -67,8 +67,15 @@ begin
     null,
     null,
     array[10::numeric],
-    true
+    false
   ) into v_event;
+
+  -- Phase 5: recovery testing needs a published fixture, but publication itself is
+  -- exercised through the guarded lifecycle test. Publish this rollback-only
+  -- fixture directly so the recovery test does not bypass the production RPC.
+  update public.lottery_events
+  set status='published',updated_at=now()
+  where id=v_event;
 
   insert into public.event_tickets(
     event_id,user_id,white_numbers,bonus_ball,price_paid

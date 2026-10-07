@@ -45,12 +45,13 @@ RLS-only write blocking is no longer the only layer for read-only datasets.
 
 Broad browser write grants are removed from read-only-by-design tables including draw/event catalog data, game history, referral history, support claims, payment-order history, ticket results, and audit logs.
 
-Intentional direct-write exceptions remain:
+At the end of Phase 1, `credit_requests` and legacy `tickets` were intentional direct-write exceptions. Phase 5 later retired the legacy ticket write path after caller/traffic analysis.
+
+Current production exceptions/boundaries are:
 
 - `credit_requests`: authenticated INSERT under restrictive RLS;
-- legacy `tickets`: authenticated INSERT/UPDATE under legacy ownership rules.
-
-Current `event_tickets` remains RPC-only for mutation.
+- legacy `tickets`: historical read only for browser roles; INSERT/UPDATE/DELETE are frozen;
+- current `event_tickets`: RPC-only for mutation.
 
 ## Phase 1.5 — secure defaults
 
@@ -61,7 +62,7 @@ Future `public` tables/functions/sequences created by `postgres` no longer autom
 `supabase/tests/phase1_security_invariants.sql` is a read-only regression suite that asserts:
 
 - read-only tables have no browser write grants;
-- intentional direct-write exceptions still work;
+- intentional direct-write exceptions/boundaries remain explicit;
 - profile mutation stays RPC-only;
 - every privileged function has explicit `search_path`;
 - anonymous `SECURITY DEFINER` exposure stays on the two approved public-read RPCs;

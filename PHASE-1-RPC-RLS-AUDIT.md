@@ -71,12 +71,13 @@ Phase 1 removes browser-role write grants from:
 - `support_claim_requests`
 - `ticket_results`
 
-Intentional direct-write exceptions remain:
+Phase 1 originally retained two direct-write exceptions. Phase 5 subsequently froze the retired legacy Powerball ticket path after confirming no active browser/REST caller.
 
-- `credit_requests` — authenticated INSERT under a restrictive RLS policy
-- legacy `tickets` — authenticated INSERT/UPDATE under legacy ownership/RLS rules
+Current production state:
 
-Current multi-event tickets remain RPC-only: `event_tickets` is SELECT-only for authenticated users.
+- `credit_requests` — authenticated INSERT under a restrictive RLS policy;
+- legacy `tickets` — authenticated historical read only; browser INSERT/UPDATE/DELETE grants and write policies removed;
+- current `event_tickets` — SELECT-only for authenticated users and RPC-only for mutation.
 
 ## Future-object defaults
 
@@ -87,7 +88,7 @@ A Phase 1 migration revokes automatic browser grants for future `public` tables,
 `supabase/tests/phase1_security_invariants.sql` checks:
 
 - read-only table write grants
-- intentional direct-write exceptions
+- intentional direct-write exceptions/boundaries
 - profile RPC-only mutation
 - explicit `search_path` on privileged functions
 - anonymous privileged-function allowlist

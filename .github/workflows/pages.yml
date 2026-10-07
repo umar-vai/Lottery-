@@ -53,6 +53,9 @@ jobs:
       - name: Phase 7C incident alerting gate
         run: node scripts/phase7c-incident-alerting.mjs
 
+      - name: Phase 7D external alert delivery gate
+        run: node scripts/phase7d-external-alert-delivery.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

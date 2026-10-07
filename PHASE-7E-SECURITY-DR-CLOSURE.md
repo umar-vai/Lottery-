@@ -97,6 +97,8 @@ Phase 7E adds covering indexes for the two advisor-reported unindexed private fo
 
 No 7-day-evidence-dependent “unused” index is removed.
 
+Post-migration advisor re-run confirms the `unindexed_foreign_keys` finding is gone. The two new FK indexes now appear as fresh `unused_index` INFO entries, which is expected immediately after creation and is not evidence that they should be removed.
+
 ## Free-plan backup reality
 
 Current Supabase documentation recommends Free-plan projects regularly export their own data and keep off-site backups. Scheduled platform backups are documented for Pro/Team/Enterprise.
@@ -135,7 +137,7 @@ That override is for disposable local testing only, not the production backup pr
 - verifies the internal SHA-256 manifest;
 - restores roles/schema/data following the Supabase documented order;
 - restores migration history;
-- immediately disables restored cron jobs and external alert delivery;
+- immediately **unschedules** restored cron jobs and disables external alert delivery;
 - runs `scripts/verify-restored-database.sql`.
 
 ## Restore verification
@@ -148,7 +150,7 @@ The restore verification checks:
 - authenticated users cannot directly execute private SECURITY DEFINER helpers;
 - Draw Credit integrity passes;
 - no open lottery failure incident exists;
-- cron jobs are disabled in the rehearsal environment;
+- cron jobs are absent/unscheduled in the rehearsal environment;
 - external alert delivery is disabled in the rehearsal environment;
 - key restored row counts are printed for comparison.
 
@@ -162,6 +164,8 @@ A real encrypted off-site backup and a real restore rehearsal still require cred
 4. a separate restore target (or self-hosted test instance).
 
 Until those are supplied and the archive is actually exported/restored, GitHub issue #61 must remain open.
+
+The restore verifier itself was exercised safely against production inside a transaction: all cron jobs were temporarily unscheduled and external alert delivery disabled, the verifier passed, and the transaction was rolled back. Post-rollback verification confirmed all 7 production cron jobs returned, Telegram remained enabled/ready, and production SLO remained OK. This validates the verifier logic; it is **not** a substitute for restoring a real backup into an isolated destination.
 
 ## Phase 7E security exceptions
 

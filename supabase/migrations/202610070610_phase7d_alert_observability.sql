@@ -88,9 +88,11 @@ declare
   v_support_orphan bigint:=0;
   v_support_expired_pending bigint:=0;
   v_breaches jsonb:='[]'::jsonb;
-  v_severity text:='ok';\n  v_alert jsonb;
+  v_severity text:='ok';
+  v_alert jsonb;
 begin
-  v_operations:=private.operations_incident_report();\n  v_alert:=private.production_alert_delivery_report();
+  v_operations:=private.operations_incident_report();
+  v_alert:=private.production_alert_delivery_report();
 
   select
     count(*) filter(where backend_type='client backend'),
@@ -133,7 +135,8 @@ begin
     ('lottery-operational-health'),
     ('production-slo-every-5-minutes'),
     ('production-slo-snapshot-15m'),
-    ('operational-history-retention-daily'),\n    ('production-alert-dispatch-minute')
+    ('operational-history-retention-daily'),
+    ('production-alert-dispatch-minute')
   ) expected(jobname)
   where not exists(
     select 1 from cron.job j
@@ -291,7 +294,8 @@ begin
       'orphan_claims',v_support_orphan,
       'expired_pending',v_support_expired_pending
     ),
-    'alert_delivery',v_alert,\n    'application',v_operations,
+    'alert_delivery',v_alert,
+    'application',v_operations,
     'thresholds',jsonb_build_object(
       'connections_warning_pct',75,
       'connections_critical_pct',90,
@@ -317,7 +321,8 @@ declare
   v_events jsonb;
   v_pending bigint:=0;
   v_unacked_7d bigint:=0;
-  v_last_recovery timestamptz;\n  v_delivery jsonb;
+  v_last_recovery timestamptz;
+  v_delivery jsonb;
 begin
   if auth.uid() is null or not public.is_admin() then
     raise exception 'Admin access required';
@@ -325,7 +330,8 @@ begin
 
   v_base:=private.operations_incident_report();
   v_slo:=private.production_slo_report();
-  v_history:=private.production_slo_history_report(24);\n  v_delivery:=private.production_alert_delivery_report();
+  v_history:=private.production_slo_history_report(24);
+  v_delivery:=private.production_alert_delivery_report();
 
   select max(created_at)
   into v_last_recovery

@@ -887,7 +887,7 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 
 These are high priority.
 
-1. Keep the privileged-function inventory intentional. Phase 6 moved credit review behind the canonical public admin RPC: 36 authenticated public admin SECURITY DEFINER RPCs are now expected, while authenticated direct execution of private SECURITY DEFINER helpers is expected to remain zero.
+1. Keep the privileged-function inventory intentional. Phase 6 moved credit review behind the canonical public admin RPC: 37 authenticated public admin SECURITY DEFINER RPCs are now expected after the Phase 7C acknowledgement endpoint, while authenticated direct execution of private SECURITY DEFINER helpers is expected to remain zero.
 2. Preserve explicit safe `search_path` on every SECURITY DEFINER function and the server-side `is_admin()` guard on authenticated admin RPCs.
 3. Source-control every live migration and Edge Function.
 4. Remove/decommission unused RPC generations only after caller analysis.

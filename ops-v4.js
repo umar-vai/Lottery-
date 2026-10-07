@@ -89,7 +89,7 @@ function load(){
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
-function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderLaunchStability();renderMutationGuardrails();renderSloObservability();renderSloAlert();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderLaunchStability();renderLaunchExit();renderMutationGuardrails();renderSloObservability();renderSloAlert();startCountdown()}
 function renderStats(){
   var summary=S.scalability&&S.scalability.summary||{},n=nextEvent();
   $('statEvents').textContent=Number(summary.lotteries!=null?summary.lotteries:S.events.length).toLocaleString();
@@ -246,6 +246,99 @@ function renderLaunchStability(){
   }
 }
 
+function renderLaunchExit(){
+  var r=S.incidents||{},x=r.launch_exit||{},st=$('launchExitStatus'),root=$('launchExitInfo'),hint=$('launchExitHint'),signoffs=$('launchOperatorSignoffs'),warnings=$('launchWarningDispositions'),approve=$('approveLaunchExit'),hold=$('holdLaunchExit');
+  if(!st||!root)return;
+  if(!x.exit_state){
+    st.textContent='UNAVAILABLE';st.className='status-pill cancelled';
+    root.innerHTML='<div class="overview-empty">Phase 8B exit data could not be loaded.</div>';
+    if(hint)hint.textContent='Operator sign-off report is unavailable.';
+    if(approve)approve.disabled=true;if(hold)hold.disabled=true;
+    return
+  }
+  var state=String(x.exit_state||'blocked'),op=x.operator_signoff||{},items=Array.isArray(op.items)?op.items:[],wr=x.warning_review||{},unresolved=Array.isArray(wr.unresolved_items)?wr.unresolved_items:[],finalDecision=x.final_decision||{},reasons=Array.isArray(x.gate_reasons)?x.gate_reasons:[];
+  st.textContent=state.replace(/_/g,' ').toUpperCase();
+  st.className='status-pill '+(state==='signed_off'||state==='ready_for_signoff'?'completed':state==='stabilizing'?'locked':'cancelled');
+  root.innerHTML=[
+    info('Exit state',state.replace(/_/g,' ')),
+    info('Technical state',String(x.technical_state||'unknown').toUpperCase()),
+    info('Pre-signoff ready',x.pre_signoff_ready?'YES':'NO'),
+    info('Fully signed off',x.fully_signed_off?'YES':'NO'),
+    info('Required decisions',String(Number(op.required_total||0))),
+    info('Outstanding decisions',String(Number(op.required_outstanding||0))),
+    info('Warning snapshots',String(Number(wr.warning_snapshots||0))),
+    info('Warnings unresolved',String(Number(wr.unresolved||0))),
+    info('Final decision',String(finalDecision.decision||'pending').toUpperCase()),
+    info('Window ends',fmt(x.window&&x.window.ends_at))
+  ].join('');
+
+  if(signoffs){
+    signoffs.innerHTML=items.map(function(i){
+      var status=String(i.status||'outstanding'),required=!!i.required_for_exit,actions='';
+      if(required){
+        actions='<div class="action-grid">'+
+          '<button class="btn primary compact" type="button" data-launch-signoff="'+esc(i.key)+'" data-launch-status="completed">Complete</button>'+
+          '<button class="btn ghost compact" type="button" data-launch-signoff="'+esc(i.key)+'" data-launch-status="accepted_risk">Accept risk</button>'+
+          '<button class="btn ghost compact" type="button" data-launch-signoff="'+esc(i.key)+'" data-launch-status="deferred">Defer</button>'+
+          '<button class="btn danger compact" type="button" data-launch-signoff="'+esc(i.key)+'" data-launch-status="outstanding">Reset</button>'+
+        '</div>'
+      }
+      return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>#'+esc(i.issue||'?')+' · '+esc(String(i.key||'').replace(/_/g,' '))+'</strong><span class="status-pill '+(status==='outstanding'?'locked':status==='conditional'?'': 'completed')+'">'+esc(status.replace(/_/g,' ').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(i.requirement||'')+'</span>'+(i.note?'<span>Note: '+esc(i.note)+'</span>':'')+(i.decided_at?'<span>'+esc(fmt(i.decided_at))+'</span>':'')+'</div>'+actions+'</div></div>'
+    }).join('')||'<div class="record-card"><strong>No operator sign-off items.</strong></div>';
+    signoffs.onclick=function(ev){
+      var b=ev.target.closest('[data-launch-signoff]');if(!b)return;
+      setLaunchOperatorSignoff(b.getAttribute('data-launch-signoff'),b.getAttribute('data-launch-status'))
+    }
+  }
+
+  if(warnings){
+    warnings.innerHTML=unresolved.map(function(w){
+      var breaches=Array.isArray(w.breaches)?w.breaches.map(function(b){return String(b.signal||'warning').replace(/_/g,' ')}).join(', '):'warning';
+      return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>Warning snapshot #'+esc(w.snapshot_id)+'</strong><span class="status-pill locked">REVIEW</span></div><div class="record-meta"><span>'+esc(fmt(w.captured_at))+'</span><span>'+esc(breaches)+'</span></div><div class="action-grid"><button class="btn primary compact" type="button" data-launch-warning="'+esc(w.snapshot_id)+'">Disposition warning</button></div></div></div>'
+    }).join('')||'<div class="record-card"><strong>No unresolved warning snapshots.</strong></div>';
+    warnings.onclick=function(ev){
+      var b=ev.target.closest('[data-launch-warning]');if(!b)return;
+      dispositionLaunchWarning(Number(b.getAttribute('data-launch-warning')))
+    }
+  }
+
+  if(hint){
+    hint.textContent=reasons.length
+      ?'Exit gate: '+reasons.map(function(g){return String(g.signal||'gate').replace(/_/g,' ')}).join(' · ')
+      :'All exit criteria are clear. Final operator approval may be recorded.'
+  }
+  if(approve)approve.disabled=!x.pre_signoff_ready||x.fully_signed_off;
+  if(hold)hold.disabled=x.fully_signed_off;
+}
+
+function setLaunchOperatorSignoff(key,status){
+  var label=status==='accepted_risk'?'accepting this risk':status==='deferred'?'deferring this item':status==='completed'?'marking this item complete':'resetting this item to outstanding';
+  var reason=status==='outstanding'?'Reset by operator':requireReason('Why are you '+label+'?','Phase 8B operator decision for '+String(key).replace(/_/g,' '));
+  if(reason===null)return;
+  rpc('admin_record_launch_operator_signoff',{p_key:key,p_status:status,p_note:reason},reason)
+    .then(function(){note('Launch operator decision recorded');return refreshIncidents()})
+    .catch(function(e){note('Launch sign-off update failed: '+e.message,true)})
+}
+
+function dispositionLaunchWarning(id){
+  var reason=requireReason('Document the cause and disposition for warning snapshot #'+id+'.','Reviewed Phase 8B warning; cause understood and disposition recorded.');
+  if(reason===null)return;
+  rpc('admin_disposition_launch_warning',{p_snapshot_id:id,p_note:reason},reason)
+    .then(function(){note('Warning snapshot dispositioned');return refreshIncidents()})
+    .catch(function(e){note('Warning disposition failed: '+e.message,true)})
+}
+
+function finalizeLaunchExit(decision){
+  var reason=requireReason(
+    decision==='approved'?'Final Phase 8B approval note:':'Why are you holding Phase 8B exit?',
+    decision==='approved'?'72-hour stabilization exit criteria reviewed and approved.':'Phase 8B exit held pending operator review.'
+  );
+  if(reason===null)return;
+  rpc('admin_finalize_launch_stabilization',{p_decision:decision,p_note:reason},reason)
+    .then(function(){note(decision==='approved'?'Phase 8B signed off':'Phase 8B exit held',decision!=='approved');return refreshIncidents()})
+    .catch(function(e){note('Phase 8B final decision failed: '+e.message,true)})
+}
+
 function renderMutationGuardrails(){
   var g=S.guardrails,st=$('mutationGuardrailStatus'),root=$('mutationGuardrailInfo'),hint=$('mutationGuardrailHint'),pause=$('pauseUserMutations'),resume=$('resumeUserMutations');
   if(!st||!root)return;
@@ -392,7 +485,7 @@ function pollIncidentAlerts(){
   ]).then(function(x){
     var r=x[0],previous=S.lastSloSeverity,current=String(r&&r.production_slo&&r.production_slo.severity||'ok');
     S.incidents=r;S.guardrails=x[1]||S.guardrails;S.lastSloSeverity=current;
-    renderIncidents();renderLaunchStability();renderMutationGuardrails();renderSloObservability();renderSloAlert();
+    renderIncidents();renderLaunchStability();renderLaunchExit();renderMutationGuardrails();renderSloObservability();renderSloAlert();
     if(previous&&previous==='ok'&&current!=='ok')note('Production SLO changed to '+current.toUpperCase(),true);
     if(previous&&previous!=='ok'&&current==='ok')note('Production SLO recovered');
   }).catch(function(e){console.warn('Phase 7F operations poll failed',e)})
@@ -416,7 +509,7 @@ function renderAdminChanges(){
 }
 function refreshIncidents(){
   var b=$('refreshIncidents');if(b)b.disabled=true;
-  return Promise.all([rpc('admin_get_operations_incident_center',{}),rpc('admin_get_mutation_guardrails',{})]).then(function(x){var r=x[0];S.incidents=r;S.guardrails=x[1]||S.guardrails;S.lastSloSeverity=String(r&&r.production_slo&&r.production_slo.severity||'ok');renderIncidents();renderMutationGuardrails();renderSloObservability();renderSloAlert();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+  return Promise.all([rpc('admin_get_operations_incident_center',{}),rpc('admin_get_mutation_guardrails',{})]).then(function(x){var r=x[0];S.incidents=r;S.guardrails=x[1]||S.guardrails;S.lastSloSeverity=String(r&&r.production_slo&&r.production_slo.severity||'ok');renderIncidents();renderLaunchStability();renderLaunchExit();renderMutationGuardrails();renderSloObservability();renderSloAlert();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
 }
 function refreshAdminChanges(){if(window.Draw01RemainingScalability)return window.Draw01RemainingScalability.loadAdminChanges(true);return Promise.resolve()}
 
@@ -607,7 +700,7 @@ function bind(){
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){activateTab(b)}});
   $('retryBtn').onclick=boot;
   if($('topCreate'))$('topCreate').onclick=openCreate;
-  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('pauseUserMutations'))$('pauseUserMutations').onclick=function(){setMasterMutationGuardrail(false)};if($('resumeUserMutations'))$('resumeUserMutations').onclick=function(){setMasterMutationGuardrail(true)};if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;
+  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('pauseUserMutations'))$('pauseUserMutations').onclick=function(){setMasterMutationGuardrail(false)};if($('resumeUserMutations'))$('resumeUserMutations').onclick=function(){setMasterMutationGuardrail(true)};if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;if($('approveLaunchExit'))$('approveLaunchExit').onclick=function(){finalizeLaunchExit('approved')};if($('holdLaunchExit'))$('holdLaunchExit').onclick=function(){finalizeLaunchExit('held')};
   $('closeEventModal').onclick=$('cancelEventModal').onclick=function(){$('eventDialog').close()};$('eventForm').onsubmit=saveEvent;
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};
   $('fBonusEnabled').onchange=syncBonusField;$('fScheduleMode').onchange=syncSchedule;$('fWinnerCount').oninput=function(){renderPrizeFields()};

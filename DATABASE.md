@@ -1029,3 +1029,38 @@ Restore rehearsal requirements:
 - disable restored external alert delivery before verification;
 - run `scripts/verify-restored-database.sql`;
 - only re-enable cron/outbound integrations after destination-specific credentials and settings are deliberately configured.
+
+
+---
+
+# 21. Phase 7G load / chaos evidence
+
+Phase 7G retained private evidence for production run:
+
+`429d08d0-d992-4d8d-892b-71dc0f784eda`
+
+Measured same-user/same-event ticket contention:
+
+- 1 worker p95: 93.56 ms
+- 4 workers p95: 240.46 ms
+- 8 workers p95: 514.02 ms
+- 12 workers p95: 793.56 ms
+
+The 12-worker wave completed with zero probe failures and zero financial/event residue.
+
+A 12-way rate-limit contention probe with limit 5 produced exactly 5 allowed and 7 rate-limited outcomes.
+
+A controlled advisory-lock holder ran for ~900 ms while a waiter failed in ~250 ms with the expected lock-timeout SQLSTATE, leaving no blocker.
+
+Post-wave observations:
+
+- connection usage remained below the existing 75% warning threshold;
+- blocked sessions over 30s: 0;
+- idle-in-transaction over 60s: 0;
+- Draw Credit integrity issue total: 0;
+- Telegram delivery remained enabled/ready;
+- mutation guardrails remained enabled.
+
+Temporary Phase 7G service probe RPCs were removed from the public schema after the run and retained only as private, externally non-executable historical helpers. The production alert dispatcher no longer contains the temporary Phase 7G suite action.
+
+Phase 7G does not establish a maximum system capacity. Its measured launch target for the tested contention envelope is p95 < 1 second at <=12 concurrent same-row ticket workers. Aggregate multi-user capacity requires future traffic evidence.

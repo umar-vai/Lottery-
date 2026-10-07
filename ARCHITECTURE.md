@@ -1,6 +1,6 @@
 # DRAW//01 Architecture
 
-> Source of truth for the current production architecture as of 2026-10-05.
+> Source of truth for the current production architecture as of 2026-10-07.
 >
 > Repository: `umar-vai/Lottery-`  
 > Public app: `https://umar-vai.github.io/Lottery-/`  
@@ -595,15 +595,11 @@ The original `README.md` is primarily about this legacy architecture.
 
 The current user-facing platform is the newer `lottery_events` + `event_tickets` architecture.
 
-Do not delete legacy tables/functions casually. First check:
+Phase 5 verified that the legacy engine is paused, the old draw-engine cron is not active, current HTML entry points do not load `app.js`, and the observed 24-hour production window had zero REST traffic to the legacy draw/ticket tables. Historical rows are therefore retained, but browser mutation of legacy `public.tickets` is frozen: authenticated clients can read their own historical rows but cannot INSERT/UPDATE/DELETE them.
 
-- references from current JS
-- active cron jobs
-- foreign keys
-- audit/history requirements
-- whether old public URLs still rely on them
+Do not delete legacy tables/functions casually. Historical draw/ticket/result/seed rows still exist and may be useful for audit/history. Any later physical archival/removal requires a fresh dependency and retention review.
 
-At the time of this document, the active cron job is the **lottery-events** scheduler, not the old draw-engine cron.
+The active draw automation is the **lottery-events** scheduler, not the old Powerball draw-engine cron.
 
 ---
 

@@ -3,11 +3,14 @@ const KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const enc=new TextEncoder();
 type Trace={id:string;start:number;action:string};
 
+function originAllowed(req:Request){
+  const o=req.headers.get('origin')||'';
+  return !o||o==='https://lootera.win'||o==='https://www.lootera.win'||o==='https://umar-vai.github.io'||o.startsWith('http://localhost:');
+}
 function cors(req:Request){
   const o=req.headers.get('origin')||'';
-  const ok=o==='https://umar-vai.github.io'||o.startsWith('http://localhost:');
   return {
-    'Access-Control-Allow-Origin':ok?o:'https://umar-vai.github.io',
+    'Access-Control-Allow-Origin':originAllowed(req)?(o||'https://lootera.win'):'null',
     'Access-Control-Allow-Headers':'content-type,x-bridge-token',
     'Access-Control-Allow-Methods':'POST,OPTIONS',
     'Access-Control-Expose-Headers':'x-support-trace-id',
@@ -48,6 +51,7 @@ async function settle(ctx:Trace,trxId:string,senderHash:string){
 
 Deno.serve(async(req)=>{
   const ctx:Trace={id:crypto.randomUUID(),start:performance.now(),action:'bridge_ingest'};
+  if(!originAllowed(req))return reply(req,ctx,{error:'Origin not allowed'},403,{outcome:'cors_denied'});
   if(req.method==='OPTIONS')return new Response('',{headers:cors(req)});
   try{
     if(req.method!=='POST')return reply(req,ctx,{error:'POST required'},405);

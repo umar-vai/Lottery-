@@ -132,6 +132,12 @@
           <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">OPERATIONS INCIDENT CENTER</span><h2>Platform incidents</h2><p>Current draw, credit, cron, support and payment failures in one place.</p></div><span id="incidentStatus" class="status-pill">CHECKING</span></div><div id="incidentSummary" class="info-grid"></div><div class="action-grid"><button id="refreshIncidents" class="btn ghost compact" type="button">Refresh incidents</button></div></article>
           <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT INCIDENTS</span><h2>Needs attention / history</h2><p>Application and database incidents from the previous 24 hours.</p></div></div><div id="incidentList" class="records"></div></article>
         </div>
+        <article id="mutationGuardrailPanel" class="panel glass slo-observability-panel">
+          <div class="panel-head"><div><span class="eyebrow">EMERGENCY MUTATION GUARDRAILS</span><h2>Protected user writes</h2><p>Server-side kill switch and successful-mutation rate budgets for tickets, games, support claims, credit requests, referrals and payment orders.</p></div><span id="mutationGuardrailStatus" class="status-pill">CHECKING</span></div>
+          <div id="mutationGuardrailInfo" class="info-grid"></div>
+          <p id="mutationGuardrailHint" class="muted">Loading guardrails…</p>
+          <div class="action-grid"><button id="pauseUserMutations" class="btn danger compact" type="button">Pause all user mutations</button><button id="resumeUserMutations" class="btn primary compact" type="button">Resume user mutations</button></div>
+        </article>
         <article id="sloObservabilityPanel" class="panel glass slo-observability-panel">
           <div class="panel-head"><div><span class="eyebrow">PRODUCTION SLO</span><h2>Live reliability & acknowledgement</h2><p>Current database/application SLO, 24-hour snapshots, breach/recovery history, operator acknowledgement and external alert delivery health.</p></div><span id="sloStatus" class="status-pill">CHECKING</span></div>
           <div id="sloSummary" class="info-grid"></div>
@@ -221,7 +227,7 @@
   <script src="site-shell.js?v=29"></script>
   <script src="support-live.js?v=11" defer></script>
   <script src="support-admin.js?v=4" defer></script>
-  <script src="ops-v4.js?v=11" defer></script>
+  <script src="ops-v4.js?v=12" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script src="phase3-control-room.js?v=1" defer></script>
   <script src="phase3-lifecycle.js?v=1" defer></script>

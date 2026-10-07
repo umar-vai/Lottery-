@@ -18,7 +18,7 @@ The current main SHA before the release is the primary frontend rollback referen
 
 Run/check:
 
-1. GitHub Phase 0–7A validation.
+1. GitHub Phase 0–7F validation.
 2. `private.production_slo_report()`.
 3. Draw Credit integrity report.
 4. lottery operational health.
@@ -124,6 +124,24 @@ Current platform feature controls include:
 Use the protected admin RPC/UI path; do not directly edit feature tables from a browser client.
 
 For a single lottery incident, stop the narrow event/write path instead of globally disabling unrelated products where possible.
+
+### Phase 7F emergency write stop
+
+For suspected financial/accounting corruption, replay abuse, runaway clients, or an unsafe mutation release:
+
+1. open **Admin → Incidents → Emergency Mutation Guardrails**;
+2. choose **Pause all user mutations**;
+3. enter a concrete operational reason;
+4. preserve logs/audit/SLO evidence;
+5. investigate and repair while reads/observability remain available;
+6. verify Draw Credit integrity, Support invariants, SLO state, and the affected critical path;
+7. use **Resume user mutations** only after the condition is understood and safe.
+
+The master guard stops protected user inserts for tickets, games, Support claims, credit requests, referrals and payment orders. It does not intentionally stop read-only traffic, monitoring, or unrelated admin remediation.
+
+If the admin UI is unavailable, use the protected admin RPC from a trusted authenticated admin session; do not expose or edit private guardrail tables from browser code.
+
+Browser lottery purchases use nonce-based idempotency. A retry of the same selection must reuse the same client nonce so a lost response cannot create a second debit/ticket.
 
 ## 8. Incident severity
 
@@ -261,7 +279,22 @@ Safety rules:
 
 A transaction-only production simulation has validated the verifier/safety logic, but it does **not** count as the required real off-site backup + isolated restore rehearsal.
 
-## 13. Recovery completion
+## 13. Phase 7F go-live abuse controls
+
+Release verification for a mutation-affecting change must include:
+
+- master mutation guard = enabled unless deliberately paused;
+- all expected category guardrails enabled;
+- ticket idempotent replay test passes;
+- Draw Credit integrity remains zero-issue;
+- Support duplicate/orphan invariants remain zero;
+- Support Edge CORS accepts `lootera.win` and rejects an unrelated hostile Origin;
+- private authenticated SECURITY DEFINER exposure remains zero;
+- advisor authenticated SECURITY DEFINER count is understood at the current intentional baseline (50 after Phase 7F).
+
+Rate budgets protect successful application writes, not volumetric request floods. Do not treat them as a WAF. Phase 7G load/chaos testing establishes burst and saturation thresholds.
+
+## 14. Recovery completion
 
 An incident is closed only when:
 

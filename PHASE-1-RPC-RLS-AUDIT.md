@@ -1,6 +1,6 @@
 # Phase 1 — SECURITY DEFINER / RLS Audit
 
-Audit target: production Supabase project `Lottery DRAW01`.
+Audit target: production Supabase project for **Lootera / lootera.win** (`mwtlsnneooxmryondrex`).
 
 ## SECURITY DEFINER findings
 
@@ -27,6 +27,14 @@ Phase 7C adds one intentional browser-callable admin SECURITY DEFINER endpoint, 
 
 Phase 7D does not add another browser-callable privileged endpoint. Its three dispatcher RPCs are granted only to `service_role` and also require the independent Vault dispatch token. The authenticated SECURITY DEFINER warning count therefore remains **47**, while authenticated direct execution of private SECURITY DEFINER helpers remains zero. The two new private delivery tables have direct browser/service table grants revoked.
 
+Phase 7F adds exactly three intentional authenticated SECURITY DEFINER public RPCs:
+
+- `admin_get_mutation_guardrails()` — admin-only read, explicit `auth.uid() + is_admin()`;
+- `admin_set_mutation_guardrails(...)` — admin-only audited emergency mutation control, explicit `auth.uid() + is_admin()`;
+- `purchase_event_ticket_idempotent(...)` — authenticated player endpoint that derives the player from `auth.uid()` and delegates the financial transaction to the existing ticket purchase boundary.
+
+The current authenticated SECURITY DEFINER advisor warning count is therefore expected to be **50** after Phase 7F. Authenticated direct execution of private SECURITY DEFINER functions remains zero.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:
@@ -35,7 +43,8 @@ Player-callable privileged functions scope themselves to `auth.uid()` or otherwi
 - `drop_plinko(...)`
 - `drop_plinko_batch(...)`
 - `get_my_referral_dashboard()`
-- `purchase_event_ticket(...)`
+- `purchase_event_ticket(...)` — compatibility/core transaction path, now protected by the Phase 7F insert guard
+- `purchase_event_ticket_idempotent(...)` — preferred browser path with nonce-based replay safety
 - `spin_slot(...)`
 - `update_my_profile(...)`
 - `is_admin()` (read-only authorization helper)

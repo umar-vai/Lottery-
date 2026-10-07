@@ -141,7 +141,7 @@ if(exists(adminJs)){
   ]) if(!code.includes(marker))fail('Phase 7D admin UI missing marker: '+marker);
 }
 
-if(exists(adminHtml)&&!/ops-v4\.js\?v=(?:1[01]|[2-9][0-9]+)\b/.test(read(adminHtml))){
+if(exists(adminHtml)&&!/ops-v4\.js\?v=(?:1[0-9]|[2-9][0-9]+)\b/.test(read(adminHtml))){
   fail('Phase 7D admin JS cache-bust version must be 10 or newer.');
 }
 

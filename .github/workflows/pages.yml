@@ -59,6 +59,9 @@ jobs:
       - name: Phase 7E security and DR gate
         run: node scripts/phase7e-security-dr.mjs
 
+      - name: Phase 7F go-live abuse hardening gate
+        run: node scripts/phase7f-abuse-hardening.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

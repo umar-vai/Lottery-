@@ -116,11 +116,18 @@ Foreign keys:
 
 Authenticated users can read their own event tickets. Admins can read all event tickets.
 
-Browser code should not directly insert event tickets. Use:
+Browser code should not directly insert event tickets. Phase 7F browser clients use the nonce-based idempotent wrapper:
 
 ```text
-purchase_event_ticket(p_event_id, p_white_numbers, p_bonus_ball)
+purchase_event_ticket_idempotent(
+  p_event_id,
+  p_white_numbers,
+  p_bonus_ball,
+  p_client_nonce
+)
 ```
+
+The older `purchase_event_ticket(...)` function remains the core/compatibility transaction boundary. Cached or legacy clients can still call it, but every successful ticket insert is protected by the Phase 7F database mutation guard/rate trigger.
 
 ---
 
@@ -293,6 +300,8 @@ Server-side behavior:
 17. returns `ticket_id` and `new_balance`
 
 Because the event/profile rows are locked inside one PostgreSQL transaction, this is the core concurrency boundary for ticket purchasing.
+
+Phase 7F adds `public.purchase_event_ticket_idempotent(..., p_client_nonce)` for browser purchases. It takes an advisory transaction lock keyed by user + nonce, stores the completed ticket/balance in `private.ticket_purchase_idempotency`, replays the original result on retry, and rejects reuse of the same nonce for a different ticket payload.
 
 ---
 
@@ -914,6 +923,10 @@ These are high priority.
 10. Phase 7E confirms `pg_net 0.20.4` is non-relocatable in the live project. Do not attempt an unsupported schema move solely to silence the advisor.
 11. The two Phase 7E private foreign keys are covered by `production_alert_delivery_config_updated_by_idx` and `production_incident_acknowledgements_acknowledged_by_idx`.
 12. A real encrypted off-site backup and isolated restore rehearsal are still required; use `scripts/export-offsite-backup.sh`, `scripts/restore-offsite-backup.sh`, and `scripts/verify-restored-database.sql`.
+13. Phase 7F adds exactly three intentional authenticated SECURITY DEFINER RPCs: `admin_get_mutation_guardrails()`, `admin_set_mutation_guardrails(...)`, and `purchase_event_ticket_idempotent(...)`. The current advisor authenticated SECURITY DEFINER warning count is therefore **50**; authenticated direct execution of private SECURITY DEFINER helpers remains zero.
+14. Phase 7F user-write guardrails are private, database-enforced, and auditable. The master/category switches cover ticket, game, Support claim, credit-request, referral, and payment-order inserts.
+15. The successful-mutation budgets are not a WAF/DDoS substitute. Phase 7G owns burst/load/connection-saturation testing and platform-level request-limit evidence.
+16. Current Support Edge CORS explicitly allows `https://lootera.win`, `https://www.lootera.win`, the GitHub Pages origin, and localhost development; non-empty unapproved origins are rejected.
 
 ---
 
@@ -964,7 +977,38 @@ Then create a migration that moves the known current state forward.
 
 ---
 
-# 19. Phase 7E disaster-recovery rules
+# 19. Phase 7F go-live mutation hardening
+
+Private Phase 7F controls:
+
+- `private.production_mutation_guardrails` — emergency master/category write switches;
+- `private.mutation_rate_limit_windows` — atomic successful-mutation budgets, pruned after 2 days;
+- `private.ticket_purchase_idempotency` — browser ticket nonce/result replay map.
+
+Protected insert budgets:
+
+- ticket purchases: 20/min/user;
+- slot spins: 240/min/user;
+- Plinko drops: 900/min/user;
+- credit requests: 6/hour/user;
+- Support claim requests: 30/hour/user;
+- Support point claims: 60/hour/user;
+- payment orders: 12/hour/user;
+- referral joins: 3/day/referred user.
+
+Admin Incident Center exposes the guardrail state and provides audited **Pause all user mutations** / **Resume user mutations** controls.
+
+The guard triggers protect all current server paths that ultimately insert the protected records, including compatibility RPCs. These are successful-mutation budgets, not volumetric request throttles.
+
+Current Support Edge versions after Phase 7F:
+
+- `support-phone-bridge` v6 — custom bridge-token auth;
+- `support-device-admin` v7 — JWT + admin check;
+- `claim-support-points` v6 — JWT auth.
+
+---
+
+# 20. Phase 7E disaster-recovery rules
 
 Lootera is currently on a Free-plan recovery model, so operator-controlled off-site backups remain mandatory.
 

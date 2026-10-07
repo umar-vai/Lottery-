@@ -132,7 +132,7 @@ function telegramAlertText(item:AlertItem){
   const p=item.payload||{};
   const event=String(p.event||'production_slo_breached');
   const recovered=item.delivery_kind==='recovery'||event==='production_slo_recovered'||item.severity==='ok';
-  const heading=recovered?'DRAW//01 — RECOVERED':'DRAW//01 — '+String(item.severity||'warning').toUpperCase();
+  const heading=recovered?'Lootera — RECOVERED':'Lootera — '+String(item.severity||'warning').toUpperCase();
   const kind=titleCase(String(item.delivery_kind||'initial'));
   const occurred=String(p.occurred_at||item.created_at||new Date().toISOString());
   const action=recovered
@@ -140,6 +140,7 @@ function telegramAlertText(item:AlertItem){
     :'Open the admin Incident Center, inspect the signal, acknowledge ownership, then mitigate or roll back if needed.';
   return truncate([
     heading,
+    'lootera.win',
     '',
     'Delivery: '+kind,
     'Audit event: #'+String(item.audit_log_id),
@@ -270,7 +271,7 @@ async function discoverTelegram(ctx:Trace,dispatchToken:string,target:DeliveryTa
   await sendTelegram(
     botToken,
     chatId,
-    'DRAW//01 production alerts paired successfully. External delivery is still disabled until the test alert succeeds.'
+    'Lootera production alerts paired successfully. External delivery is still disabled until the test alert succeeds.'
   );
 
   await recordState(dispatchToken,true,null,false);
@@ -299,7 +300,7 @@ async function testTelegram(ctx:Trace,dispatchToken:string,target:DeliveryTarget
       botToken,
       chatId,
       [
-        'DRAW//01 — TEST ALERT',
+        'Lootera — TEST ALERT',
         '',
         'Telegram production alert delivery is connected.',
         'Critical: escalation after 5 minutes if unacknowledged.',
@@ -396,7 +397,7 @@ async function dispatchWebhook(
 
   for(const item of items){
     const outbound={
-      source:'DRAW//01',
+      source:'lootera.win',
       alert_id:item.id,
       audit_log_id:item.audit_log_id,
       delivery_kind:item.delivery_kind,
@@ -408,7 +409,7 @@ async function dispatchWebhook(
     const body=JSON.stringify(outbound);
     const headers:Record<string,string>={
       'content-type':'application/json',
-      'user-agent':'DRAW01-Production-Alert/1.0',
+      'user-agent':'Lootera-Production-Alert/1.0',
       'x-draw01-alert-id':String(item.id),
       'x-draw01-delivery-kind':item.delivery_kind,
       'x-draw01-severity':item.severity,

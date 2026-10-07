@@ -62,6 +62,9 @@ jobs:
       - name: Phase 7F go-live abuse hardening gate
         run: node scripts/phase7f-abuse-hardening.mjs
 
+      - name: Phase 7G load chaos recovery gate
+        run: node scripts/phase7g-load-chaos-recovery.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

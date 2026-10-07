@@ -367,6 +367,8 @@ operational-history-retention-daily -> 23 3 * * * -> private.prune_operational_h
 
 Phase 7A's private `production_slo_report()` combines application integrity with connection pressure, blocking sessions, cache-hit rates, recent cron failures, required-cron presence, and Support settlement invariants. It is not exposed to browser/service API roles.
 
+Phase 7C delivers that state to active admins through the existing Incident Center. The browser polls the admin-only incident RPC every 60 seconds while visible, shows a persistent banner for warning/critical states, and allows an admin to acknowledge a `production_slo_breached` event with a 3–500 character operator note. Acknowledgement is stored privately and audited separately; it never marks the SLO recovered.
+
 It runs due `published + scheduled` events whose `draw_at <= now()`.
 
 Failures are written into `audit_logs` instead of crashing the whole loop.
@@ -831,6 +833,9 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 - `private.capture_production_slo_snapshot()` — private 15-minute SLO snapshot writer
 - `private.production_slo_history_report(integer)` — private 1–720 hour SLO history summary
 - `private.prune_operational_history()` — 30-day SLO/pg_cron history retention
+- `private.production_incident_acknowledgements` — Phase 7C private breach acknowledgement trail
+- `public.admin_acknowledge_production_incident(bigint,text)` — admin-only SLO breach acknowledgement RPC
+- `public.admin_get_operations_incident_center()` — existing admin incident RPC, extended in Phase 7C with SLO/history/event/acknowledgement data
 
 ## Virtual credit-request functions
 
@@ -882,7 +887,7 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 
 These are high priority.
 
-1. Keep the privileged-function inventory intentional. Phase 6 moved credit review behind the canonical public admin RPC: 36 authenticated public admin SECURITY DEFINER RPCs are now expected, while authenticated direct execution of private SECURITY DEFINER helpers is expected to remain zero.
+1. Keep the privileged-function inventory intentional. Phase 6 moved credit review behind the canonical public admin RPC: 37 authenticated public admin SECURITY DEFINER RPCs are now expected after the Phase 7C acknowledgement endpoint, while authenticated direct execution of private SECURITY DEFINER helpers is expected to remain zero.
 2. Preserve explicit safe `search_path` on every SECURITY DEFINER function and the server-side `is_admin()` guard on authenticated admin RPCs.
 3. Source-control every live migration and Edge Function.
 4. Remove/decommission unused RPC generations only after caller analysis.

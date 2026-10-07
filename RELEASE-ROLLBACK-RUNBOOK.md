@@ -168,7 +168,22 @@ After deployment:
 - confirm GitHub Pages/CI deployment success;
 - record any follow-up issue.
 
-## 10. Recovery completion
+## 10. Phase 7C alert acknowledgement
+
+When the admin production banner is warning or critical:
+
+1. open the **Incidents** tab;
+2. inspect the current SLO breach signals and 24-hour history;
+3. acknowledge the relevant `production_slo_breached` event with a concrete operator note;
+4. mitigate or rollback the underlying problem;
+5. wait for server-authoritative `production_slo_recovered`;
+6. verify healthy snapshots after recovery.
+
+Acknowledgement means the incident has an operator owner. It **does not** resolve or suppress the underlying SLO condition.
+
+The admin page refreshes incident/SLO state every 60 seconds while visible. External webhook delivery is not currently configured; do not add a destination or secret without an explicit operator-controlled credential and retry policy.
+
+## 11. Recovery completion
 
 An incident is closed only when:
 

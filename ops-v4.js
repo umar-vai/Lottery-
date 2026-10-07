@@ -4,7 +4,7 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var S={session:null,user:null,profile:null,focusEvent:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,adminChanges:null,scalability:null,eventStats:{},editing:null,editingCompleted:false,balanceUser:null,timer:null,playerQuery:'',ticketQuery:''};
+var S={session:null,user:null,profile:null,focusEvent:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,adminChanges:null,scalability:null,eventStats:{},editing:null,editingCompleted:false,balanceUser:null,timer:null,alertTimer:null,lastSloSeverity:null,playerQuery:'',ticketQuery:''};
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -66,7 +66,7 @@ function boot(){
     if(window.Draw01Shell){window.Draw01Shell.setSession(S.session);window.Draw01Shell.setBalance(p.balance||0)}
     $('gate').style.display='none';
     $('app').hidden=false;
-    return load();
+    return load().then(function(){startAlertPolling()});
     }).catch(function(e){$('gateMsg').textContent='Admin check failed: '+e.message;note(e.message,true)})
   }).catch(function(e){$('gateMsg').textContent='Session recovery failed: '+e.message;note(e.message,true)})
 }
@@ -88,7 +88,7 @@ function load(){
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
-function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderSloObservability();renderSloAlert();startCountdown()}
 function renderStats(){
   var summary=S.scalability&&S.scalability.summary||{},n=nextEvent();
   $('statEvents').textContent=Number(summary.lotteries!=null?summary.lotteries:S.events.length).toLocaleString();
@@ -212,6 +212,96 @@ function renderIncidents(){
   if(!rows.length){list.innerHTML='<div class="record-card"><strong>No application/database incidents in the last 24 hours.</strong></div>';return}
   list.innerHTML=rows.map(function(x){return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>'+esc(x.title||'Incident')+'</strong><span class="status-pill '+(x.severity==='critical'?'cancelled':'locked')+'">'+esc(String(x.severity||'warning').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(x.category||'system')+'</span><span>'+esc(x.detail||'')+'</span><span>'+esc(fmt(x.created_at))+'</span></div></div></div>'}).join('')
 }
+
+function sloClass(severity){return severity==='critical'?'cancelled':severity==='warning'?'locked':'completed'}
+function sloSignals(rows){
+  if(!Array.isArray(rows)||!rows.length)return'No active breach signals';
+  return rows.slice(0,4).map(function(x){return String(x.signal||x.category||'signal').replace(/_/g,' ')}).join(' · ')
+}
+function openIncidentsTab(){
+  var b=document.querySelector('.tabs button[data-tab="incidents"]');
+  if(b)activateTab(b);
+  var target=$('sloObservabilityPanel');if(target)target.scrollIntoView({behavior:'smooth',block:'start'})
+}
+function renderSloAlert(){
+  var banner=$('sloAlertBanner');if(!banner)return;
+  var r=S.incidents||{},slo=r.production_slo||{},severity=String(slo.severity||'ok'),pending=Number(r.pending_slo_ack_count||0);
+  if(severity==='ok'&&pending===0){banner.hidden=true;banner.className='slo-alert-banner glass';return}
+  banner.hidden=false;banner.className='slo-alert-banner glass '+(severity==='critical'?'critical':'warning');
+  var label=severity==='critical'?'CRITICAL':severity==='warning'?'WARNING':'ACK NEEDED';
+  $('sloAlertSeverity').textContent=label;$('sloAlertSeverity').className='status-pill '+sloClass(severity==='ok'?'warning':severity);
+  $('sloAlertTitle').textContent=severity==='ok'?'Production incident needs acknowledgement':'Production SLO '+severity;
+  var detail=sloSignals(slo.breaches);
+  if(pending)detail+=(detail?' · ':'')+pending+' active breach'+(pending===1?'':'es')+' awaiting acknowledgement';
+  $('sloAlertDetail').textContent=detail;
+  $('sloAlertOpenIncidents').onclick=openIncidentsTab
+}
+function renderSloObservability(){
+  var r=S.incidents||{},slo=r.production_slo,hist=r.slo_history,st=$('sloStatus'),summary=$('sloSummary'),history=$('sloHistorySummary'),eventsRoot=$('sloEventList');
+  if(!st||!summary||!history||!eventsRoot)return;
+  if(!slo){
+    st.textContent='UNAVAILABLE';st.className='status-pill cancelled';
+    summary.innerHTML='<div class="overview-empty">Production SLO data could not be loaded.</div>';history.innerHTML='';eventsRoot.innerHTML='';
+    return
+  }
+  var severity=String(slo.severity||'critical'),db=slo.database||{},cron=slo.cron||{},support=slo.support||{},delivery=r.alert_delivery||{};
+  st.textContent=severity.toUpperCase();st.className='status-pill '+sloClass(severity);
+  summary.innerHTML=[
+    info('Connection usage',String(Number(db.connection_usage_pct||0).toFixed(2))+'%'),
+    info('Blocked >30s',String(Number(db.blocked_sessions_over_30s||0))),
+    info('Idle tx >60s',String(Number(db.idle_in_transaction_over_60s||0))),
+    info('Table cache',String(Number(db.table_cache_hit_pct||0).toFixed(2))+'%'),
+    info('Index cache',String(Number(db.index_cache_hit_pct||0).toFixed(2))+'%'),
+    info('Cron failures · 15m',String(Number(cron.failed_15m||0))),
+    info('Missing required cron',String(Number(cron.missing_required_jobs||0))),
+    info('Support integrity',Number(support.duplicate_settlements||0)+Number(support.orphan_claims||0)+' issues'),
+    info('Pending acknowledgements',String(Number(r.pending_slo_ack_count||0))),
+    info('Admin alert polling',(delivery.admin_polling_seconds||60)+'s'),
+    info('External webhook',delivery.external_webhook_configured?'Configured':'Not configured'),
+    info('Checked',fmt(slo.checked_at))
+  ].join('');
+  var counts=hist&&hist.severity_counts||{};
+  history.innerHTML=[
+    info('Snapshots · 24h',String(Number(hist&&hist.snapshot_count||0))),
+    info('Healthy',String(Number(counts.ok||0))),
+    info('Warning',String(Number(counts.warning||0))),
+    info('Critical',String(Number(counts.critical||0))),
+    info('Unacknowledged · 7d',String(Number(r.unacknowledged_slo_breaches_7d||0)))
+  ].join('');
+  var rows=Array.isArray(r.slo_events)?r.slo_events:[];
+  if(!rows.length){eventsRoot.innerHTML='<div class="record-card"><strong>No SLO breach/recovery events in the last 7 days.</strong></div>';return}
+  eventsRoot.innerHTML=rows.map(function(x){
+    var breach=x.action==='production_slo_breached',sev=String(x.severity||'warning'),signals=sloSignals(x.breaches),ack=x.acknowledged;
+    var ackMeta=ack?'<span>Acknowledged by '+esc(x.acknowledged_by_name||x.acknowledged_by_email||'admin')+' · '+esc(fmt(x.acknowledged_at))+'</span><span>'+esc(x.acknowledgement_note||'')+'</span>':'';
+    var action=breach&&!ack?'<button type="button" class="btn primary compact" data-slo-ack="'+esc(x.id)+'">Acknowledge</button>':'';
+    return '<div class="record-card slo-event-card"><div class="record-main"><div class="record-title"><strong>'+esc(breach?'SLO breach':'SLO recovered')+'</strong><span class="status-pill '+sloClass(sev)+'">'+esc(sev.toUpperCase())+'</span>'+(ack?'<span class="muted-pill">ACKNOWLEDGED</span>':'')+'</div><div class="record-meta"><span>'+esc(signals)+'</span><span>'+esc(fmt(x.created_at))+'</span>'+ackMeta+'</div></div><div class="record-actions slo-event-actions">'+action+'</div></div>'
+  }).join('');
+  eventsRoot.querySelectorAll('[data-slo-ack]').forEach(function(b){b.onclick=function(){acknowledgeSloIncident(Number(b.getAttribute('data-slo-ack')))}})
+}
+function acknowledgeSloIncident(id){
+  var reason=requireReason('Add an acknowledgement note for this production SLO breach.','Investigating production SLO breach');
+  if(reason===null)return;
+  rpc('admin_acknowledge_production_incident',{p_audit_log_id:id,p_note:reason},reason).then(function(){
+    note('Production incident acknowledged');
+    return refreshIncidents()
+  }).catch(function(e){note('Acknowledgement failed: '+e.message,true)})
+}
+function pollIncidentAlerts(){
+  if(document.hidden||!S.session)return Promise.resolve();
+  return rpc('admin_get_operations_incident_center',{}).then(function(r){
+    var previous=S.lastSloSeverity,current=String(r&&r.production_slo&&r.production_slo.severity||'ok');
+    S.incidents=r;S.lastSloSeverity=current;
+    renderIncidents();renderSloObservability();renderSloAlert();
+    if(previous&&previous==='ok'&&current!=='ok')note('Production SLO changed to '+current.toUpperCase(),true);
+    if(previous&&previous!=='ok'&&current==='ok')note('Production SLO recovered');
+  }).catch(function(e){console.warn('Phase 7C alert poll failed',e)})
+}
+function startAlertPolling(){
+  clearInterval(S.alertTimer);
+  S.lastSloSeverity=String(S.incidents&&S.incidents.production_slo&&S.incidents.production_slo.severity||'ok');
+  S.alertTimer=setInterval(pollIncidentAlerts,60000)
+}
+
 function renderAdminChanges(){
   var r=S.adminChanges||{},rows=Array.isArray(r.rows)?r.rows:[],root=$('adminChangeList'),summary=$('adminChangeSummary');
   if(!root||!summary)return;
@@ -225,7 +315,7 @@ function renderAdminChanges(){
 }
 function refreshIncidents(){
   var b=$('refreshIncidents');if(b)b.disabled=true;
-  return rpc('admin_get_operations_incident_center',{}).then(function(r){S.incidents=r;renderIncidents();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+  return rpc('admin_get_operations_incident_center',{}).then(function(r){S.incidents=r;S.lastSloSeverity=String(r&&r.production_slo&&r.production_slo.severity||'ok');renderIncidents();renderSloObservability();renderSloAlert();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
 }
 function refreshAdminChanges(){if(window.Draw01RemainingScalability)return window.Draw01RemainingScalability.loadAdminChanges(true);return Promise.resolve()}
 

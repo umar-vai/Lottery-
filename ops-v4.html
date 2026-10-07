@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="phase3-lifecycle.css?v=1">
   <link rel="stylesheet" href="phase3-investigation.css?v=1">
   <link rel="stylesheet" href="phase3-scalability.css?v=1">
-  <link rel="stylesheet" href="phase3-remaining-scalability.css?v=1">
+  <link rel="stylesheet" href="phase3-remaining-scalability.css?v=1">\n  <link rel="stylesheet" href="phase7c-observability.css?v=1">
   <script src="support-center.js?v=8" data-d01-support-center="1" defer></script>
 </head>
 <body>
@@ -33,6 +33,11 @@
 
     <section id="app" class="app" hidden>
       <section class="hero-row"><div><span class="eyebrow">LOTTERY PLATFORM</span><h1>Control center</h1><p>Manage lotteries, tickets, winners, players, Love Points and audit history from one stable admin workspace.</p></div><div class="hero-actions"><button id="heroCreate" class="btn primary">+ Create lottery</button><a class="btn ghost" href="./">Open public site ↗</a></div></section>
+
+      <section id="sloAlertBanner" class="slo-alert-banner glass" hidden>
+        <div class="slo-alert-copy"><span class="eyebrow">PRODUCTION ALERT</span><strong id="sloAlertTitle">Production SLO needs attention</strong><span id="sloAlertDetail">Loading alert detail…</span></div>
+        <div class="slo-alert-actions"><span id="sloAlertSeverity" class="status-pill">CHECKING</span><button id="sloAlertOpenIncidents" class="btn ghost compact" type="button">Open incidents</button></div>
+      </section>
 
       <section class="stats-grid">
         <article class="stat-card glass"><div class="stat-icon">E</div><div><span>Lotteries</span><strong id="statEvents">0</strong><small>Total lotteries</small></div></article>
@@ -127,6 +132,14 @@
           <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">OPERATIONS INCIDENT CENTER</span><h2>Platform incidents</h2><p>Current draw, credit, cron, support and payment failures in one place.</p></div><span id="incidentStatus" class="status-pill">CHECKING</span></div><div id="incidentSummary" class="info-grid"></div><div class="action-grid"><button id="refreshIncidents" class="btn ghost compact" type="button">Refresh incidents</button></div></article>
           <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">RECENT INCIDENTS</span><h2>Needs attention / history</h2><p>Application and database incidents from the previous 24 hours.</p></div></div><div id="incidentList" class="records"></div></article>
         </div>
+        <article id="sloObservabilityPanel" class="panel glass slo-observability-panel">
+          <div class="panel-head"><div><span class="eyebrow">PRODUCTION SLO</span><h2>Live reliability & acknowledgement</h2><p>Current database/application SLO, 24-hour snapshots, breach/recovery history and operator acknowledgement.</p></div><span id="sloStatus" class="status-pill">CHECKING</span></div>
+          <div id="sloSummary" class="info-grid"></div>
+          <div class="section-label">24-hour SLO history</div>
+          <div id="sloHistorySummary" class="info-grid slo-history-summary"></div>
+          <div class="section-label">SLO events · last 7 days</div>
+          <div id="sloEventList" class="records slo-event-list"></div>
+        </article>
         <article class="panel glass"><div class="panel-head"><div><span class="eyebrow">CANONICAL ADMIN CHANGES</span><h2>Who changed what</h2><p>Actor, reason and exact before/after snapshots for sensitive admin mutations.</p></div><button id="refreshAdminChanges" class="btn ghost compact" type="button">Refresh changes</button></div><div class="remaining-page-meta"><input id="adminChangeSearch" type="search" autocomplete="off" placeholder="Search actor, action, reason or row"><select id="adminChangeTableFilter"><option value="all">All tables</option><option value="profiles">Profiles</option><option value="lottery_events">Lottery events</option><option value="event_prize_tiers">Prize tiers</option><option value="platform_controls">Platform controls</option><option value="credit_requests">Credit requests</option><option value="support_point_adjustments">Support point adjustments</option></select><span id="adminChangeSummary" class="muted-pill">0 changes</span></div><div id="adminChangeList" class="records"></div><div class="sc-page-actions"><button id="adminChangeLoadMore" class="btn ghost compact" type="button" hidden>Load more changes</button></div></article>
       </section>
 
@@ -208,7 +221,7 @@
   <script src="site-shell.js?v=29"></script>
   <script src="support-live.js?v=11" defer></script>
   <script src="support-admin.js?v=4" defer></script>
-  <script src="ops-v4.js?v=8" defer></script>
+  <script src="ops-v4.js?v=9" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script src="phase3-control-room.js?v=1" defer></script>
   <script src="phase3-lifecycle.js?v=1" defer></script>

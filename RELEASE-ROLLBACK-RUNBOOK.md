@@ -2,7 +2,7 @@
 
 Date: 2026-10-07
 
-This runbook is the production release policy for DRAW//01 / Lootera.
+This runbook is the production release policy for Lootera / Lootera.
 
 ## 1. Before every release
 

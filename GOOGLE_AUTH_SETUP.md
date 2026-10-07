@@ -1,4 +1,4 @@
-# Google Login Setup — DRAW//01
+# Google Login Setup — Lootera
 
 The database, scheduler, realtime draw system, and GitHub Pages frontend are already connected. Google OAuth is the only account-level setup that requires your Google credentials.
 
@@ -14,7 +14,7 @@ Copy the generated **Client ID** and **Client Secret**.
 
 ## 2. Supabase Google provider
 
-Open Supabase project **Lottery DRAW01** → Authentication → Providers → Google.
+Open the Supabase project for **Lootera** (ref `mwtlsnneooxmryondrex`) → Authentication → Providers → Google.
 
 Enable Google and paste the Client ID and Client Secret from Google Cloud.
 

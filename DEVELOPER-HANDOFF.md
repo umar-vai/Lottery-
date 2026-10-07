@@ -1,4 +1,4 @@
-# DRAW//01 Developer Handoff
+# Lootera Developer Handoff
 
 > Read this first when taking over the project.
 >
@@ -18,7 +18,7 @@ Related documents:
 
 # 1. Project summary in one minute
 
-DRAW//01 is a static GitHub Pages application with a Supabase backend.
+Lootera is a static GitHub Pages application with a Supabase backend.
 
 Current primary product model:
 

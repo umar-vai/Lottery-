@@ -80,7 +80,7 @@ The Edge Function remains custom-authenticated with the independent Vault dispat
 
 For an active incident, the Telegram alert contains:
 
-- DRAW//01 + severity;
+- Lootera + severity;
 - delivery stage: Initial / Escalation 1 / Escalation 2;
 - audit event ID;
 - breached signal names;
@@ -89,7 +89,7 @@ For an active incident, the Telegram alert contains:
 - delivery attempt number;
 - operator instruction to open the Incident Center and acknowledge.
 
-Recovery sends a separate `DRAW//01 — RECOVERED` message.
+Recovery sends a separate `Lootera — RECOVERED` message.
 
 ## What is still needed
 

@@ -68,13 +68,17 @@ begin
   end if;
 
   if has_function_privilege('anon','public.admin_get_operations_incident_center()','EXECUTE')
-     or has_function_privilege('anon','public.admin_get_admin_change_audit(integer)','EXECUTE') then
+     or has_function_privilege('anon','public.admin_list_admin_changes_page(text,text,integer,timestamptz,bigint)','EXECUTE') then
     raise exception 'Anon can execute admin incident/audit RPCs';
   end if;
 
   if not has_function_privilege('authenticated','public.admin_get_operations_incident_center()','EXECUTE')
-     or not has_function_privilege('authenticated','public.admin_get_admin_change_audit(integer)','EXECUTE') then
-    raise exception 'Authenticated admin incident/audit RPC grants are missing';
+     or not has_function_privilege('authenticated','public.admin_list_admin_changes_page(text,text,integer,timestamptz,bigint)','EXECUTE') then
+    raise exception 'Authenticated canonical admin incident/audit RPC grants are missing';
+  end if;
+
+  if has_function_privilege('authenticated','public.admin_get_admin_change_audit(integer)','EXECUTE') then
+    raise exception 'Deprecated unpaginated admin audit RPC is still browser-executable';
   end if;
 
   v_incidents:=public.admin_get_operations_incident_center();
@@ -85,7 +89,7 @@ begin
     raise exception 'Incident Center report contract is incomplete';
   end if;
 
-  v_changes:=public.admin_get_admin_change_audit(20);
+  v_changes:=public.admin_list_admin_changes_page(null,null,20,null,null);
   if v_changes is null
      or not (v_changes ? 'rows')
      or jsonb_array_length(v_changes->'rows')<1 then

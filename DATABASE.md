@@ -704,7 +704,7 @@ Primary/current:
 - `support-phone-bridge` — bridge ingest; custom device token; `verify_jwt=false`
 - `support-device-admin` — device management; JWT protected
 - `claim-support-points` — user claim; JWT protected
-- `production-alert-dispatch` — internal Phase 7D webhook dispatcher; custom Vault dispatch-token auth; `verify_jwt=false`; external webhook URL comes only from Edge Function secrets
+- `production-alert-dispatch` — Phase 7D dispatcher v2; custom Vault dispatch-token auth; `verify_jwt=false`; supports generic HTTPS webhooks plus native Telegram Bot API pairing/test/delivery. Telegram bot token/chat ID remain in Vault.
 
 Legacy:
 
@@ -846,6 +846,10 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 - `public.service_claim_production_alert_batch(text,integer)` — service-role-only Edge dispatcher claim API
 - `public.service_complete_production_alert_delivery(...)` — service-role-only delivery result API
 - `public.service_record_production_alert_dispatcher_state(...)` — service-role-only dispatcher configuration health API
+- `private.set_production_alert_telegram_bot_token(text)` — trusted operator-only Vault token writer
+- `private.rotate_production_alert_telegram_pairing_code()` — trusted operator-only pairing-code rotation
+- `public.service_get_production_alert_delivery_target(text)` — service-role-only channel/Telegram target lookup, additionally protected by dispatch token
+- `public.service_store_production_alert_telegram_chat(text,text,text)` — service-role-only Telegram pairing result writer
 
 ## Virtual credit-request functions
 

@@ -9,13 +9,16 @@ const fail=m=>failures.push(m);
 
 const core='supabase/migrations/202610070600_phase7d_external_alert_core.sql';
 const obs='supabase/migrations/202610070610_phase7d_alert_observability.sql';
+const telegram='supabase/migrations/202610070620_phase7d_telegram_channel.sql';
 const runtime='supabase/tests/phase7d_external_alert_delivery.sql';
+const telegramRuntime='supabase/tests/phase7d_telegram_channel.sql';
+const telegramReport='PHASE-7D-TELEGRAM-ACTIVATION.md';
 const edge='supabase/functions/production-alert-dispatch/index.ts';
 const report='PHASE-7D-EXTERNAL-ALERT-DELIVERY.md';
 const adminJs='ops-v4.js';
 const adminHtml='ops-v4.html';
 
-for(const f of [core,obs,runtime,edge,report,adminJs,adminHtml]){
+for(const f of [core,obs,telegram,runtime,telegramRuntime,edge,report,telegramReport,adminJs,adminHtml]){
   if(!exists(f))fail('Missing Phase 7D artifact: '+f);
 }
 
@@ -53,6 +56,24 @@ if(exists(obs)){
   ]) if(!sql.includes(marker))fail('Phase 7D observability migration missing marker: '+marker);
 }
 
+if(exists(telegram)){
+  const sql=read(telegram);
+  for(const marker of [
+    "check (channel in ('webhook','telegram'))",
+    'production_alert_telegram_pairing_code',
+    'private.set_production_alert_telegram_bot_token',
+    'service_get_production_alert_delivery_target',
+    'service_store_production_alert_telegram_chat',
+    'telegram_bot_configured',
+    'telegram_chat_configured',
+    'telegram_ready'
+  ]) if(!sql.includes(marker))fail('Phase 7D Telegram migration missing marker: '+marker);
+
+  if(/production_alert_telegram_bot_token[^\n]*['"][0-9]+:/i.test(sql)){
+    fail('Telegram bot token must not be hardcoded in migration.');
+  }
+}
+
 if(exists(runtime)){
   const sql=read(runtime);
   for(const marker of [
@@ -64,6 +85,16 @@ if(exists(runtime)){
     'Phase 7D private delivery tables are directly readable',
     'rollback;'
   ]) if(!sql.includes(marker))fail('Phase 7D runtime contract missing marker: '+marker);
+}
+
+if(exists(telegramRuntime)){
+  const sql=read(telegramRuntime);
+  for(const marker of [
+    'Telegram is not the selected production alert channel',
+    'Telegram service setup RPC is browser executable',
+    'Operator-only Telegram bot-token helper is externally executable',
+    'rollback;'
+  ]) if(!sql.includes(marker))fail('Phase 7D Telegram runtime contract missing marker: '+marker);
 }
 
 if(exists(edge)){
@@ -78,11 +109,21 @@ if(exists(edge)){
     "signal:AbortSignal.timeout(8000)",
     'service_claim_production_alert_batch',
     'service_complete_production_alert_delivery',
-    "u.protocol!=='https:'"
+    "u.protocol!=='https:'",
+    'telegram_discover',
+    'telegram_test',
+    'service_get_production_alert_delivery_target',
+    'service_store_production_alert_telegram_chat',
+    'api.telegram.org',
+    "'sendMessage'",
+    'getUpdates?limit=100'
   ]) if(!code.includes(marker))fail('Phase 7D Edge dispatcher missing marker: '+marker);
 
-  if(/https:\/\/(?!mwtlsnneooxmryondrex\.supabase\.co)/i.test(code)){
-    fail('Unexpected hardcoded external HTTPS destination in Phase 7D Edge dispatcher.');
+  const hardcodedUrls=[...code.matchAll(/https:\/\/[^'"\s)]+/g)].map(x=>x[0]);
+  for(const u of hardcodedUrls){
+    if(!u.startsWith('https://mwtlsnneooxmryondrex.supabase.co')&&!u.startsWith('https://api.telegram.org')){
+      fail('Unexpected hardcoded external HTTPS destination in Phase 7D Edge dispatcher: '+u);
+    }
   }
 }
 
@@ -90,7 +131,9 @@ if(exists(adminJs)){
   const code=read(adminJs);
   for(const marker of [
     "info('External delivery'",
-    "info('Webhook config'",
+    "info('Alert channel'",
+    "info('Telegram bot'",
+    "info('Telegram chat'",
     "info('Alert queue'",
     "info('Dead letters'",
     "info('Escalation policy'",
@@ -98,8 +141,21 @@ if(exists(adminJs)){
   ]) if(!code.includes(marker))fail('Phase 7D admin UI missing marker: '+marker);
 }
 
-if(exists(adminHtml)&&!read(adminHtml).includes('ops-v4.js?v=10')){
-  fail('Phase 7D admin JS cache-bust version is missing.');
+if(exists(adminHtml)&&!/ops-v4\.js\?v=(?:1[01]|[2-9][0-9]+)\b/.test(read(adminHtml))){
+  fail('Phase 7D admin JS cache-bust version must be 10 or newer.');
+}
+
+if(exists(telegramReport)){
+  const md=read(telegramReport);
+  for(const marker of [
+    'Telegram',
+    '@BotFather',
+    '/start <PAIRING_CODE>',
+    'production_alert_telegram_bot_token',
+    'production_alert_telegram_chat_id',
+    'production-alert-dispatch',
+    'version 2'
+  ]) if(!md.includes(marker))fail('Phase 7D Telegram report missing marker: '+marker);
 }
 
 if(exists(report)){
@@ -123,4 +179,4 @@ if(failures.length){
   process.exit(1);
 }
 
-console.log('PHASE 7D EXTERNAL ALERT DELIVERY CHECK PASSED — durable outbox, escalation, retry, dispatcher auth, and disabled-by-default webhook delivery are protected.');
+console.log('PHASE 7D EXTERNAL ALERT DELIVERY CHECK PASSED — durable outbox, escalation, retry, dispatcher auth, and disabled-by-default webhook/Telegram delivery are protected.');

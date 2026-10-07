@@ -185,7 +185,21 @@ The admin page refreshes incident/SLO state every 60 seconds while visible. Exte
 
 ## 11. Phase 7D external alert delivery
 
-External webhook delivery is disabled unless a real HTTPS destination has been configured in Edge Function secrets and the private delivery config is explicitly enabled.
+External alert delivery remains disabled until the selected destination is configured and tested. The selected production channel is now **Telegram**.
+
+Telegram activation:
+
+1. create the alert bot with **@BotFather**;
+2. store the BotFather token through the trusted operator helper so it goes directly into Supabase Vault;
+3. rotate/read the pairing code;
+4. from the intended private Telegram account, send `/start <PAIRING_CODE>` to the bot;
+5. invoke the dispatcher `telegram_discover` action to discover/store the chat ID;
+6. invoke `telegram_test` and confirm the test alert arrived;
+7. explicitly enable external delivery only after the test succeeds.
+
+Telegram bot tokens/chat IDs must never be stored in Git, frontend code, audit logs, or GitHub issues.
+
+Generic HTTPS webhook delivery remains available as a fallback path if the channel is later changed back to `webhook`.
 
 Required secret:
 

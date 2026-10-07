@@ -50,6 +50,9 @@ jobs:
       - name: Phase 7B operations history gate
         run: node scripts/phase7b-ops-history.mjs
 
+      - name: Phase 7C incident alerting gate
+        run: node scripts/phase7c-incident-alerting.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

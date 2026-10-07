@@ -96,7 +96,8 @@ if(exists('ops-v4.js')){
 
 if(exists('ops-v4.html')){
   const markup=read('ops-v4.html');
-  if(!markup.includes('ops-v4.js?v=12')) fail('Phase 7F admin bundle cache-bust version missing.');
+  const m=markup.match(/ops-v4\.js\?v=(\d+)/);
+  if(!m||Number(m[1])<12) fail('Phase 7F admin bundle cache-bust version must be 12 or newer.');
   for(const marker of ['mutationGuardrailPanel','Pause all user mutations','Resume user mutations']){
     if(!markup.includes(marker)) fail('Phase 7F admin HTML missing marker: '+marker);
   }

@@ -10,7 +10,10 @@ permissions:
 
 jobs:
   cleanup:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'Phase 8B: execute retired Edge cleanup')
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.message, 'Phase 8B: execute retired Edge cleanup') ||
+      contains(github.event.head_commit.message, 'Phase 8B: retry retired Edge cleanup')
     runs-on: ubuntu-22.04
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

@@ -4,9 +4,9 @@ This directory mirrors the Edge Functions deployed to Supabase project `Lottery 
 
 | Function | Status | Version | JWT verification | Production bundle SHA-256 | Role |
 |---|---|---:|---|---|---|
-| `support-phone-bridge` | ACTIVE | 3 | disabled | `2b8a92a624d84ff080e0e3ac7c0272a61dda40fcfdf720abbb19535bb6e090ac` | Current custom-token phone ingest |
-| `support-device-admin` | ACTIVE | 4 | enabled | `05dd992f32baa7c458b3c4fd4bd8ff670e999dcaeb7d5f95601c4dea2f0669c7` | Current admin device management; bounded compatibility reads |
-| `claim-support-points` | ACTIVE | 3 | enabled | `49d3b97b59841aabaa2a6f11863aa770f1930f85f9a2c1ea803a33312de639a8` | Current authenticated support claim |
+| `support-phone-bridge` | ACTIVE | 4 | disabled | `1c030c068b4d30b6949f1e357f3499c72f8e100e9985f11cf2d999b2f72b34da` | Current custom-token phone ingest; structured PII-free telemetry |
+| `support-device-admin` | ACTIVE | 5 | enabled | `a13a2083412a873546dd048c1e69eac3a7cc0386c40ececf32270863e520e937` | Current admin device management; structured PII-free telemetry |
+| `claim-support-points` | ACTIVE | 4 | enabled | `6b5ce4668591aea58011b546c1a02142998a604725fb1520e657e22316c9f510` | Current authenticated support claim; structured PII-free telemetry |
 | `binance-pay-create-order` | ACTIVE | 1 | enabled | `48cbde4a7cc6ffd2ec63d94e0ae023e33acf5fb17ad3b73e6c87a181df4f586c` | Current Binance Pay order creation |
 | `binance-pay-webhook` | ACTIVE | 1 | disabled | `750bab5ade2f2947937fc2722173d055b1629fcb9ab9496f2305ab7fd0fd9a15` | External Binance webhook |
 | `phone-bridge` | ACTIVE | 3 | disabled | `6c6908f36efdcbc56387a3783b0785e617fb95f184528eb4a62be9d53efe1b6c` | Decommissioned 410 stub |

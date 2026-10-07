@@ -20,7 +20,6 @@ begin
     'referral_rewards_referred_user_id_idx',
     'support_bridge_devices_created_by_idx',
     'support_claim_requests_transaction_id_idx',
-    'support_pending_claims_transaction_id_idx',
     'support_point_adjustments_actor_user_id_idx',
     'support_transactions_device_id_idx'
   ]
@@ -40,8 +39,7 @@ begin
     from pg_policies
     where schemaname='public'
       and (
-        (tablename='support_pending_claims' and policyname='support_pending_select_own')
-        or (tablename='support_claim_requests' and policyname='support_claim_requests_select_own')
+        (tablename='support_claim_requests' and policyname='support_claim_requests_select_own')
         or (tablename='slot_spins' and policyname='users can read own slot spins')
         or (tablename='plinko_drops' and policyname='users can read own plinko drops')
         or (tablename='binance_pay_orders' and policyname='binance_pay_orders_select_own')
@@ -65,9 +63,9 @@ begin
     select count(*)
     from pg_policies
     where schemaname='public'
-      and tablename in ('support_pending_claims','support_claim_requests','slot_spins','plinko_drops','binance_pay_orders')
+      and tablename in ('support_claim_requests','slot_spins','plinko_drops','binance_pay_orders')
       and cmd='SELECT'
-  ) < 5 then
+  ) < 4 then
     raise exception 'One or more optimized RLS SELECT policies are missing';
   end if;
 

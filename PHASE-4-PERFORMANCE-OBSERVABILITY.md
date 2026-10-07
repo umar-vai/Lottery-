@@ -102,7 +102,7 @@ Observed baseline before the source change:
 - old `support-device-admin` v3 list invocations were roughly 0.78–0.95 seconds
 - deployed v4 had no post-deployment invocation in the measured window, so it had no live latency sample yet
 
-The connector was not permitted to deploy the Edge Function revisions from this chat, so the source is committed for deployment through the normal Supabase deployment path.
+`support-device-admin` v5, `support-phone-bridge` v4, and `claim-support-points` v4 were subsequently deployed to production from the committed Phase 4 source. Live function source verification confirmed `trace_id`, `duration_ms`, and the `x-support-trace-id` response header are present in all three production bundles.
 
 ## Advisor cleanup
 
@@ -139,11 +139,11 @@ The remaining authenticated SECURITY DEFINER functions are current application e
 
 ### Auth setting outside this connector
 
-`auth_leaked_password_protection` remains a Supabase Auth project setting. It should be enabled in Auth settings; this connector does not expose that configuration mutation.
+`auth_leaked_password_protection` remains a Supabase Auth project setting. It should be enabled in Auth settings; the connected Supabase MCP surface currently exposes no Auth configuration mutation for this setting.
 
 ### Performance advisor: unused indexes
 
-23 unused-index INFO findings remain. No index was dropped blindly.
+21 unused-index INFO findings remain after retiring the empty legacy `support_pending_claims` table and its two table-specific indexes. No current index was dropped blindly.
 
 They fall into three groups:
 
@@ -152,6 +152,28 @@ They fall into three groups:
 3. low-traffic feature indexes for game/payment/support paths.
 
 An index should only be removed after a representative traffic window shows continued zero usage and a dependency/query review confirms it is not preserving FK or future keyset performance.
+
+## Legacy Support claim retirement
+
+A final dependency/caller/runtime audit isolated the superseded 3-argument Support claim path from the current production flow.
+
+Retired in production:
+
+- `public.support_pending_claims` (confirmed empty)
+- `public.service_submit_support_claim(uuid,text,text)`
+- `public.service_settle_pending_support_transaction(uuid)`
+- `public.service_claim_support_points(uuid,text,text)`
+- `private.submit_support_claim(uuid,text,text)`
+- `private.settle_pending_support_transaction(uuid)`
+- `private.claim_support_points(uuid,text,text)`
+
+The canonical 4-argument submit + current pending-claim settlement path remains intact. Direct EXECUTE on `private.settle_support_claim_request(uuid)` was also revoked from `PUBLIC`, `anon`, `authenticated`, and `service_role`; it remains reachable only through the protected canonical service wrapper.
+
+This cleanup reduced performance-advisor unused-index INFO findings from **23 to 21**.
+
+## Profile write boundary verification
+
+The authenticated browser role has **SELECT-only** privileges on `public.profiles`; it has no table or column UPDATE privilege and there is no UPDATE RLS policy. Self-service profile edits remain restricted to `update_my_profile(display_name,nickname)`, which only writes those two display fields plus `updated_at`. Direct browser changes to `role` or Draw Credit `balance` are therefore blocked at the database privilege boundary.
 
 ## Verification
 

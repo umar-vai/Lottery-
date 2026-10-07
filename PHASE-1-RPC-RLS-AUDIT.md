@@ -23,6 +23,8 @@ Legacy draw-admin functions that are not used by the current browser admin are a
 
 Phase 6 tightened the virtual-credit review path: `public.admin_review_credit_request(...)` is now the canonical authenticated SECURITY DEFINER admin entrypoint, and direct `anon` / `authenticated` / `service_role` EXECUTE on `private.review_credit_request(...)` is revoked. Production classification now shows zero authenticated-executable SECURITY DEFINER functions in the `private` schema.
 
+Phase 7C adds one intentional browser-callable admin SECURITY DEFINER endpoint, `public.admin_acknowledge_production_incident(bigint,text)`. It is executable by `authenticated` only, performs its own `auth.uid() + is_admin()` guard, and writes only the private acknowledgement record plus its audit event. The Supabase advisor authenticated SECURITY DEFINER warning count is therefore expected to be **47** after Phase 7C. This count is not a target to blindly reduce; each browser-callable endpoint must remain justified and guarded.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:

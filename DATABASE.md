@@ -361,6 +361,8 @@ Additional production health cron jobs:
 draw-credit-integrity-hourly   -> 17 * * * *   -> private.run_draw_credit_integrity_check()
 lottery-operational-health     -> */5 * * * *  -> private.run_lottery_operational_health_check()
 production-slo-every-5-minutes -> */5 * * * *  -> private.run_production_slo_check()
+production-slo-snapshot-15m    -> */15 * * * * -> private.capture_production_slo_snapshot()
+operational-history-retention-daily -> 23 3 * * * -> private.prune_operational_history()
 ```
 
 Phase 7A's private `production_slo_report()` combines application integrity with connection pressure, blocking sessions, cache-hit rates, recent cron failures, required-cron presence, and Support settlement invariants. It is not exposed to browser/service API roles.
@@ -826,6 +828,9 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 - `private.run_due_lottery_events()`
 - `private.production_slo_report()` — Phase 7A production SLO classifier
 - `private.run_production_slo_check()` — five-minute debounced SLO audit checker
+- `private.capture_production_slo_snapshot()` — private 15-minute SLO snapshot writer
+- `private.production_slo_history_report(integer)` — private 1–720 hour SLO history summary
+- `private.prune_operational_history()` — 30-day SLO/pg_cron history retention
 
 ## Virtual credit-request functions
 

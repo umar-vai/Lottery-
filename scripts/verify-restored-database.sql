@@ -57,8 +57,8 @@ begin
     raise exception 'Open lottery failure incidents exist after restore: %',v_health;
   end if;
 
-  if exists(select 1 from cron.job where active) then
-    raise exception 'Restore rehearsal safety failed: cron jobs are still active';
+  if exists(select 1 from cron.job) then
+    raise exception 'Restore rehearsal safety failed: cron jobs were not unscheduled';
   end if;
 
   if exists(

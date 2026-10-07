@@ -56,6 +56,9 @@ jobs:
       - name: Phase 7D external alert delivery gate
         run: node scripts/phase7d-external-alert-delivery.mjs
 
+      - name: Phase 7E security and DR gate
+        run: node scripts/phase7e-security-dr.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

@@ -910,6 +910,10 @@ These are high priority.
 6. Keep database tests for concurrent ticket purchases at max capacity.
 7. Keep tests proving one support transaction cannot be claimed twice.
 8. Keep tests proving Support Points cannot be used in `purchase_event_ticket`.
+9. Phase 7E confirmed Lootera Auth is currently Google-only: 7 identities, 0 password users. Supabase leaked-password protection remains a Free-plan advisor warning and must be enabled if password auth is introduced or the project upgrades to a plan that supports it.
+10. Phase 7E confirms `pg_net 0.20.4` is non-relocatable in the live project. Do not attempt an unsupported schema move solely to silence the advisor.
+11. The two Phase 7E private foreign keys are covered by `production_alert_delivery_config_updated_by_idx` and `production_incident_acknowledgements_acknowledged_by_idx`.
+12. A real encrypted off-site backup and isolated restore rehearsal are still required; use `scripts/export-offsite-backup.sh`, `scripts/restore-offsite-backup.sh`, and `scripts/verify-restored-database.sql`.
 
 ---
 
@@ -957,3 +961,27 @@ Before changing the database, compare:
 6. repository SQL
 
 Then create a migration that moves the known current state forward.
+
+---
+
+# 19. Phase 7E disaster-recovery rules
+
+Lootera is currently on a Free-plan recovery model, so operator-controlled off-site backups remain mandatory.
+
+Backup requirements:
+
+- export roles, schema, data, and `supabase_migrations` history;
+- encrypt the archive before off-site transfer;
+- keep database credentials and dumps outside Git;
+- verify SHA-256 before and after transfer;
+- back up `event-covers` object bytes separately from database metadata;
+- separately inventory Edge Function deployments/secrets, Google Auth provider configuration, and other platform settings.
+
+Restore rehearsal requirements:
+
+- use an isolated non-production destination;
+- never restore the rehearsal bundle into project `mwtlsnneooxmryondrex`;
+- unschedule all restored cron jobs before verification;
+- disable restored external alert delivery before verification;
+- run `scripts/verify-restored-database.sql`;
+- only re-enable cron/outbound integrations after destination-specific credentials and settings are deliberately configured.

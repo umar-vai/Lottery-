@@ -166,13 +166,14 @@ Maps Supabase Auth users into application users.
 | `created_at` | timestamptz | Created |
 | `updated_at` | timestamptz | Updated |
 
-### RLS
+### RLS / write boundary
 
-- user can read own profile
-- user can update own profile under current policy
-- admin can read all profiles
+- authenticated users can read their own profile
+- admins can read all profiles
+- authenticated browser roles have **SELECT-only** table/column privileges on `profiles`
+- there is no browser UPDATE policy or UPDATE grant
 
-Important: role/balance security must not depend only on this generic user update policy. Sensitive balance/role changes should continue to go through protected RPCs and should be audited. A future security review should verify that users cannot exploit direct profile updates to change `role` or `balance` fields; ideally field-sensitive writes should be enforced in the database rather than relying on UI behavior.
+Self-service profile editing uses `update_my_profile(display_name,nickname)`, which only updates those two display fields plus `updated_at`. Sensitive `role` and Draw Credit `balance` changes remain behind protected admin/database mutation paths.
 
 ---
 
@@ -859,15 +860,14 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 
 These are high priority.
 
-1. Review the `profiles` UPDATE policy and ensure an ordinary user cannot directly set `role` or `balance` through PostgREST. Prefer column-restricted privileges or RPC-only sensitive mutations.
-2. Enumerate EXECUTE grants for every SECURITY DEFINER function.
-3. Confirm each SECURITY DEFINER function sets a safe search path.
-4. Source-control every live migration and Edge Function.
-5. Remove/decommission unused RPC generations only after caller analysis.
-6. Physically delete the already-decommissioned `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit` Edge stubs when a deletion-capable Supabase surface is available.
-7. Keep database tests for concurrent ticket purchases at max capacity.
-8. Keep tests proving one support transaction cannot be claimed twice.
-9. Keep tests proving Support Points cannot be used in `purchase_event_ticket`.
+1. Enumerate EXECUTE grants for every SECURITY DEFINER function and keep intentional public/authenticated entrypoints documented.
+2. Confirm each SECURITY DEFINER function sets a safe search path.
+3. Source-control every live migration and Edge Function.
+4. Remove/decommission unused RPC generations only after caller analysis.
+5. Physically delete the already-decommissioned `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit` Edge stubs when a deletion-capable Supabase surface is available.
+6. Keep database tests for concurrent ticket purchases at max capacity.
+7. Keep tests proving one support transaction cannot be claimed twice.
+8. Keep tests proving Support Points cannot be used in `purchase_event_ticket`.
 
 ---
 

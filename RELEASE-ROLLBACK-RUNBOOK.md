@@ -18,7 +18,7 @@ The current main SHA before the release is the primary frontend rollback referen
 
 Run/check:
 
-1. GitHub Phase 0–7G validation.
+1. GitHub Phase 0–8 validation.
 2. `private.production_slo_report()`.
 3. Draw Credit integrity report.
 4. lottery operational health.
@@ -316,7 +316,55 @@ A live global mutation-kill-switch outage was intentionally not injected into ac
 
 Historical note: Phase 7G began while the 24-hour SLO window already contained two older `job canceled` cron failures. New Phase 7G acceptance focuses on no failures in the last 15 minutes, all required jobs present, and no new integrity/lock regression.
 
-## 15. Recovery completion
+## 15. Phase 8 production launch stabilization
+
+Phase 8 uses a 72-hour stabilization window from **2026-10-07 10:32:08 UTC** through **2026-10-10 10:32:08 UTC**.
+
+Current technical decision values:
+
+- `technical_go_operator_signoff_required` — technical controls are green; operator-owned exceptions remain;
+- `hold_for_warning` — no critical blocker, but a technical warning requires disposition;
+- `no_go` — a technical blocker exists.
+
+During the window:
+
+1. keep `production-launch-stability-15m` active;
+2. review Admin → Incidents → Phase 8 Launch Stabilization;
+3. treat any blocked snapshot as a launch incident;
+4. investigate every warning snapshot;
+5. preserve Telegram and SLO evidence;
+6. do not suppress a failing integrity signal simply to make the launch report green.
+
+Immediate Phase 8 NO-GO/rollback signals include:
+
+- critical production SLO;
+- Draw Credit issue > 0;
+- Support duplicate/orphan settlement > 0;
+- required production cron missing;
+- mutation guardrail unexpectedly disabled;
+- Telegram dispatcher unavailable/dead-lettered when external alerting is expected;
+- privileged-function surface drift;
+- any financial/ticket residue or duplicate debit.
+
+At 72-hour exit, sign off only if:
+
+- technical readiness is READY;
+- no critical launch snapshot remains unresolved;
+- warning snapshots have an owner and documented disposition;
+- Draw Credit and Support invariants remain clean;
+- connection/lock thresholds remain within the runbook limits;
+- Telegram remains ready with zero dead letters;
+- mutation guardrails are fully enabled unless an intentional incident pause is documented.
+
+Operator sign-off still separately covers:
+
+- issue #61 real encrypted off-site backup + isolated restore rehearsal;
+- issue #59 physical deletion of retired Edge stubs;
+- custom-domain/DNS/HTTPS verification for `lootera.win` before a campaign explicitly relies on that origin.
+
+Historical cron runs for jobs that no longer exist are not current SLO failures. Phase 8 scopes 24-hour cron-failure health to currently active jobs while retaining missing-required-job detection.
+
+## 16. Recovery completion
 
 An incident is closed only when:
 

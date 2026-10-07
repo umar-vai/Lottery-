@@ -116,7 +116,7 @@ if(exists(edge)){
     'service_store_production_alert_telegram_chat',
     'api.telegram.org',
     "'sendMessage'",
-    "'getUpdates'"
+    'getUpdates?limit=100'
   ]) if(!code.includes(marker))fail('Phase 7D Edge dispatcher missing marker: '+marker);
 
   const hardcodedUrls=[...code.matchAll(/https:\/\/[^'"\s)]+/g)].map(x=>x[0]);

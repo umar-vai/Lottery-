@@ -131,8 +131,9 @@ function alertSignals(payload:Record<string,unknown>){
 function telegramAlertText(item:AlertItem){
   const p=item.payload||{};
   const event=String(p.event||'production_slo_breached');
-  const recovered=item.delivery_kind==='recovery'||event==='production_slo_recovered'||item.severity==='ok';
-  const heading=recovered?'Lootera — RECOVERED':'Lootera — '+String(item.severity||'warning').toUpperCase();
+  const isTest=event==='production_alert_test'||p.test===true;
+  const recovered=!isTest&&(item.delivery_kind==='recovery'||event==='production_slo_recovered'||item.severity==='ok');
+  const heading=isTest?'Lootera — TEST ALERT':recovered?'Lootera — RECOVERED':'Lootera — '+String(item.severity||'warning').toUpperCase();
   const kind=titleCase(String(item.delivery_kind||'initial'));
   const occurred=String(p.occurred_at||item.created_at||new Date().toISOString());
   const action=recovered

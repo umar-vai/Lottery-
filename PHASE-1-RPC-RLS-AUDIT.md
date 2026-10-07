@@ -21,6 +21,8 @@ Current browser-callable `admin_*` functions are executable by `authenticated`, 
 
 Legacy draw-admin functions that are not used by the current browser admin are already service-role-only.
 
+Phase 6 tightened the virtual-credit review path: `public.admin_review_credit_request(...)` is now the canonical authenticated SECURITY DEFINER admin entrypoint, and direct `anon` / `authenticated` / `service_role` EXECUTE on `private.review_credit_request(...)` is revoked. Production classification now shows zero authenticated-executable SECURITY DEFINER functions in the `private` schema.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:

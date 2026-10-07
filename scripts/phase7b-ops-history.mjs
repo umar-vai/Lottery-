@@ -9,10 +9,11 @@ const fail=m=>failures.push(m);
 
 const historyMigration='supabase/migrations/202610070515_phase7b_ops_history.sql';
 const indexMigration='supabase/migrations/202610070525_phase7b_drop_duplicate_slug_index.sql';
+const cronMigration='supabase/migrations/202610070530_phase7b_extend_required_crons.sql';
 const runtime='supabase/tests/phase7b_ops_history.sql';
 const report='PHASE-7B-OPS-HISTORY.md';
 
-for (const f of [historyMigration,indexMigration,runtime,report]) {
+for (const f of [historyMigration,indexMigration,cronMigration,runtime,report]) {
   if (!exists(f)) fail('Missing Phase 7B artifact: '+f);
 }
 
@@ -43,6 +44,15 @@ if (exists(indexMigration)) {
   }
 }
 
+if (exists(cronMigration)) {
+  const sql=read(cronMigration);
+  for (const marker of [
+    'production-slo-snapshot-15m',
+    'operational-history-retention-daily',
+    'private.production_slo_report'
+  ]) if (!sql.includes(marker)) fail('Phase 7B required-cron migration missing marker: '+marker);
+}
+
 if (exists(runtime)) {
   const sql=read(runtime);
   for (const marker of [
@@ -52,6 +62,8 @@ if (exists(runtime)) {
     'operational-history-retention-daily',
     'Private SLO snapshot table is externally readable',
     'Duplicate lottery_events_slug_idx still exists',
+    'Phase 7B required cron set is incomplete',
+    'Production SLO report does not recognize all Phase 7B required cron jobs',
     'rollback;'
   ]) if (!sql.includes(marker)) fail('Phase 7B runtime test missing marker: '+marker);
 }

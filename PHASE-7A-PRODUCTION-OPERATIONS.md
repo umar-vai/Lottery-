@@ -113,6 +113,8 @@ Current live result after deployment:
 
 with no active breaches.
 
+The JSON threshold contract exposes keys including `connections_warning_pct`, `connections_critical_pct`, `cache_hit_warning_below_pct`, `blocked_session_critical_after_seconds`, and `idle_in_transaction_warning_after_seconds`.
+
 ## 3. Automated SLO checker
 
 Private function:
@@ -219,3 +221,5 @@ A clean 24-hour and then 7-day observation should be captured after Phase 7A to 
 - natural Support Edge telemetry with `trace_id`.
 
 Do not generate fake financial/support mutations merely to create monitoring data.
+
+This evidence-dependent follow-up is tracked in GitHub issue #63. Phase 6 off-site backup/restore remains tracked in #61, while Auth leaked-password protection and retired Edge stub deletion remain tracked in #59.

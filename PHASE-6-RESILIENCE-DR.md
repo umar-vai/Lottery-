@@ -249,3 +249,5 @@ The following cannot be honestly marked complete through the current connected s
 - Auth leaked-password protection and physical deletion of retired Edge stubs tracked in issue #59.
 
 The repository now contains the executable tooling and runbook needed to perform the database export safely without committing production data.
+
+Operator execution of the private off-site backup and full restore rehearsal is tracked in GitHub issue #61. Existing Auth/retired-Edge manual cleanup remains tracked in issue #59.

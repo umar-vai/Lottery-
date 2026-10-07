@@ -102,7 +102,7 @@ Observed baseline before the source change:
 - old `support-device-admin` v3 list invocations were roughly 0.78–0.95 seconds
 - deployed v4 had no post-deployment invocation in the measured window, so it had no live latency sample yet
 
-The connector was not permitted to deploy the Edge Function revisions from this chat, so the source is committed for deployment through the normal Supabase deployment path.
+`support-device-admin` v5, `support-phone-bridge` v4, and `claim-support-points` v4 were subsequently deployed to production from the committed Phase 4 source. Live function source verification confirmed `trace_id`, `duration_ms`, and the `x-support-trace-id` response header are present in all three production bundles.
 
 ## Advisor cleanup
 
@@ -139,7 +139,7 @@ The remaining authenticated SECURITY DEFINER functions are current application e
 
 ### Auth setting outside this connector
 
-`auth_leaked_password_protection` remains a Supabase Auth project setting. It should be enabled in Auth settings; this connector does not expose that configuration mutation.
+`auth_leaked_password_protection` remains a Supabase Auth project setting. It should be enabled in Auth settings; the connected Supabase MCP surface currently exposes no Auth configuration mutation for this setting.
 
 ### Performance advisor: unused indexes
 

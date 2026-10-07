@@ -15,8 +15,12 @@ const runtime='supabase/tests/phase8b_operator_signoff.sql';
 const report='PHASE-8B-OPERATOR-SIGNOFF.md';
 const js='ops-v4.js';
 const html='ops-v4.html';
+const operatorScripts=[
+  'scripts/phase8b-delete-retired-edge-stubs.sh',
+  'scripts/phase8b-complete-offsite-rehearsal.sh'
+];
 
-for(const f of [...migrations,runtime,report,js,html]){
+for(const f of [...migrations,runtime,report,js,html,...operatorScripts]){
   if(!exists(f))fail('Missing Phase 8B artifact: '+f);
 }
 
@@ -81,6 +85,40 @@ if(exists(html)){
   ]) if(!markup.includes(marker))fail('Phase 8B admin HTML missing marker: '+marker);
   const m=markup.match(/ops-v4\.js\?v=(\d+)/);
   if(!m||Number(m[1])<14)fail('Phase 8B admin cache-bust version must be 14 or newer.');
+}
+
+for(const script of operatorScripts){
+  if(!exists(script))continue;
+  const sh=read(script);
+  if(!sh.startsWith('#!/usr/bin/env bash'))fail('Phase 8B operator script missing bash shebang: '+script);
+  if(!sh.includes('set -euo pipefail'))fail('Phase 8B operator script missing strict shell mode: '+script);
+}
+if(exists(operatorScripts[0])){
+  const sh=read(operatorScripts[0]);
+  for(const m of [
+    'EDGE_DELETE_CONFIRM=LOOTERA_DELETE_RETIRED_EDGE_STUBS',
+    'support-phone-bridge',
+    'support-device-admin',
+    'claim-support-points',
+    'phone-bridge',
+    'bridge-device-admin',
+    'claim-demo-credit',
+    'supabase functions delete'
+  ]) if(!sh.includes(m))fail('Phase 8B Edge cleanup helper missing marker: '+m);
+}
+if(exists(operatorScripts[1])){
+  const sh=read(operatorScripts[1]);
+  for(const m of [
+    'SUPABASE_DB_URL',
+    'BACKUP_AGE_RECIPIENT',
+    'RESTORE_DB_URL',
+    'SUPABASE_S3_ACCESS_KEY_ID',
+    'SUPABASE_S3_SECRET_ACCESS_KEY',
+    'event-covers',
+    'rclone copy',
+    'restore-offsite-backup.sh',
+    'database_restore_rehearsal=passed'
+  ]) if(!sh.includes(m))fail('Phase 8B off-site rehearsal helper missing marker: '+m);
 }
 
 if(exists(report)){

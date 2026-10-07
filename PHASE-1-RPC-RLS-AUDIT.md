@@ -35,6 +35,8 @@ Phase 7F adds exactly three intentional authenticated SECURITY DEFINER public RP
 
 The current authenticated SECURITY DEFINER advisor warning count is therefore expected to be **50** after Phase 7F. Authenticated direct execution of private SECURITY DEFINER functions remains zero.
 
+Phase 7G temporarily used service-role-only probe RPCs protected by the independent dispatch token. After evidence capture, those probe functions were moved out of the public schema into `private` and all `anon`, `authenticated`, and `service_role` EXECUTE grants were revoked. Therefore the browser-callable authenticated SECURITY DEFINER baseline remains **50**, and authenticated direct private SECURITY DEFINER exposure remains zero.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:

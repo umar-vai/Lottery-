@@ -25,6 +25,8 @@ Phase 6 tightened the virtual-credit review path: `public.admin_review_credit_re
 
 Phase 7C adds one intentional browser-callable admin SECURITY DEFINER endpoint, `public.admin_acknowledge_production_incident(bigint,text)`. It is executable by `authenticated` only, performs its own `auth.uid() + is_admin()` guard, and writes only the private acknowledgement record plus its audit event. The Supabase advisor authenticated SECURITY DEFINER warning count is therefore expected to be **47** after Phase 7C. This count is not a target to blindly reduce; each browser-callable endpoint must remain justified and guarded.
 
+Phase 7D does not add another browser-callable privileged endpoint. Its three dispatcher RPCs are granted only to `service_role` and also require the independent Vault dispatch token. The authenticated SECURITY DEFINER warning count therefore remains **47**, while authenticated direct execution of private SECURITY DEFINER helpers remains zero. The two new private delivery tables have direct browser/service table grants revoked.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:

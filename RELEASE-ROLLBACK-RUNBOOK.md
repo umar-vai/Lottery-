@@ -183,7 +183,39 @@ Acknowledgement means the incident has an operator owner. It **does not** resolv
 
 The admin page refreshes incident/SLO state every 60 seconds while visible. External webhook delivery is not currently configured; do not add a destination or secret without an explicit operator-controlled credential and retry policy.
 
-## 11. Recovery completion
+## 11. Phase 7D external alert delivery
+
+External webhook delivery is disabled unless a real HTTPS destination has been configured in Edge Function secrets and the private delivery config is explicitly enabled.
+
+Required secret:
+
+- `PRODUCTION_ALERT_WEBHOOK_URL`
+
+Optional secrets:
+
+- `PRODUCTION_ALERT_WEBHOOK_BEARER`
+- `PRODUCTION_ALERT_WEBHOOK_SIGNING_SECRET`
+
+Operational rules:
+
+1. never store webhook URLs/tokens/signing secrets in Git, frontend code, SQL migrations, or audit logs;
+2. after secret configuration, explicitly enable `private.production_alert_delivery_config.external_enabled`;
+3. verify the dispatcher reports configured=true before relying on the external channel;
+4. if the webhook URL is missing or invalid, the Edge dispatcher auto-disables external delivery;
+5. inspect pending/in-flight/dead-letter counts in the Incident Center;
+6. acknowledgement stops future escalation stages but does not mark the SLO recovered;
+7. dead-letter rows require operator review; do not repeatedly replay them without understanding the external failure;
+8. disabling external delivery does not disable the Phase 7C in-admin alert channel or the ChatGPT SLO watch.
+
+Rollback order for a dispatcher regression:
+
+1. set external delivery disabled;
+2. preserve outbox/audit evidence;
+3. redeploy the last known-good `production-alert-dispatch` Edge Function;
+4. verify internal dispatch-token auth;
+5. re-enable only after a successful configuration probe.
+
+## 12. Recovery completion
 
 An incident is closed only when:
 

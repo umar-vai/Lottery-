@@ -363,6 +363,7 @@ lottery-operational-health     -> */5 * * * *  -> private.run_lottery_operationa
 production-slo-every-5-minutes -> */5 * * * *  -> private.run_production_slo_check()
 production-slo-snapshot-15m    -> */15 * * * * -> private.capture_production_slo_snapshot()
 operational-history-retention-daily -> 23 3 * * * -> private.prune_operational_history()
+production-alert-dispatch-minute -> * * * * * -> private.kick_production_alert_dispatch()
 ```
 
 Phase 7A's private `production_slo_report()` combines application integrity with connection pressure, blocking sessions, cache-hit rates, recent cron failures, required-cron presence, and Support settlement invariants. It is not exposed to browser/service API roles.
@@ -703,6 +704,7 @@ Primary/current:
 - `support-phone-bridge` — bridge ingest; custom device token; `verify_jwt=false`
 - `support-device-admin` — device management; JWT protected
 - `claim-support-points` — user claim; JWT protected
+- `production-alert-dispatch` — internal Phase 7D webhook dispatcher; custom Vault dispatch-token auth; `verify_jwt=false`; external webhook URL comes only from Edge Function secrets
 
 Legacy:
 
@@ -836,6 +838,14 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 - `private.production_incident_acknowledgements` — Phase 7C private breach acknowledgement trail
 - `public.admin_acknowledge_production_incident(bigint,text)` — admin-only SLO breach acknowledgement RPC
 - `public.admin_get_operations_incident_center()` — existing admin incident RPC, extended in Phase 7C with SLO/history/event/acknowledgement data
+- `private.production_alert_delivery_config` — Phase 7D private external-alert policy/config
+- `private.production_alert_outbox` — durable external-alert delivery queue
+- `private.production_alert_delivery_report()` — private external-alert health summary
+- `private.enqueue_production_alert_escalations()` — warning/critical escalation scheduler
+- `private.kick_production_alert_dispatch()` — minute dispatcher kick via pg_net
+- `public.service_claim_production_alert_batch(text,integer)` — service-role-only Edge dispatcher claim API
+- `public.service_complete_production_alert_delivery(...)` — service-role-only delivery result API
+- `public.service_record_production_alert_dispatcher_state(...)` — service-role-only dispatcher configuration health API
 
 ## Virtual credit-request functions
 
@@ -888,6 +898,7 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 These are high priority.
 
 1. Keep the privileged-function inventory intentional. Phase 6 moved credit review behind the canonical public admin RPC: 37 authenticated public admin SECURITY DEFINER RPCs are now expected after the Phase 7C acknowledgement endpoint, while authenticated direct execution of private SECURITY DEFINER helpers is expected to remain zero.
+   Phase 7D adds service-role-only dispatcher RPCs, so the authenticated SECURITY DEFINER advisor count remains 47 and private authenticated SECURITY DEFINER exposure remains zero.
 2. Preserve explicit safe `search_path` on every SECURITY DEFINER function and the server-side `is_admin()` guard on authenticated admin RPCs.
 3. Source-control every live migration and Edge Function.
 4. Remove/decommission unused RPC generations only after caller analysis.

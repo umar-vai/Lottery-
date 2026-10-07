@@ -257,7 +257,13 @@ function renderSloObservability(){
     info('Support integrity',Number(support.duplicate_settlements||0)+Number(support.orphan_claims||0)+' issues'),
     info('Pending acknowledgements',String(Number(r.pending_slo_ack_count||0))),
     info('Admin alert polling',(delivery.admin_polling_seconds||60)+'s'),
-    info('External webhook',delivery.external_webhook_configured?'Configured':'Not configured'),
+    info('External delivery',delivery.enabled?'Enabled':'Disabled'),
+    info('Webhook config',delivery.external_webhook_configured?'Verified':'Not configured'),
+    info('Alert queue',String(Number(delivery.pending_count||0))+' pending · '+String(Number(delivery.in_flight_count||0))+' in flight'),
+    info('Dead letters',String(Number(delivery.dead_letter_count||0))),
+    info('Delivered · 24h',String(Number(delivery.delivered_24h||0))),
+    info('Dispatcher cron',delivery.dispatcher_cron_active?'Active':'Missing'),
+    info('Last delivery',fmt(delivery.last_delivery_at)),
     info('Checked',fmt(slo.checked_at))
   ].join('');
   var counts=hist&&hist.severity_counts||{};
@@ -266,7 +272,9 @@ function renderSloObservability(){
     info('Healthy',String(Number(counts.ok||0))),
     info('Warning',String(Number(counts.warning||0))),
     info('Critical',String(Number(counts.critical||0))),
-    info('Unacknowledged · 7d',String(Number(r.unacknowledged_slo_breaches_7d||0)))
+    info('Unacknowledged · 7d',String(Number(r.unacknowledged_slo_breaches_7d||0))),
+    info('Escalation policy','Critical '+String(Number(delivery.critical_escalation_1_minutes||5))+'m · Warning '+String(Number(delivery.warning_escalation_1_minutes||15))+'m · Level 2 '+String(Number(delivery.escalation_2_minutes||30))+'m'),
+    info('Delivery retries','Up to '+String(Number(delivery.max_attempts||6))+' attempts')
   ].join('');
   var rows=Array.isArray(r.slo_events)?r.slo_events:[];
   if(!rows.length){eventsRoot.innerHTML='<div class="record-card"><strong>No SLO breach/recovery events in the last 7 days.</strong></div>';return}
@@ -294,7 +302,7 @@ function pollIncidentAlerts(){
     renderIncidents();renderSloObservability();renderSloAlert();
     if(previous&&previous==='ok'&&current!=='ok')note('Production SLO changed to '+current.toUpperCase(),true);
     if(previous&&previous!=='ok'&&current==='ok')note('Production SLO recovered');
-  }).catch(function(e){console.warn('Phase 7C alert poll failed',e)})
+  }).catch(function(e){console.warn('Phase 7D alert poll failed',e)})
 }
 function startAlertPolling(){
   clearInterval(S.alertTimer);

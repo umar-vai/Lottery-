@@ -46,7 +46,7 @@ begin
   from pg_proc p join pg_namespace n on n.oid=p.pronamespace
   where p.prosecdef
     and n.nspname='public'
-    and p.proname like 'admin\\_%' escape '\\'
+    and p.proname ~ '^admin_'
     and has_function_privilege('authenticated',p.oid,'EXECUTE')
     and pg_get_functiondef(p.oid) not ilike '%is_admin()%';
 

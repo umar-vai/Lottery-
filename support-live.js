@@ -3,7 +3,9 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var timer=null,userId=null,last=-1;
+var FALLBACK_MS=60000;
+var MIN_REFRESH_GAP_MS=3000;
+var timer=null,userId=null,last=-1,inflight=null,lastRefreshAt=0;
 function unpack(x){if(!x)return null;if(x.access_token)return x;if(x.currentSession&&x.currentSession.access_token)return x.currentSession;if(x.session&&x.session.access_token)return x.session;if(x.data&&x.data.session&&x.data.session.access_token)return x.data.session;return null}
 function readSession(){try{var keys=['sb-'+REF+'-auth-token'];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(REF)>=0&&k.indexOf('auth')>=0&&keys.indexOf(k)<0)keys.push(k)}for(var j=0;j<keys.length;j++){var raw=localStorage.getItem(keys[j]);if(!raw)continue;try{var s=unpack(JSON.parse(raw));if(s)return s}catch(e){}}}catch(e){}return null}
 function api(path,token){return fetch(BASE+path,{headers:{apikey:KEY,Authorization:'Bearer '+token}}).then(function(r){return r.text().then(function(t){var d;try{d=t?JSON.parse(t):null}catch(e){d=null}if(!r.ok)throw new Error('HTTP '+r.status);return d})})}
@@ -15,9 +17,31 @@ function installDelegatedOpen(){if(window.__lpSupportDelegatedOpen)return;window
 function bindSupportButton(){var b=document.getElementById('d01SupportBtn');if(!b)return;b.setAttribute('aria-label','Open Love Points payment center');if(b.dataset.lpBound==='1')return;b.dataset.lpBound='1';b.onclick=function(e){e.preventDefault();e.stopPropagation();goToLovePoints()}}
 function ensure(){var btn=document.getElementById('d01CreditBtn');if(!btn)return false;var n=document.getElementById('d01SupportInline');if(!n){n=document.createElement('span');n.id='d01SupportInline';n.className='d01-support-inline';n.title='Love Points are separate from Draw Credits and cannot be used for tickets, odds or prizes.';n.textContent='0 LP';btn.appendChild(n)}bindSupportButton();return true}
 function paint(v){last=Number(v||0);if(!ensure())return;var n=document.getElementById('d01SupportInline');if(n)n.textContent=fmt(last);var b=document.getElementById('d01SupportBtn');if(b)b.textContent='♥ Love Points · '+fmt(last)}
-function refresh(){var s=readSession();if(!s||!s.access_token){userId=null;paint(0);return Promise.resolve()}var token=s.access_token;var getUser=userId?Promise.resolve({id:userId}):api('/auth/v1/user',token);return getUser.then(function(u){userId=u&&u.id?u.id:null;if(!userId)throw new Error('No user');return api('/rest/v1/support_wallets?select=balance&user_id=eq.'+encodeURIComponent(userId)+'&limit=1',token)}).then(function(rows){paint(rows&&rows[0]?rows[0].balance:0)}).catch(function(){paint(0)})}
-function start(){installDelegatedOpen();ensure();refresh();clearInterval(timer);timer=setInterval(function(){if(document.visibilityState!=='hidden'){ensure();refresh()}},4000)}
-window.Draw01SupportLive={refresh:refresh,getBalance:function(){return last},open:goToLovePoints};
+function refresh(force){
+  if(inflight)return inflight;
+  if(!force&&Date.now()-lastRefreshAt<MIN_REFRESH_GAP_MS)return Promise.resolve(last);
+  var s=readSession();
+  if(!s||!s.access_token){userId=null;paint(0);lastRefreshAt=Date.now();return Promise.resolve(0)}
+  var token=s.access_token;
+  var getUser=userId?Promise.resolve({id:userId}):api('/auth/v1/user',token);
+  inflight=getUser.then(function(u){
+    userId=u&&u.id?u.id:null;
+    if(!userId)throw new Error('No user');
+    return api('/rest/v1/support_wallets?select=balance&user_id=eq.'+encodeURIComponent(userId)+'&limit=1',token)
+  }).then(function(rows){paint(rows&&rows[0]?rows[0].balance:0);return last})
+    .catch(function(){paint(0);return last})
+    .finally(function(){lastRefreshAt=Date.now();inflight=null});
+  return inflight
+}
+function wake(){if(document.visibilityState!=='hidden')refresh(false)}
+function start(){
+  installDelegatedOpen();ensure();refresh(true);clearInterval(timer);
+  timer=setInterval(wake,FALLBACK_MS)
+}
+window.Draw01SupportLive={refresh:function(){return refresh(true)},getBalance:function(){return last},open:goToLovePoints};
 installDelegatedOpen();
+document.addEventListener('draw01:support-points-changed',function(){refresh(true)});
+document.addEventListener('visibilitychange',wake);
+window.addEventListener('focus',wake);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(start,80)});else setTimeout(start,80);
 })();

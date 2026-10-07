@@ -65,6 +65,9 @@ jobs:
       - name: Phase 7G load chaos recovery gate
         run: node scripts/phase7g-load-chaos-recovery.mjs
 
+      - name: Phase 8 production launch stabilization gate
+        run: node scripts/phase8-production-launch.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

@@ -37,6 +37,10 @@ The current authenticated SECURITY DEFINER advisor warning count is therefore ex
 
 Phase 7G temporarily used service-role-only probe RPCs protected by the independent dispatch token. After evidence capture, those probe functions were moved out of the public schema into `private` and all `anon`, `authenticated`, and `service_role` EXECUTE grants were revoked. Therefore the browser-callable authenticated SECURITY DEFINER baseline remains **50**, and authenticated direct private SECURITY DEFINER exposure remains zero.
 
+Phase 8 adds no new browser-callable privileged RPC. Launch-readiness and stabilization functions remain in `private` with direct `anon`, `authenticated`, and `service_role` EXECUTE revoked. The existing admin Incident Center RPC is extended to include private launch-stability output after its existing admin check. The authenticated SECURITY DEFINER advisor baseline therefore remains **50**, anonymous privileged allowlist remains **2**, and authenticated direct private SECURITY DEFINER exposure remains **0**.
+
+The two Phase 8 private launch tables are RLS-enabled with no permissive policy and all direct grants revoked. Together with the previously intentional private deny-by-default tables, the Security Advisor `rls_enabled_no_policy` informational count is expected to be **8** after Phase 8.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:

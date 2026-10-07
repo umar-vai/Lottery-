@@ -1064,3 +1064,62 @@ Post-wave observations:
 Temporary Phase 7G service probe RPCs were removed from the public schema after the run and retained only as private, externally non-executable historical helpers. The production alert dispatcher no longer contains the temporary Phase 7G suite action.
 
 Phase 7G does not establish a maximum system capacity. Its measured launch target for the tested contention envelope is p95 < 1 second at <=12 concurrent same-row ticket workers. Aggregate multi-user capacity requires future traffic evidence.
+
+
+---
+
+# 22. Phase 8 production launch stabilization
+
+Phase 8 adds a private 72-hour launch-readiness evidence window.
+
+Window baseline:
+
+- Git SHA: `a04a30d7d3841a778382a0e43893d31c3421f131`
+- started: 2026-10-07 10:32:08 UTC
+- scheduled end: 2026-10-10 10:32:08 UTC
+- cadence: every 15 minutes
+
+Private tables:
+
+- `private.production_launch_stability_config`
+- `private.production_launch_stability_snapshots`
+
+Private functions:
+
+- `private.production_launch_readiness_report()`
+- `private.capture_production_launch_stability_snapshot()`
+- `private.production_launch_stability_report()`
+
+All direct anon/authenticated/service-role access is revoked.
+
+Temporary launch cron:
+
+```text
+production-launch-stability-15m -> */15 * * * * -> private.capture_production_launch_stability_snapshot()
+```
+
+There are therefore **8 active cron jobs** during the Phase 8 observation window, while the permanent required-SLO inventory remains the original 7. The Phase 8 launch cron deliberately becomes a no-op after the 72-hour end time and is not treated as a permanent required job.
+
+Phase 8 also corrects current cron-health accounting: `production_slo_report()` and `operations_incident_report()` count failed `cron.job_run_details` only when the corresponding `cron.job` still exists and is active. Historical failed runs from deleted one-off jobs no longer hold current production in warning. Missing required jobs are still detected independently and remain critical.
+
+Initial Phase 8 technical state:
+
+- production SLO: OK;
+- active-cron failures 15m/24h: 0 / 0;
+- required permanent cron missing: 0;
+- Draw Credit issue total: 0;
+- Support duplicate/orphan: 0 / 0;
+- mutation guardrails: enabled;
+- Telegram: enabled/ready, zero dead letters;
+- anonymous public SECURITY DEFINER allowlist: 2;
+- private authenticated SECURITY DEFINER exposure: 0;
+- launch state: READY;
+- launch decision: `technical_go_operator_signoff_required`.
+
+The launch report keeps operator-owned exceptions visible instead of converting them into false technical failures:
+
+- issue #61: real encrypted off-site backup + isolated restore rehearsal;
+- issue #59: physical deletion of retired Edge stubs;
+- issue #59 leaked-password protection: conditional while the app remains Google-only on the current plan.
+
+Phase 8 launch snapshots are retained for 30 days by `private.prune_operational_history()`.

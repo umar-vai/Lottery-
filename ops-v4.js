@@ -89,7 +89,7 @@ function load(){
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
-function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderMutationGuardrails();renderSloObservability();renderSloAlert();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderLaunchStability();renderMutationGuardrails();renderSloObservability();renderSloAlert();startCountdown()}
 function renderStats(){
   var summary=S.scalability&&S.scalability.summary||{},n=nextEvent();
   $('statEvents').textContent=Number(summary.lotteries!=null?summary.lotteries:S.events.length).toLocaleString();
@@ -212,6 +212,38 @@ function renderIncidents(){
   ].join('');
   if(!rows.length){list.innerHTML='<div class="record-card"><strong>No application/database incidents in the last 24 hours.</strong></div>';return}
   list.innerHTML=rows.map(function(x){return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>'+esc(x.title||'Incident')+'</strong><span class="status-pill '+(x.severity==='critical'?'cancelled':'locked')+'">'+esc(String(x.severity||'warning').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(x.category||'system')+'</span><span>'+esc(x.detail||'')+'</span><span>'+esc(fmt(x.created_at))+'</span></div></div></div>'}).join('')
+}
+
+function renderLaunchStability(){
+  var r=S.incidents||{},l=r.launch_stability||{},current=l.current||{},win=l.window||{},counts=l.state_counts||{},st=$('launchStabilityStatus'),root=$('launchStabilityInfo'),hint=$('launchStabilityHint');
+  if(!st||!root)return;
+  if(!current.technical_state){
+    st.textContent='UNAVAILABLE';st.className='status-pill cancelled';
+    root.innerHTML='<div class="overview-empty">Launch stabilization data could not be loaded.</div>';
+    if(hint)hint.textContent='Phase 8 launch evidence is unavailable.';
+    return
+  }
+  var state=String(current.technical_state||'blocked'),ready=!!current.technical_ready,op=Array.isArray(current.operator_exceptions)?current.operator_exceptions:[],decision=String(current.launch_decision||'unknown').replace(/_/g,' ');
+  st.textContent=state.toUpperCase();
+  st.className='status-pill '+(state==='ready'?'completed':state==='warning'?'locked':'cancelled');
+  root.innerHTML=[
+    info('Technical readiness',ready?'READY':'HOLD'),
+    info('Launch decision',decision),
+    info('Window',String(win.status||'stabilizing').toUpperCase()),
+    info('Window ends',fmt(win.ends_at)),
+    info('Snapshots',String(Number(l.snapshot_count||0))),
+    info('Ready snapshots',String(Number(counts.ready||0))),
+    info('Warning snapshots',String(Number(counts.warning||0))),
+    info('Blocked snapshots',String(Number(counts.blocked||0))),
+    info('Max connection usage',String(Number(l.max_connection_usage_pct||0).toFixed(2))+'%'),
+    info('Max blockers >30s',String(Number(l.max_blocked_sessions_over_30s||0))),
+    info('Published lotteries',String(Number(current.published_events||0))),
+    info('Operator exceptions',String(op.length))
+  ].join('');
+  if(hint){
+    var labels=op.map(function(x){return '#'+String(x.issue||'?')+' '+String(x.key||'operator exception').replace(/_/g,' ')}).join(' · ');
+    hint.textContent=op.length?'Technical state is green; operator sign-off remains for '+labels+'.':'No operator exceptions recorded.';
+  }
 }
 
 function renderMutationGuardrails(){
@@ -360,7 +392,7 @@ function pollIncidentAlerts(){
   ]).then(function(x){
     var r=x[0],previous=S.lastSloSeverity,current=String(r&&r.production_slo&&r.production_slo.severity||'ok');
     S.incidents=r;S.guardrails=x[1]||S.guardrails;S.lastSloSeverity=current;
-    renderIncidents();renderMutationGuardrails();renderSloObservability();renderSloAlert();
+    renderIncidents();renderLaunchStability();renderMutationGuardrails();renderSloObservability();renderSloAlert();
     if(previous&&previous==='ok'&&current!=='ok')note('Production SLO changed to '+current.toUpperCase(),true);
     if(previous&&previous!=='ok'&&current==='ok')note('Production SLO recovered');
   }).catch(function(e){console.warn('Phase 7F operations poll failed',e)})

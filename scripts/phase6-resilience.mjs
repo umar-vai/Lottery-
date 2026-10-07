@@ -61,9 +61,13 @@ if (exists(backup)) {
     'supabase db dump',
     '--role-only',
     '--data-only',
-    'SHA256SUMS',
-    'Storage bucket objects are NOT contained'
+    'SHA256SUMS'
   ]) if (!sh.includes(marker)) fail('Backup helper missing marker: '+marker);
+
+  if (!sh.includes('Storage bucket objects are NOT contained')
+      && !sh.includes('Storage object bytes are NOT included')) {
+    fail('Backup helper must explicitly state that Storage object bytes are not included.');
+  }
 
   if (/SUPABASE_DB_URL\s*=\s*['"][^$]/.test(sh)) {
     fail('Backup helper must never hardcode a database connection string.');

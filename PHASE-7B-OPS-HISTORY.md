@@ -120,6 +120,17 @@ Schedule:
 
 `23 3 * * *` UTC.
 
+Phase 7B also extends the Phase 7A required-cron SLO contract. Production is now expected to keep all six jobs active:
+
+1. `lottery-events-every-minute`
+2. `draw-credit-integrity-hourly`
+3. `lottery-operational-health`
+4. `production-slo-every-5-minutes`
+5. `production-slo-snapshot-15m`
+6. `operational-history-retention-daily`
+
+If either Phase 7B history job is missing/inactive, `private.production_slo_report()` reports a critical missing-required-cron breach.
+
 The retention is deliberately 30 days so normal incident investigations and weekly trend review keep enough history while preventing unbounded cron-log growth.
 
 ## 6. Evidence-based index cleanup

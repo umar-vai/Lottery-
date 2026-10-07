@@ -355,6 +355,16 @@ schedule: * * * * *
 command: select private.run_due_lottery_events();
 ```
 
+Additional production health cron jobs:
+
+```text
+draw-credit-integrity-hourly   -> 17 * * * *   -> private.run_draw_credit_integrity_check()
+lottery-operational-health     -> */5 * * * *  -> private.run_lottery_operational_health_check()
+production-slo-every-5-minutes -> */5 * * * *  -> private.run_production_slo_check()
+```
+
+Phase 7A's private `production_slo_report()` combines application integrity with connection pressure, blocking sessions, cache-hit rates, recent cron failures, required-cron presence, and Support settlement invariants. It is not exposed to browser/service API roles.
+
 It runs due `published + scheduled` events whose `draw_at <= now()`.
 
 Failures are written into `audit_logs` instead of crashing the whole loop.
@@ -814,6 +824,8 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 - `get_public_event_winners(...)`
 - `private.run_lottery_event_internal(...)`
 - `private.run_due_lottery_events()`
+- `private.production_slo_report()` — Phase 7A production SLO classifier
+- `private.run_production_slo_check()` — five-minute debounced SLO audit checker
 
 ## Virtual credit-request functions
 

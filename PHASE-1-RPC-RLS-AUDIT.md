@@ -41,6 +41,16 @@ Phase 8 adds no new browser-callable privileged RPC. Launch-readiness and stabil
 
 The two Phase 8 private launch tables are RLS-enabled with no permissive policy and all direct grants revoked. Together with the previously intentional private deny-by-default tables, the Security Advisor `rls_enabled_no_policy` informational count is expected to be **8** after Phase 8.
 
+Phase 8B adds exactly three intentional authenticated SECURITY DEFINER admin entrypoints:
+
+- `admin_record_launch_operator_signoff(text,text,text)` — admin-only audited operator exception decision;
+- `admin_disposition_launch_warning(bigint,text)` — admin-only audited warning-snapshot disposition;
+- `admin_finalize_launch_stabilization(text,text)` — admin-only audited final hold/approval endpoint with a server-authoritative exit gate.
+
+Each performs its own `auth.uid() + is_admin()` check. Their backing tables and private reports have direct `anon`, `authenticated`, and `service_role` access revoked. The authenticated public SECURITY DEFINER advisor baseline is therefore **53** after Phase 8B; anonymous public allowlist remains **2**; authenticated direct private SECURITY DEFINER exposure remains **0**.
+
+Phase 8B adds three more deny-by-default private tables, so the expected `rls_enabled_no_policy` informational count becomes **11**.
+
 ### Authenticated player RPCs
 
 Player-callable privileged functions scope themselves to `auth.uid()` or otherwise derive the current user server-side:

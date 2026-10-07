@@ -87,6 +87,26 @@ begin
   ) then
     raise exception 'Lottery slug uniqueness constraint is missing';
   end if;
+
+  if (
+    select count(*)
+    from cron.job
+    where active
+      and jobname in (
+        'lottery-events-every-minute',
+        'draw-credit-integrity-hourly',
+        'lottery-operational-health',
+        'production-slo-every-5-minutes',
+        'production-slo-snapshot-15m',
+        'operational-history-retention-daily'
+      )
+  )<>6 then
+    raise exception 'Phase 7B required cron set is incomplete';
+  end if;
+
+  if coalesce((private.production_slo_report()->'cron'->>'missing_required_jobs')::integer,-1)<>0 then
+    raise exception 'Production SLO report does not recognize all Phase 7B required cron jobs';
+  end if;
 end
 $phase7b_ops_history_contract$;
 

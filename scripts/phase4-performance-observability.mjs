@@ -11,6 +11,7 @@ const migration='supabase/migrations/202610070245_phase4_performance_observabili
 const runtimeTest='supabase/tests/phase4_performance_observability.sql';
 const legacyMigration='supabase/migrations/202610070330_phase4_retire_legacy_support_claims.sql';
 const legacyTest='supabase/tests/phase4_legacy_support_retirement.sql';
+const profileBoundaryTest='supabase/tests/phase4_profile_write_boundary.sql';
 
 if(!exists(migration)) fail('Missing Phase 4 performance/observability migration.');
 else {
@@ -55,6 +56,17 @@ else {
     'Canonical Support claim/settlement functions are missing',
     'Private canonical settlement implementation is directly executable'
   ]) if(!sql.includes(marker)) fail('Legacy Support retirement test missing marker: '+marker);
+}
+
+
+if(!exists(profileBoundaryTest)) fail('Missing Phase 4 profile write-boundary runtime test.');
+else {
+  const sql=read(profileBoundaryTest);
+  for(const marker of [
+    'Authenticated role has direct profiles UPDATE privilege',
+    'Authenticated profiles UPDATE RLS policy exists',
+    'update_my_profile appears to mutate role or balance'
+  ]) if(!sql.includes(marker)) fail('Profile write-boundary test missing marker: '+marker);
 }
 
 if(!exists('support-live.js')) fail('Missing Support live client.');

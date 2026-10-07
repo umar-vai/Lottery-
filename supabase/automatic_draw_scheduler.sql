@@ -1,4 +1,4 @@
--- Live DRAW//01 scheduler used by the Supabase project.
+-- Live Lootera scheduler used by the Supabase project.
 -- Run after schema.sql and secure_draw.sql.
 
 create extension if not exists pg_cron with schema extensions;

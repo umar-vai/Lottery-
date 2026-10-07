@@ -92,16 +92,20 @@ psql \
 
 echo "Immediately disabling restored cron/outbound alert delivery for rehearsal safety..."
 psql --variable ON_ERROR_STOP=1 --dbname "$TARGET_URL" <<'SQL'
-do $$
+do $
+declare
+  r record;
 begin
   if to_regclass('cron.job') is not null then
-    update cron.job set active=false where active;
+    for r in select jobid from cron.job loop
+      perform cron.unschedule(r.jobid);
+    end loop;
   end if;
   if to_regclass('private.production_alert_delivery_config') is not null then
     update private.production_alert_delivery_config set external_enabled=false, updated_at=now();
   end if;
 end
-$$;
+$;
 SQL
 
 echo "Running restored-database verification..."

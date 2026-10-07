@@ -35,6 +35,9 @@ jobs:
       - name: Phase 3 product gate
         run: node scripts/phase3-product.mjs
 
+      - name: Phase 4 performance and observability gate
+        run: node scripts/phase4-performance-observability.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

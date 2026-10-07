@@ -131,7 +131,7 @@ if(exists(report)){
   const md=read(report);
   for(const marker of [
     '20 / minute / user',
-    'nonce-based replay',
+    'Ticket purchase idempotency',
     '401 Bridge token required',
     '403 Origin not allowed',
     'authenticated SECURITY DEFINER count therefore moves from 47 to **50**',

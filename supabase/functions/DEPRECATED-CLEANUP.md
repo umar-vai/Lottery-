@@ -54,3 +54,18 @@ Observed deprecated endpoint traffic:
 Repository caller search again found no active caller for the deprecated names. They are retirement-ready.
 
 Physical deletion is still pending because the connected Supabase tool surface exposes list/get/deploy but not Edge Function deletion. Until a deletion-capable Supabase surface is available, all three production endpoints remain inert `410 Gone` stubs and source control must keep the matching stub code.
+
+
+## Third retirement observation — 2026-10-07
+
+After the Phase 4 telemetry deployment, repository search and the latest 24-hour `function_edge_logs` were checked again.
+
+Deprecated endpoint traffic:
+
+- `phone-bridge`: **0**
+- `bridge-device-admin`: **0**
+- `claim-demo-credit`: **0**
+
+No active frontend caller was found. The current endpoints are `support-phone-bridge`, `support-device-admin`, and `claim-support-points`.
+
+The connected Supabase MCP still has no physical Edge Function delete action, so the three deprecated production endpoints remain inert `410 Gone` stubs. This is a tracked infrastructure cleanup item rather than an active application dependency.

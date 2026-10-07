@@ -247,9 +247,12 @@ RLS:
 Review path:
 
 ```text
-public.admin_review_credit_request(...)
-    -> private.review_credit_request(...)
+authenticated admin
+    -> public.admin_review_credit_request(...)   [canonical SECURITY DEFINER API]
+        -> private.review_credit_request(...)    [internal helper]
 ```
+
+Phase 6 removes direct anon/authenticated/service-role EXECUTE from the private helper. The public wrapper performs the server-side admin check and is the only browser-callable review entrypoint.
 
 Approved requests become Draw Credit admin adjustments and should be reflected in `balance_ledger`.
 
@@ -862,7 +865,7 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 
 These are high priority.
 
-1. Keep the Phase 5 SECURITY DEFINER inventory intentional: 35 authenticated admin RPCs, 8 authenticated user-facing RPCs, 2 anonymous public-read RPCs, plus the protected private credit-review helper used by its wrapper.
+1. Keep the privileged-function inventory intentional. Phase 6 moved credit review behind the canonical public admin RPC: 36 authenticated public admin SECURITY DEFINER RPCs are now expected, while authenticated direct execution of private SECURITY DEFINER helpers is expected to remain zero.
 2. Preserve explicit safe `search_path` on every SECURITY DEFINER function and the server-side `is_admin()` guard on authenticated admin RPCs.
 3. Source-control every live migration and Edge Function.
 4. Remove/decommission unused RPC generations only after caller analysis.

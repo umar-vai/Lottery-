@@ -90,13 +90,16 @@ if(exists('ops-v4.js')){
     'renderMutationGuardrails',
     'admin_get_mutation_guardrails',
     'admin_set_mutation_guardrails',
-    'Pause all user mutations',
     'setMasterMutationGuardrail'
   ]) if(!js.includes(marker))fail('Phase 7F admin JS missing marker: '+marker);
 }
 
-if(exists('ops-v4.html')&&!read('ops-v4.html').includes('ops-v4.js?v=12')){
-  fail('Phase 7F admin bundle cache-bust version missing.');
+if(exists('ops-v4.html')){
+  const markup=read('ops-v4.html');
+  if(!markup.includes('ops-v4.js?v=12')) fail('Phase 7F admin bundle cache-bust version missing.');
+  for(const marker of ['mutationGuardrailPanel','Pause all user mutations','Resume user mutations']){
+    if(!markup.includes(marker)) fail('Phase 7F admin HTML missing marker: '+marker);
+  }
 }
 
 for(const p of [
@@ -128,7 +131,7 @@ if(exists(report)){
   const md=read(report);
   for(const marker of [
     '20 / minute / user',
-    'nonce-based idempotent replay',
+    'nonce-based replay',
     '401 Bridge token required',
     '403 Origin not allowed',
     'authenticated SECURITY DEFINER count therefore moves from 47 to **50**',

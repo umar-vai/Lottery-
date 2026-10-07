@@ -1,4 +1,4 @@
-# DRAW//01 Architecture
+# Lootera Architecture
 
 > Source of truth for the current production architecture as of 2026-10-07.
 >
@@ -8,7 +8,7 @@
 
 ## 1. What the system is
 
-DRAW//01 is a static-browser frontend backed by Supabase. The current product is a **multi-event virtual-credit draw simulation platform**. It also contains an independent **Development Support Points** system.
+Lootera is a static-browser frontend backed by Supabase. The current product is a **multi-event virtual-credit draw simulation platform**. It also contains an independent **Development Support Points** system.
 
 The two balances are intentionally separate:
 

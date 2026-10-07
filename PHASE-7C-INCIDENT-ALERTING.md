@@ -100,6 +100,8 @@ Rules:
 
 The private acknowledgement table is never directly exposed to browser roles.
 
+Post-deployment advisor classification is expected to show **47 authenticated SECURITY DEFINER warnings**: the prior 46 intentional browser-callable surfaces plus the new admin acknowledgement RPC. The new RPC was verified to contain the server-side admin guard; anonymous and service-role direct EXECUTE are revoked, and authenticated direct execution of private SECURITY DEFINER helpers remains zero.
+
 ## 5. Admin UI alert delivery
 
 The current admin page loads the enhanced Incident Center payload.

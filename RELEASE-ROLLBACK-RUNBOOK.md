@@ -2,7 +2,7 @@
 
 Date: 2026-10-07
 
-This runbook is the production release policy for Lootera / Lootera.
+This runbook is the production release policy for Lootera / lootera.win.
 
 ## 1. Before every release
 
@@ -185,7 +185,7 @@ The admin page refreshes incident/SLO state every 60 seconds while visible. Exte
 
 ## 11. Phase 7D external alert delivery
 
-External alert delivery remains disabled until the selected destination is configured and tested. The selected production channel is now **Telegram**.
+The selected production channel is **Telegram** and delivery is currently enabled and verified. If Telegram is deliberately disabled or its token/chat pairing is rotated, repeat the test-and-enable procedure below before relying on the channel.
 
 Telegram activation:
 
@@ -229,7 +229,39 @@ Rollback order for a dispatcher regression:
 4. verify internal dispatch-token auth;
 5. re-enable only after a successful configuration probe.
 
-## 12. Recovery completion
+## 12. Phase 7E encrypted backup and restore rehearsal
+
+Lootera Free-plan recovery does not rely on a claimed backup that has never been tested.
+
+### Backup
+
+Use `scripts/export-offsite-backup.sh` with:
+
+- a private `SUPABASE_DB_URL`;
+- an operator-controlled `BACKUP_AGE_RECIPIENT`;
+- a destination outside the Git repository.
+
+The script exports roles/schema/data plus migration history, verifies component checksums, packages the bundle, encrypts it with age, removes raw staging SQL, and writes an outer SHA-256 file.
+
+Database backup does **not** contain Storage object bytes, Edge Function secrets/deployments, Google OAuth configuration, or custom platform settings. Preserve those separately.
+
+### Restore rehearsal
+
+Use `scripts/restore-offsite-backup.sh` only against an isolated destination.
+
+Safety rules:
+
+1. `RESTORE_CONFIRM=LOOTERA_RESTORE_REHEARSAL` is mandatory;
+2. the script refuses a destination containing the production project ref;
+3. archive checksums must pass;
+4. restored cron jobs are unscheduled before verification;
+5. external alert delivery is disabled before verification;
+6. `scripts/verify-restored-database.sql` must pass before the rehearsal is considered successful;
+7. never point restored outbound integrations at production credentials during a rehearsal.
+
+A transaction-only production simulation has validated the verifier/safety logic, but it does **not** count as the required real off-site backup + isolated restore rehearsal.
+
+## 13. Recovery completion
 
 An incident is closed only when:
 

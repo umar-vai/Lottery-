@@ -44,6 +44,9 @@ jobs:
       - name: Phase 6 resilience and disaster recovery gate
         run: node scripts/phase6-resilience.mjs
 
+      - name: Phase 7A production operations gate
+        run: node scripts/phase7a-production-ops.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

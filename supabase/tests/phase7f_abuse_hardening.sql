@@ -141,9 +141,12 @@ begin
     raise exception 'Phase 7F replay inserted more than one ticket debit';
   end if;
 
+  execute 'reset role';
   if (select count(*) from private.ticket_purchase_idempotency where user_id=v_player and client_nonce=v_nonce)<>1 then
     raise exception 'Phase 7F idempotency mapping missing';
   end if;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v_player,'role','authenticated')::text,true);
+  execute 'set local role authenticated';
 
   v_denied:=false;
   begin

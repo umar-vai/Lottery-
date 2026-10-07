@@ -59,7 +59,7 @@ if(exists(restore)){
     'LOOTERA_RESTORE_REHEARSAL',
     'refusing to restore into Lootera production',
     'session_replication_role = replica',
-    'update cron.job set active=false',
+    'cron.unschedule',
     'external_enabled=false',
     'verify-restored-database.sql'
   ]) if(!sh.includes(marker))fail('Phase 7E restore script missing marker: '+marker);
@@ -72,7 +72,7 @@ if(exists(verify)){
     'A critical public table lost RLS after restore',
     'Authenticated role can execute private SECURITY DEFINER functions after restore',
     'Draw Credit integrity failed after restore',
-    'cron jobs are still active',
+    'cron jobs were not unscheduled',
     'external alerts remain enabled'
   ]) if(!sql.includes(marker))fail('Phase 7E restore verification missing marker: '+marker);
 }

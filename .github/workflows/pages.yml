@@ -47,6 +47,9 @@ jobs:
       - name: Phase 7A production operations gate
         run: node scripts/phase7a-production-ops.mjs
 
+      - name: Phase 7B operations history gate
+        run: node scripts/phase7b-ops-history.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

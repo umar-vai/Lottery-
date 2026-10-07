@@ -361,11 +361,9 @@ Current database contains multiple generations of event RPCs. New work should no
 
 ### Create/update generations
 
-- `admin_create_lottery_event(...)`
-- `admin_create_lottery_event_v2(...)`
+Current browser/API contract:
+
 - `admin_create_lottery_event_v3(...)`
-- `admin_update_lottery_event(...)`
-- `admin_update_lottery_event_v2(...)`
 - `admin_update_lottery_event_v3(...)`
 
 `v3` includes:
@@ -375,7 +373,7 @@ Current database contains multiple generations of event RPCs. New work should no
 - `max_players`
 - `max_total_tickets`
 
-Do not remove v1/v2 until code search confirms no active caller.
+Legacy v1/v2 function bodies are retained for migration/history compatibility, but Phase 4 revoked browser-role EXECUTE after code search confirmed there is no active caller. Do not re-expose v1/v2 through the Data API.
 
 ### Other current event RPCs
 
@@ -418,18 +416,17 @@ get_public_event_winners(p_event_id uuid)
 
 Returns for completed events:
 
-- `user_id`
-- `display_name`
-- `avatar_url`
-- `ticket_id`
+- `winner_key` — non-reversible public winner reference
+- `display_name` — nickname/display-name fallback only
+- `ticket_ref` — sanitized public ticket reference
 - `winner_rank`
 - `prize_awarded`
 - `white_numbers`
 - `bonus_ball`
 
-It joins winner tickets to profiles and orders by rank.
+It joins winner tickets to profiles and orders by rank, but does not expose raw user IDs, emails or raw ticket IDs.
 
-This RPC is used to expose winner identity/result information without opening direct public read access to all event tickets/profiles.
+This RPC intentionally remains a narrow anonymous `SECURITY DEFINER` projection so winner results can be public without opening direct read access to protected ticket/profile tables.
 
 ---
 
@@ -795,12 +792,9 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 - `is_admin()`
 - `handle_new_user()`
 - `purchase_event_ticket(...)`
-- `admin_create_lottery_event(...)`
-- `admin_create_lottery_event_v2(...)`
-- `admin_create_lottery_event_v3(...)`
-- `admin_update_lottery_event(...)`
-- `admin_update_lottery_event_v2(...)`
-- `admin_update_lottery_event_v3(...)`
+- `admin_create_lottery_event_v3(...)` — current browser/API
+- `admin_update_lottery_event_v3(...)` — current browser/API
+- legacy v1/v2 create/update bodies remain in the database with browser EXECUTE revoked
 - `admin_delete_lottery_event(...)`
 - `admin_run_lottery_event(...)`
 - `admin_set_event_cover(...)`

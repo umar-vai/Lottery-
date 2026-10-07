@@ -405,3 +405,60 @@ Final exit procedure after **2026-10-10 10:32:08 UTC**:
 9. confirm the server returns `exit_state=signed_off` and `fully_signed_off=true`.
 
 If any criterion is unclear, choose **Hold exit** rather than approval. A hold is an auditable operator decision and does not suppress technical monitoring.
+
+
+### Phase 8B completion helpers
+
+Two guarded operator scripts are provided so the remaining manual dependencies can be completed without ad-hoc commands.
+
+#### Issue #59 — retired Edge Function physical deletion
+
+Run only after fresh retirement evidence confirms the three old stubs are unused:
+
+```bash
+EDGE_DELETE_CONFIRM=LOOTERA_DELETE_RETIRED_EDGE_STUBS \
+SUPABASE_PROJECT_REF=mwtlsnneooxmryondrex \
+./scripts/phase8b-delete-retired-edge-stubs.sh
+```
+
+The helper:
+
+- checks the installed Supabase CLI and requires explicit `--project-ref` support;
+- targets only the Lootera project ref supplied by the operator;
+- refuses deletion unless all three replacement functions are present;
+- deletes only `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit`;
+- lists functions again and fails if any retired stub remains or any replacement disappeared.
+
+After a PASS, record Issue #59 as **Completed** in the Phase 8B Admin panel with the command output as evidence.
+
+#### Issue #61 — encrypted off-site backup + isolated restore rehearsal
+
+Required operator-owned inputs:
+
+- `SUPABASE_DB_URL`
+- `BACKUP_AGE_RECIPIENT`
+- `AGE_IDENTITY_FILE`
+- `RESTORE_DB_URL`
+- `BACKUP_DESTINATION`
+- `SUPABASE_S3_ACCESS_KEY_ID`
+- `SUPABASE_S3_SECRET_ACCESS_KEY`
+
+Run:
+
+```bash
+./scripts/phase8b-complete-offsite-rehearsal.sh
+```
+
+The helper:
+
+1. creates the encrypted logical database backup;
+2. queries source `event-covers` object count/bytes from Storage metadata;
+3. downloads actual `event-covers` object bytes through Supabase's S3-compatible endpoint;
+4. verifies remote, local, and database-metadata counts/bytes agree;
+5. encrypts the Storage archive with age;
+6. runs the isolated database restore rehearsal through the existing hardened restore helper;
+7. writes a checksum-bearing Phase 8B evidence manifest.
+
+The rehearsal is still not complete until the encrypted database archive, encrypted Storage archive, and evidence file are transferred to operator-controlled off-site storage and their checksums are verified there.
+
+Never paste DB URLs, age private identities, S3 secret keys, or backup archives into GitHub issues, commits, chat messages, or logs.

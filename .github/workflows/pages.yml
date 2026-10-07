@@ -71,6 +71,11 @@ jobs:
       - name: Phase 8B operator sign-off gate
         run: node scripts/phase8b-operator-signoff.mjs
 
+      - name: Phase 8B operator shell syntax
+        run: |
+          bash -n scripts/phase8b-delete-retired-edge-stubs.sh
+          bash -n scripts/phase8b-complete-offsite-rehearsal.sh
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

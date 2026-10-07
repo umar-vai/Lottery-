@@ -247,3 +247,17 @@ Phase 8B is complete only when the server reports:
 `exit_state = signed_off`
 
 That requires the real window to have ended and the final authenticated operator approval to be recorded after every exit criterion passes.
+
+
+## Operator completion kit
+
+Phase 8B now includes guarded scripts for both outstanding required operator items:
+
+- `scripts/phase8b-delete-retired-edge-stubs.sh`
+- `scripts/phase8b-complete-offsite-rehearsal.sh`
+
+The Edge cleanup helper uses the current documented Supabase CLI `functions delete` flow, requires explicit operator confirmation, verifies all replacement functions before deletion, and verifies the retired stubs are absent afterward.
+
+The off-site rehearsal helper extends the existing Phase 7E database backup/restore tooling with a real `event-covers` object-byte backup through Supabase's S3-compatible Storage endpoint. It compares source S3 count/bytes, database Storage metadata, and downloaded local count/bytes before encrypting the Storage archive. It then invokes the isolated restore verifier and writes a checksum-bearing evidence manifest.
+
+These helpers make #59 and #61 repeatable and auditable, but they do not bypass operator-owned credentials or physical deletion/restore execution. A requirement must remain `outstanding` until its corresponding helper actually passes and the evidence is retained.

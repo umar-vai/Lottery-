@@ -66,9 +66,12 @@ if (exists(html)) {
     'sloObservabilityPanel',
     'sloHistorySummary',
     'sloEventList',
-    'phase7c-observability.css',
-    'ops-v4.js?v=9'
+    'phase7c-observability.css'
   ]) if (!markup.includes(marker)) fail('Phase 7C admin HTML missing marker: '+marker);
+
+  if (!/ops-v4\.js\?v=(?:[9]|[1-9][0-9]+)\b/.test(markup)) {
+    fail('Phase 7C admin JS cache-bust version must be 9 or newer.');
+  }
 }
 
 if (exists(report)) {

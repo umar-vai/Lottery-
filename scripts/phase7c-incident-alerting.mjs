@@ -46,6 +46,7 @@ if (exists(runtime)) {
 
 if (exists(js)) {
   const code=read(js);
+  try { new Function(code); } catch (err) { fail('ops-v4.js syntax error: '+err.message); }
   for (const marker of [
     'startAlertPolling',
     'setInterval(pollIncidentAlerts,60000)',

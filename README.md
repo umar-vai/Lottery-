@@ -1,4 +1,4 @@
-# DRAW//01 — Public Powerball-style Test System
+# Lootera — Public Powerball-style Test System
 
 > **Current developer documentation (2026-10-05):** this README mainly documents the original Powerball-style subsystem. The live product has since evolved into a multi-event platform. New developers should start with [`DEVELOPER-HANDOFF.md`](./DEVELOPER-HANDOFF.md), then [`ARCHITECTURE.md`](./ARCHITECTURE.md) and [`DATABASE.md`](./DATABASE.md).
 
@@ -7,7 +7,7 @@ A public multiplayer draw application for GitHub Pages. It reproduces the core P
 ## Live architecture
 
 - **Frontend:** GitHub Pages
-- **Backend project:** Supabase `Lottery DRAW01`
+- **Backend:** Supabase project `mwtlsnneooxmryondrex` (Lootera production)
 - **Auth:** Supabase Auth + Google OAuth
 - **Database:** Supabase Postgres
 - **Security:** Row Level Security (RLS)

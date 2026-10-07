@@ -201,8 +201,9 @@ async function recordState(dispatchToken:string,configured:boolean,error:string|
 
 async function discoverTelegram(ctx:Trace,dispatchToken:string,target:DeliveryTarget){
   const tg=target.telegram||{};
-  const botToken=String(tg.bot_token||'').trim();
-  const pairingCode=String(tg.pairing_code||'').trim();
+  const botToken=(Deno.env.get('TELEGRAM_BOT_TOKEN')||String(tg.bot_token||'')).trim();
+  const requestedCode=String((target as DeliveryTarget & {setup_code?:string}).setup_code||'').trim();
+  const pairingCode=requestedCode||String(tg.pairing_code||'').trim();
 
   if(!botToken){
     await recordState(dispatchToken,false,'Telegram bot token is not configured',true);
@@ -285,7 +286,7 @@ async function discoverTelegram(ctx:Trace,dispatchToken:string,target:DeliveryTa
 
 async function testTelegram(ctx:Trace,dispatchToken:string,target:DeliveryTarget){
   const tg=target.telegram||{};
-  const botToken=String(tg.bot_token||'').trim();
+  const botToken=(Deno.env.get('TELEGRAM_BOT_TOKEN')||String(tg.bot_token||'')).trim();
   const chatId=String(tg.chat_id||'').trim();
 
   if(!botToken||!chatId){
@@ -323,7 +324,7 @@ async function dispatchTelegram(
   items:AlertItem[]
 ){
   const tg=target.telegram||{};
-  const botToken=String(tg.bot_token||'').trim();
+  const botToken=(Deno.env.get('TELEGRAM_BOT_TOKEN')||String(tg.bot_token||'')).trim();
   const chatId=String(tg.chat_id||'').trim();
 
   if(!botToken||!chatId){
@@ -463,10 +464,11 @@ Deno.serve(async(req)=>{
     try{requestBody=await req.json()}catch{}
     const action=String(requestBody.action||'dispatch');
 
-    const target=await loadTarget(dispatchToken);
+    const target=await loadTarget(dispatchToken) as DeliveryTarget & {setup_code?:string};
     const channel=String(target.channel||'webhook');
 
     if(action==='telegram_discover'){
+      target.setup_code=String(requestBody.pairing_code||'').trim();
       if(channel!=='telegram')return reply(ctx,{error:'Telegram channel is not selected'},409,{channel});
       return discoverTelegram(ctx,dispatchToken,target);
     }

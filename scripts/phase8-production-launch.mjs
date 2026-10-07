@@ -21,6 +21,8 @@ if(exists(migration)){
   const sql=read(migration);
   for(const marker of [
     "join cron.job j on j.jobid=r.jobid and j.active",
+    "'missing_required_cron'",
+    "'production-slo-snapshot-15m'",
     'private.production_launch_stability_config',
     'private.production_launch_stability_snapshots',
     'private.production_launch_readiness_report',
@@ -34,12 +36,20 @@ if(exists(migration)){
     "'offsite_backup_restore_rehearsal'",
     "'retired_edge_stub_physical_deletion'"
   ]) if(!sql.includes(marker))fail('Phase 8 migration missing marker: '+marker);
+
+  const activeCronJoinCount=(sql.match(/join cron\.job j on j\.jobid=r\.jobid and j\.active/g)||[]).length;
+  if(activeCronJoinCount<3)fail('Phase 8 migration must scope all current cron failure reads to active cron jobs.');
 }
 
 if(exists(runtime)){
   const sql=read(runtime);
   for(const marker of [
     'Phase 8 production SLO is not launch-clean',
+    'Phase 8 orphan cron history leaked into current SLO',
+    'Phase 8 active cron failure regression failed',
+    'Phase 8 missing required cron regression failed',
+    'phase8 runtime simulated active cron failure',
+    'cron.alter_job',
     'Phase 8 operations incident report is not clean',
     'Phase 8 Draw Credit integrity failed',
     'Phase 8 mutation guardrails are not fully enabled',

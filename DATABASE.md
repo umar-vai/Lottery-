@@ -86,6 +86,8 @@ Authenticated users get the same public events, plus admins can see all events t
 
 Direct browser writes are not the main mutation path. Admin creation/update/draw behavior goes through RPC functions.
 
+Phase 5 enforces the lifecycle at the database boundary: `admin_create_lottery_event_v3` always creates a draft, direct draft-to-published updates are rejected, and publication must go through `admin_publish_lottery_event(uuid)`.
+
 ---
 
 ## `event_tickets`
@@ -761,9 +763,9 @@ Legacy draw records with:
 
 ## `tickets`
 
-Legacy number-match tickets.
+Legacy number-match tickets retained for historical compatibility.
 
-RLS allows users to insert/read/update own tickets with validation triggers.
+Phase 5 froze this table for browser writes after confirming the old engine is paused, no current HTML loads legacy `app.js`, and the observed 24-hour production window had no legacy REST traffic. Authenticated users may still read their own historical rows (admins may read all through RLS), but browser INSERT/UPDATE/DELETE privileges and write policies are removed.
 
 ## `ticket_results`
 
@@ -842,7 +844,7 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 | `lottery_events` | public states read | public states read | all event rows read |
 | `event_prize_tiers` | public-event tiers read | public-event tiers read | all relevant tiers read |
 | `event_tickets` | no | own read | all read |
-| `profiles` | no | own read/update | all read |
+| `profiles` | no | own read; display-name edits via `update_my_profile` RPC | all read |
 | `balance_ledger` | no | own read | all via admin condition |
 | `audit_logs` | no | no | read |
 | `credit_requests` | no | own insert/read | read/review through protected path |
@@ -851,7 +853,7 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 | `support_claim_requests` | no | own read | backend/admin tooling |
 | `game_settings` | read | read | read/admin RPC mutations |
 | `draws` | visible non-draft read | visible read | all read |
-| `tickets` | no | own insert/read/update | all read |
+| `tickets` | no | own historical read only | all read |
 | `ticket_results` | no | own read | all read |
 
 ---
@@ -860,8 +862,8 @@ The following is a conceptual summary; always inspect `pg_policies` before chang
 
 These are high priority.
 
-1. Enumerate EXECUTE grants for every SECURITY DEFINER function and keep intentional public/authenticated entrypoints documented.
-2. Confirm each SECURITY DEFINER function sets a safe search path.
+1. Keep the Phase 5 SECURITY DEFINER inventory intentional: 35 authenticated admin RPCs, 8 authenticated user-facing RPCs, 2 anonymous public-read RPCs, plus the protected private credit-review helper used by its wrapper.
+2. Preserve explicit safe `search_path` on every SECURITY DEFINER function and the server-side `is_admin()` guard on authenticated admin RPCs.
 3. Source-control every live migration and Edge Function.
 4. Remove/decommission unused RPC generations only after caller analysis.
 5. Physically delete the already-decommissioned `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit` Edge stubs when a deletion-capable Supabase surface is available.

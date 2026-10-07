@@ -18,7 +18,7 @@ The current main SHA before the release is the primary frontend rollback referen
 
 Run/check:
 
-1. GitHub Phase 0–7F validation.
+1. GitHub Phase 0–7G validation.
 2. `private.production_slo_report()`.
 3. Draw Credit integrity report.
 4. lottery operational health.
@@ -294,7 +294,29 @@ Release verification for a mutation-affecting change must include:
 
 Rate budgets protect successful application writes, not volumetric request floods. Do not treat them as a WAF. Phase 7G load/chaos testing establishes burst and saturation thresholds.
 
-## 14. Recovery completion
+## 14. Phase 7G measured load / chaos thresholds
+
+Measured production run: `429d08d0-d992-4d8d-892b-71dc0f784eda`.
+
+For the tested same-user/same-event ticket contention envelope:
+
+- healthy: p95 < 1,000 ms at <=12 concurrent ticket workers;
+- investigate: p95 >=1,000 ms at <=12 concurrent workers;
+- immediate stop/rollback: any duplicate debit/ticket, financial residue, Draw Credit mismatch, or unbounded lock wait;
+- retain existing database connection warning at 75% and critical at 90%;
+- blocked-session critical remains >30 seconds.
+
+The Phase 7G rate-contention probe proved an atomic limit of 5 produced exactly 5 allowed + 7 rejected across 12 simultaneous attempts.
+
+The injected lock waiter timed out at ~250 ms while the holder released at ~900 ms, with no stuck blocker afterward.
+
+Do not interpret these numbers as absolute platform capacity. They are release guardrails for the tested high-contention path.
+
+A live global mutation-kill-switch outage was intentionally not injected into active production. Phase 7F already verifies the kill switch transactionally. Real third-party payment/provider load also belongs in an isolated sandbox.
+
+Historical note: Phase 7G began while the 24-hour SLO window already contained two older `job canceled` cron failures. New Phase 7G acceptance focuses on no failures in the last 15 minutes, all required jobs present, and no new integrity/lock regression.
+
+## 15. Recovery completion
 
 An incident is closed only when:
 

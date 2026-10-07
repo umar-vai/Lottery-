@@ -1,6 +1,6 @@
 # DRAW//01 Database
 
-> Production database map as of 2026-10-05.
+> Production database map as of 2026-10-07.
 >
 > Supabase project: `Lottery DRAW01`  
 > Project ref: `mwtlsnneooxmryondrex`  
@@ -606,13 +606,16 @@ Treat it as read-only unless its underlying database definition is explicitly in
 
 ---
 
-## Older support table
+## Retired legacy Support pending-claim path
 
-`support_pending_claims` still exists from an earlier iteration.
+The earlier `support_pending_claims` table and its 3-argument service/private function chain were retired in Phase 4 after:
 
-The current public Support Center reads `support_claim_requests`, and the current service settlement function explicitly searches `support_claim_requests`.
+- the table was confirmed empty;
+- repository caller search found no active client;
+- live function/dependency inspection isolated the chain from the current 4-argument Support flow;
+- a rollback-only production drop test completed without dependency failures.
 
-Before dropping `support_pending_claims`, search all functions/Edge Functions and confirm no legacy endpoint still references it.
+The canonical pending/settled state is now only `support_claim_requests`.
 
 ---
 
@@ -813,14 +816,13 @@ Do not assume these triggers protect `event_tickets`; the current event system u
 
 ## Support functions
 
-- `public.service_submit_support_claim(...)` (multiple signatures)
-- `public.service_settle_pending_support_claim(...)`
-- `public.service_settle_pending_support_transaction(...)`
-- `public.service_claim_support_points(...)`
-- `private.submit_support_claim(...)`
-- `private.settle_support_claim_request(...)`
-- `private.settle_pending_support_transaction(...)`
-- `private.claim_support_points(...)`
+Canonical current Support functions:
+
+- `public.service_submit_support_claim(uuid,text,text,text)`
+- `public.service_settle_pending_support_claim(text,text)`
+- `private.settle_support_claim_request(uuid)`
+
+The superseded `support_pending_claims` table, 3-argument submit wrapper, direct claim wrapper, pending-transaction wrapper, and their private implementations were removed in Phase 4.
 
 ## Legacy draw functions
 
@@ -862,11 +864,10 @@ These are high priority.
 3. Confirm each SECURITY DEFINER function sets a safe search path.
 4. Source-control every live migration and Edge Function.
 5. Remove/decommission unused RPC generations only after caller analysis.
-6. Confirm old `phone-bridge` and `bridge-device-admin` are unused, then delete.
-7. Confirm `support_pending_claims` is unused before dropping.
-8. Add database tests for concurrent ticket purchases at max capacity.
-9. Add tests proving one support transaction cannot be claimed twice.
-10. Add tests proving Support Points cannot be used in `purchase_event_ticket`.
+6. Physically delete the already-decommissioned `phone-bridge`, `bridge-device-admin`, and `claim-demo-credit` Edge stubs when a deletion-capable Supabase surface is available.
+7. Keep database tests for concurrent ticket purchases at max capacity.
+8. Keep tests proving one support transaction cannot be claimed twice.
+9. Keep tests proving Support Points cannot be used in `purchase_event_ticket`.
 
 ---
 

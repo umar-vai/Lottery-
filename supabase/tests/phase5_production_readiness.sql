@@ -41,8 +41,47 @@ begin
   if bad_count<>0 then
     raise exception 'Unexpected authenticated private SECURITY DEFINER exposure: %',bad_count;
   end if;
+
+  select count(*) into bad_count
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+  where p.prosecdef
+    and n.nspname='public'
+    and p.proname like 'admin\\_%' escape '\\'
+    and has_function_privilege('authenticated',p.oid,'EXECUTE')
+    and pg_get_functiondef(p.oid) not ilike '%is_admin()%';
+
+  if bad_count<>0 then
+    raise exception 'Authenticated admin SECURITY DEFINER RPC missing is_admin guard: %',bad_count;
+  end if;
 end
 $phase5_security_surface$;
+
+do $phase5_legacy_freeze$
+begin
+  if has_table_privilege('authenticated','public.tickets','INSERT')
+     or has_table_privilege('authenticated','public.tickets','UPDATE')
+     or has_table_privilege('authenticated','public.tickets','DELETE')
+     or has_table_privilege('anon','public.tickets','INSERT')
+     or has_table_privilege('anon','public.tickets','UPDATE')
+     or has_table_privilege('anon','public.tickets','DELETE') then
+    raise exception 'Legacy Powerball tickets remain browser-writable';
+  end if;
+
+  if not has_table_privilege('authenticated','public.tickets','SELECT') then
+    raise exception 'Legacy Powerball historical ticket read access was removed';
+  end if;
+
+  if exists (
+    select 1
+    from pg_policies
+    where schemaname='public'
+      and tablename='tickets'
+      and cmd<>'SELECT'
+  ) then
+    raise exception 'Legacy Powerball tickets retain a browser write RLS policy';
+  end if;
+end
+$phase5_legacy_freeze$;
 
 do $phase5_e2e$
 declare

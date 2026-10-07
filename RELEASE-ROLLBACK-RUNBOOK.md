@@ -373,3 +373,35 @@ An incident is closed only when:
 - SLO severity returns to `ok` or the warning is explicitly understood;
 - recovery event/notes are recorded;
 - root cause and prevention work are tracked.
+
+
+## 17. Phase 8B operator sign-off
+
+The server-authoritative exit report is `private.production_launch_exit_report()`.
+
+During the active 72-hour window, an authenticated admin may review and disposition operator exceptions, but **final approval must not be recorded early**. The backend rejects `approved` while the exit gate is not ready.
+
+Operator exception actions in Admin → Incidents → Phase 8B Operator Sign-Off:
+
+- **Complete** — evidence-backed requirement is actually completed;
+- **Accept risk** — the operator explicitly accepts the unresolved risk with a note;
+- **Defer** — the operator explicitly defers the work with a note;
+- **Reset** — return the item to outstanding.
+
+Never select Complete merely to make the dashboard green. Issue #61 requires a real encrypted off-site export and isolated restore rehearsal. Issue #59 retired-stub deletion requires a deletion-capable Supabase surface.
+
+Every warning launch snapshot must be dispositioned. Record the cause and action through the Phase 8B warning-review control. A later healthy snapshot does not erase the need to explain an earlier warning.
+
+Final exit procedure after **2026-10-10 10:32:08 UTC**:
+
+1. confirm `exit_state` is `ready_for_signoff`;
+2. verify current production SLO is OK;
+3. verify Draw Credit and Support invariants are clean;
+4. verify blocked launch snapshots = 0;
+5. verify unresolved warning snapshots = 0;
+6. verify required operator decisions outstanding = 0;
+7. inspect Telegram readiness/dead letters and mutation guardrails;
+8. record a meaningful final approval note;
+9. confirm the server returns `exit_state=signed_off` and `fully_signed_off=true`.
+
+If any criterion is unclear, choose **Hold exit** rather than approval. A hold is an auditable operator decision and does not suppress technical monitoring.

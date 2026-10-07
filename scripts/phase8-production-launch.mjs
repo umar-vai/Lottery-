@@ -60,7 +60,7 @@ if(exists(runtime)){
     'Phase 8 private launch functions are externally executable',
     'v_public_anon_secdef<>2',
     'v_private_auth_secdef<>0',
-    'v_auth_public_secdef<>50',
+    'v_auth_public_secdef<>53',
     'rollback;'
   ]) if(!sql.includes(marker))fail('Phase 8 runtime missing marker: '+marker);
 }

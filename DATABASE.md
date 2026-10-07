@@ -1123,3 +1123,40 @@ The launch report keeps operator-owned exceptions visible instead of converting 
 - issue #59 leaked-password protection: conditional while the app remains Google-only on the current plan.
 
 Phase 8 launch snapshots are retained for 30 days by `private.prune_operational_history()`.
+
+
+---
+
+# 23. Phase 8B operator sign-off and exit gate
+
+Phase 8B adds server-authoritative operator decisions and final stabilization exit state.
+
+Private tables:
+
+- `private.production_launch_operator_signoffs`
+- `private.production_launch_warning_dispositions`
+- `private.production_launch_exit_signoff`
+
+Private reports:
+
+- `private.production_launch_operator_signoff_report()`
+- `private.production_launch_exit_report()`
+
+Authenticated admin-only RPCs:
+
+- `public.admin_record_launch_operator_signoff(text,text,text)`
+- `public.admin_disposition_launch_warning(bigint,text)`
+- `public.admin_finalize_launch_stabilization(text,text)`
+
+All three RPCs require `auth.uid() + is_admin()` and produce canonical audit records. Direct browser/service access to the private Phase 8B tables and reports is revoked.
+
+Exit states are `stabilizing`, `blocked`, `ready_for_signoff`, `signed_off`, and `held`. Approval cannot succeed while the 72-hour window is active. Blocked snapshots remain blocking, warning snapshots require explicit disposition, and required operator exceptions remain blocking until completed, accepted-risk, or deferred with an authenticated actor, timestamp, and note.
+
+At Phase 8B activation the two required operator items remain outstanding:
+
+- issue #61 — real encrypted off-site backup + isolated restore rehearsal;
+- issue #59 — physical deletion of retired Edge stubs.
+
+The leaked-password-protection item remains conditional and is not required for the current Google-only exit.
+
+Phase 8B adds three intentional authenticated public SECURITY DEFINER admin RPCs, moving that advisor baseline from 50 to **53**. Anonymous public allowlist remains **2** and authenticated direct private SECURITY DEFINER exposure remains **0**.

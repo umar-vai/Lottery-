@@ -230,8 +230,8 @@ begin
     raise exception 'Phase 8 private authenticated SECURITY DEFINER exposure drifted: %',v_private_auth_secdef;
   end if;
 
-  if v_auth_public_secdef<>50 then
-    raise exception 'Phase 8 authenticated public SECURITY DEFINER baseline drifted: %',v_auth_public_secdef;
+  if v_auth_public_secdef<>53 then
+    raise exception 'Phase 8/8B authenticated public SECURITY DEFINER baseline drifted: %',v_auth_public_secdef;
   end if;
 
   if coalesce(jsonb_array_length(l->'current'->'operator_exceptions'),0)<2 then

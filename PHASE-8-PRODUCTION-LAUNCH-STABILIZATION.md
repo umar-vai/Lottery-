@@ -263,3 +263,10 @@ The stabilization window can be signed off only after the end time if:
 Phase 8 is technical launch stabilization, not a claim that every business/legal/operator dependency is complete.
 
 The product remains the current virtual-credit simulation/testing system described in the public terms. Any move toward regulated real-money lottery activity requires a separate legal, licensing, age/identity, payment and jurisdiction readiness program.
+
+
+## Phase 8B continuation
+
+Phase 8B adds the explicit operator-decision registry, warning-disposition queue, and final stabilization exit gate described in `PHASE-8B-OPERATOR-SIGNOFF.md`.
+
+The Phase 8 technical evidence remains the source for launch health. Phase 8B does not rewrite historical snapshots or falsely mark manual dependencies complete. After Phase 8B the expected authenticated public SECURITY DEFINER baseline is **53**, anonymous public allowlist remains **2**, and authenticated direct private SECURITY DEFINER exposure remains **0**.

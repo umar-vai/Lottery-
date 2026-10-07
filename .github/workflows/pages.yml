@@ -68,6 +68,9 @@ jobs:
       - name: Phase 8 production launch stabilization gate
         run: node scripts/phase8-production-launch.mjs
 
+      - name: Phase 8B operator sign-off gate
+        run: node scripts/phase8b-operator-signoff.mjs
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: validate

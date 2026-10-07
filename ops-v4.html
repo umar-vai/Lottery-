@@ -137,6 +137,16 @@
           <div id="launchStabilityInfo" class="info-grid"></div>
           <p id="launchStabilityHint" class="muted">Loading launch stability…</p>
         </article>
+        <article id="launchExitPanel" class="panel glass slo-observability-panel">
+          <div class="panel-head"><div><span class="eyebrow">PHASE 8B · OPERATOR SIGN-OFF</span><h2>Stabilization exit gate</h2><p>Final exit requires the 72-hour window to complete, technical health to remain clean, warnings to be dispositioned, and operator-owned exceptions to have explicit decisions.</p></div><span id="launchExitStatus" class="status-pill">CHECKING</span></div>
+          <div id="launchExitInfo" class="info-grid"></div>
+          <div class="section-label">Operator exceptions</div>
+          <div id="launchOperatorSignoffs" class="records"></div>
+          <div class="section-label">Warning review queue</div>
+          <div id="launchWarningDispositions" class="records"></div>
+          <p id="launchExitHint" class="muted">Loading Phase 8B exit state…</p>
+          <div class="action-grid"><button id="holdLaunchExit" class="btn danger compact" type="button">Hold exit</button><button id="approveLaunchExit" class="btn primary compact" type="button">Approve final sign-off</button></div>
+        </article>
         <article id="mutationGuardrailPanel" class="panel glass slo-observability-panel">
           <div class="panel-head"><div><span class="eyebrow">EMERGENCY MUTATION GUARDRAILS</span><h2>Protected user writes</h2><p>Server-side kill switch and successful-mutation rate budgets for tickets, games, support claims, credit requests, referrals and payment orders.</p></div><span id="mutationGuardrailStatus" class="status-pill">CHECKING</span></div>
           <div id="mutationGuardrailInfo" class="info-grid"></div>
@@ -232,7 +242,7 @@
   <script src="site-shell.js?v=29"></script>
   <script src="support-live.js?v=11" defer></script>
   <script src="support-admin.js?v=4" defer></script>
-  <script src="ops-v4.js?v=13" defer></script>
+  <script src="ops-v4.js?v=14" defer></script>
   <script src="admin-canonical-v9.js?v=1" defer></script>
   <script src="phase3-control-room.js?v=1" defer></script>
   <script src="phase3-lifecycle.js?v=1" defer></script>

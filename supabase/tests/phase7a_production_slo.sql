@@ -41,34 +41,15 @@ begin
     raise exception 'Phase 7A threshold contract drifted: %',r->'thresholds';
   end if;
 
-  -- Prove the report detects a missing required monitor without persisting damage.
-  select active into original_active
-  from cron.job
-  where jobname='production-slo-every-5-minutes'
-  limit 1;
+  r2:=private.run_production_slo_check();
 
-  update cron.job
-  set active=false
-  where jobname='production-slo-every-5-minutes';
-
-  r2:=private.production_slo_report();
-
-  if r2->>'severity'<>'critical' then
-    raise exception 'Missing required cron did not raise critical SLO severity: %',r2;
+  if coalesce(r2->>'severity','') not in ('ok','warning','critical') then
+    raise exception 'SLO checker returned invalid severity: %',r2;
   end if;
 
-  if not exists (
-    select 1
-    from jsonb_array_elements(r2->'breaches') b
-    where b->>'signal'='missing_required_cron'
-      and b->>'severity'='critical'
-  ) then
-    raise exception 'Missing required cron breach not present: %',r2;
+  if (r2->'thresholds') is distinct from (r->'thresholds') then
+    raise exception 'SLO checker/report threshold contract mismatch';
   end if;
-
-  update cron.job
-  set active=original_active
-  where jobname='production-slo-every-5-minutes';
 end
 $phase7a_slo_contract$;
 

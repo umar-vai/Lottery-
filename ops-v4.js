@@ -4,7 +4,7 @@
 var BASE='https://mwtlsnneooxmryondrex.supabase.co';
 var KEY='sb_publishable_zfXYDH1qSZURp8bRHgnBrQ_7t7-3BMd';
 var REF='mwtlsnneooxmryondrex';
-var S={session:null,user:null,profile:null,focusEvent:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,adminChanges:null,scalability:null,eventStats:{},editing:null,editingCompleted:false,balanceUser:null,timer:null,alertTimer:null,lastSloSeverity:null,playerQuery:'',ticketQuery:''};
+var S={session:null,user:null,profile:null,focusEvent:null,events:[],tickets:[],tiers:[],profiles:[],ledger:[],audit:[],integrity:null,opsHealth:null,incidents:null,guardrails:null,adminChanges:null,scalability:null,eventStats:{},editing:null,editingCompleted:false,balanceUser:null,timer:null,alertTimer:null,lastSloSeverity:null,playerQuery:'',ticketQuery:''};
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -77,18 +77,19 @@ function load(){
     safe(rpc('admin_get_admin_base_focus',{}),null),
     safe(rpc('admin_get_draw_credit_integrity_report',{}),null),
     safe(rpc('admin_get_lottery_operational_health',{}),null),
-    safe(rpc('admin_get_operations_incident_center',{}),null)
+    safe(rpc('admin_get_operations_incident_center',{}),null),
+    safe(rpc('admin_get_mutation_guardrails',{}),null)
   ]).then(function(x){
     S.scalability=x[0]||null;
     var base=x[1]||{};
     S.focusEvent=base.focus_event||null;
     S.audit=Array.isArray(base.recent_audit)?base.recent_audit:[];
-    S.integrity=x[2]||null;S.opsHealth=x[3]||null;S.incidents=x[4]||null;
+    S.integrity=x[2]||null;S.opsHealth=x[3]||null;S.incidents=x[4]||null;S.guardrails=x[5]||null;
     S.tickets=[];S.ledger=[];S.eventStats=S.scalability&&S.scalability.event_stats||{};S.profiles=S.scalability&&Array.isArray(S.scalability.actor_profiles)?S.scalability.actor_profiles:[];
     render();
   }).catch(function(e){note('Dashboard load failed: '+e.message,true)})
 }
-function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderSloObservability();renderSloAlert();startCountdown()}
+function render(){renderStats();renderOverview();renderIntegrity();renderOperationalHealth();renderIncidents();renderMutationGuardrails();renderSloObservability();renderSloAlert();startCountdown()}
 function renderStats(){
   var summary=S.scalability&&S.scalability.summary||{},n=nextEvent();
   $('statEvents').textContent=Number(summary.lotteries!=null?summary.lotteries:S.events.length).toLocaleString();
@@ -213,6 +214,61 @@ function renderIncidents(){
   list.innerHTML=rows.map(function(x){return '<div class="record-card"><div class="record-main"><div class="record-title"><strong>'+esc(x.title||'Incident')+'</strong><span class="status-pill '+(x.severity==='critical'?'cancelled':'locked')+'">'+esc(String(x.severity||'warning').toUpperCase())+'</span></div><div class="record-meta"><span>'+esc(x.category||'system')+'</span><span>'+esc(x.detail||'')+'</span><span>'+esc(fmt(x.created_at))+'</span></div></div></div>'}).join('')
 }
 
+function renderMutationGuardrails(){
+  var g=S.guardrails,st=$('mutationGuardrailStatus'),root=$('mutationGuardrailInfo'),hint=$('mutationGuardrailHint'),pause=$('pauseUserMutations'),resume=$('resumeUserMutations');
+  if(!st||!root)return;
+  if(!g){
+    st.textContent='UNAVAILABLE';st.className='status-pill cancelled';
+    root.innerHTML='<div class="overview-empty">Mutation guardrail state could not be loaded.</div>';
+    if(pause)pause.disabled=true;if(resume)resume.disabled=true;
+    return
+  }
+  var master=!!g.master_enabled;
+  st.textContent=master?'ENABLED':'PAUSED';st.className='status-pill '+(master?'completed':'cancelled');
+  root.innerHTML=[
+    info('Master mutations',master?'Enabled':'PAUSED'),
+    info('Ticket purchases',g.ticket_purchases_enabled?'Enabled':'Paused'),
+    info('Game writes',g.game_writes_enabled?'Enabled':'Paused'),
+    info('Support claims',g.support_claims_enabled?'Enabled':'Paused'),
+    info('Credit requests',g.credit_requests_enabled?'Enabled':'Paused'),
+    info('Referrals',g.referral_writes_enabled?'Enabled':'Paused'),
+    info('Payment orders',g.payment_orders_enabled?'Enabled':'Paused'),
+    info('Last change',fmt(g.updated_at))
+  ].join('');
+  if(hint)hint.textContent=g.reason?('Reason: '+g.reason):'Successful user mutations are protected by server-side rate budgets.';
+  if(pause)pause.disabled=!master;
+  if(resume)resume.disabled=master;
+}
+function mutationGuardrailArgs(master,reason){
+  var g=S.guardrails||{};
+  return {
+    p_master_enabled:!!master,
+    p_ticket_purchases_enabled:g.ticket_purchases_enabled!==false,
+    p_game_writes_enabled:g.game_writes_enabled!==false,
+    p_support_claims_enabled:g.support_claims_enabled!==false,
+    p_credit_requests_enabled:g.credit_requests_enabled!==false,
+    p_referral_writes_enabled:g.referral_writes_enabled!==false,
+    p_payment_orders_enabled:g.payment_orders_enabled!==false,
+    p_reason:reason
+  }
+}
+function setMasterMutationGuardrail(enabled){
+  var reason=requireReason(
+    enabled?'Why are you resuming user mutations?':'Why are you pausing all user mutations?',
+    enabled?'Production recovery verified; resume user mutations':'Emergency production mutation pause'
+  );
+  if(reason===null)return;
+  var pause=$('pauseUserMutations'),resume=$('resumeUserMutations');
+  if(pause)pause.disabled=true;if(resume)resume.disabled=true;
+  rpc('admin_set_mutation_guardrails',mutationGuardrailArgs(enabled,reason),reason).then(function(r){
+    S.guardrails=r;renderMutationGuardrails();
+    note(enabled?'User mutations resumed':'All protected user mutations paused',!enabled);
+  }).catch(function(e){note('Mutation guardrail update failed: '+e.message,true);renderMutationGuardrails()})
+}
+function refreshMutationGuardrails(){
+  return rpc('admin_get_mutation_guardrails',{}).then(function(r){S.guardrails=r;renderMutationGuardrails();return r})
+}
+
 function sloClass(severity){return severity==='critical'?'cancelled':severity==='warning'?'locked':'completed'}
 function sloSignals(rows){
   if(!Array.isArray(rows)||!rows.length)return'No active breach signals';
@@ -298,13 +354,16 @@ function acknowledgeSloIncident(id){
 }
 function pollIncidentAlerts(){
   if(document.hidden||!S.session)return Promise.resolve();
-  return rpc('admin_get_operations_incident_center',{}).then(function(r){
-    var previous=S.lastSloSeverity,current=String(r&&r.production_slo&&r.production_slo.severity||'ok');
-    S.incidents=r;S.lastSloSeverity=current;
-    renderIncidents();renderSloObservability();renderSloAlert();
+  return Promise.all([
+    rpc('admin_get_operations_incident_center',{}),
+    rpc('admin_get_mutation_guardrails',{})
+  ]).then(function(x){
+    var r=x[0],previous=S.lastSloSeverity,current=String(r&&r.production_slo&&r.production_slo.severity||'ok');
+    S.incidents=r;S.guardrails=x[1]||S.guardrails;S.lastSloSeverity=current;
+    renderIncidents();renderMutationGuardrails();renderSloObservability();renderSloAlert();
     if(previous&&previous==='ok'&&current!=='ok')note('Production SLO changed to '+current.toUpperCase(),true);
     if(previous&&previous!=='ok'&&current==='ok')note('Production SLO recovered');
-  }).catch(function(e){console.warn('Phase 7D alert poll failed',e)})
+  }).catch(function(e){console.warn('Phase 7F operations poll failed',e)})
 }
 function startAlertPolling(){
   clearInterval(S.alertTimer);
@@ -325,7 +384,7 @@ function renderAdminChanges(){
 }
 function refreshIncidents(){
   var b=$('refreshIncidents');if(b)b.disabled=true;
-  return rpc('admin_get_operations_incident_center',{}).then(function(r){S.incidents=r;S.lastSloSeverity=String(r&&r.production_slo&&r.production_slo.severity||'ok');renderIncidents();renderSloObservability();renderSloAlert();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
+  return Promise.all([rpc('admin_get_operations_incident_center',{}),rpc('admin_get_mutation_guardrails',{})]).then(function(x){var r=x[0];S.incidents=r;S.guardrails=x[1]||S.guardrails;S.lastSloSeverity=String(r&&r.production_slo&&r.production_slo.severity||'ok');renderIncidents();renderMutationGuardrails();renderSloObservability();renderSloAlert();note(r&&r.ok?'Incident Center healthy':'Incident Center found issues',!(r&&r.ok))}).catch(function(e){note('Incident refresh failed: '+e.message,true)}).finally(function(){if(b)b.disabled=false})
 }
 function refreshAdminChanges(){if(window.Draw01RemainingScalability)return window.Draw01RemainingScalability.loadAdminChanges(true);return Promise.resolve()}
 
@@ -516,7 +575,7 @@ function bind(){
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){activateTab(b)}});
   $('retryBtn').onclick=boot;
   if($('topCreate'))$('topCreate').onclick=openCreate;
-  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;
+  $('heroCreate').onclick=openCreate;$('createEventBtn').onclick=openCreate;$('refreshOverview').onclick=load;$('refreshAudit').onclick=load;if($('refreshIntegrity'))$('refreshIntegrity').onclick=refreshIntegrity;if($('pauseUserMutations'))$('pauseUserMutations').onclick=function(){setMasterMutationGuardrail(false)};if($('resumeUserMutations'))$('resumeUserMutations').onclick=function(){setMasterMutationGuardrail(true)};if($('refreshOpsHealth'))$('refreshOpsHealth').onclick=refreshOperationalHealth;if($('retryDueDraws'))$('retryDueDraws').onclick=retryDueDraws;if($('refreshIncidents'))$('refreshIncidents').onclick=refreshIncidents;
   $('closeEventModal').onclick=$('cancelEventModal').onclick=function(){$('eventDialog').close()};$('eventForm').onsubmit=saveEvent;
   $('fTitle').oninput=function(){if(!S.editing&&!$('fSlug').dataset.touched)$('fSlug').value=slugify(this.value)};$('fSlug').oninput=function(){this.dataset.touched='1'};
   $('fBonusEnabled').onchange=syncBonusField;$('fScheduleMode').onchange=syncSchedule;$('fWinnerCount').oninput=function(){renderPrizeFields()};

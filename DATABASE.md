@@ -1,8 +1,8 @@
-# DRAW//01 Database
+# Lootera Database
 
 > Production database map as of 2026-10-07.
 >
-> Supabase project: `Lottery DRAW01`  
+> Product: `Lootera` — `lootera.win`  
 > Project ref: `mwtlsnneooxmryondrex`  
 > Region: Mumbai (`ap-south-1`)
 

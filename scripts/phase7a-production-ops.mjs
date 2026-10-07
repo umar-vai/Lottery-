@@ -40,7 +40,7 @@ if (exists(runtime)) {
   for (const marker of [
     'Phase 7A private SLO functions are externally executable',
     'Production SLO cron must exist exactly once and be active',
-    'missing_required_cron',
+    'SLO checker/report threshold contract mismatch',
     'rollback;'
   ]) if (!sql.includes(marker)) fail('SLO runtime contract missing marker: '+marker);
 }
